@@ -1,0 +1,114 @@
+{
+  "status": "passed",
+  "checked_code_commit": "1172b1e9e0bec7232785591268dd97c5770c4b20",
+  "source_commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
+  "upstream_base": "2d1cbcf471cf8b63e2279b3c372a6ebb47456a99",
+  "remix": "harmony-track-bus",
+  "build": 79,
+  "pgo": false,
+  "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856",
+  "general_check": {
+    "command": "BUILD=79 OCTABAM_PGO=0 make check REMIX=harmony-track-bus",
+    "exit_code": 0,
+    "summary": "module gates (image): 46 run, 0 failed",
+    "log_sha256": "5f61a8c98767af2f7938c6306e4f15b672e3d59a53d6161357cb4730e2b9f5d4",
+    "skips": [
+      "[SKIP] verify_kits: no project (OT_PROJECT=<dir> or --project)",
+      "[SKIP] verify_scenes: no project (--project, OT_PROJECT or ~/.octabam_project)",
+      "[SKIP] verify_reserve_writes: no project (OT_PROJECT=<dir> or ~/.octabam_project)",
+      "[SKIP] verify_modedefaults: no project (OT_PROJECT=<dir> or --project)",
+      "[SKIP] verify_scenesp2: no project (OT_PROJECT=<dir> or --project)",
+      "[SKIP] verify_plocksp2: no project (OT_PROJECT=<dir> or --project)",
+      "[SKIP] verify_set: no project (OT_PROJECT=<dir> or --project)",
+      "[SKIP] verify_tempobus: no staged card (run verify_set with OT_PROJECT first)",
+      "[SKIP] verify_fx2lock: no project (OT_PROJECT=<dir>, --project or ~/.octabam_project)",
+      "[SKIP] verify_brain: no project (OT_PROJECT=<dir>, --project or ~/.octabam_project)",
+      "[SKIP] verify_loadmeter: no project (OT_PROJECT=<dir>, --project or ~/.octabam_project)",
+      "[SKIP] port project test: supply --project DIR or OT_PROJECT (source is only read)",
+      "[SKIP] concert UART suite: supply --project DIR or OT_PROJECT",
+      "[not run] full RTOS/project gate: supply --project DIR"
+    ],
+    "project_skip_coverage": [
+      {
+        "skipped_in_general_run": "[SKIP] verify_kits: no project (OT_PROJECT=<dir> or --project)",
+        "covered_by": "kits-full"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_scenes: no project (--project, OT_PROJECT or ~/.octabam_project)",
+        "covered_by": "midi-scenes"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_reserve_writes: no project (OT_PROJECT=<dir> or ~/.octabam_project)",
+        "covered_by": "reserve-writes"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_modedefaults: no project (OT_PROJECT=<dir> or --project)",
+        "covered_by": "mode-defaults"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_scenesp2: no project (OT_PROJECT=<dir> or --project)",
+        "covered_by": "scenes-p2"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_plocksp2: no project (OT_PROJECT=<dir> or --project)",
+        "covered_by": "plocks-editor"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_set: no project (OT_PROJECT=<dir> or --project)",
+        "covered_by": "set"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_tempobus: no staged card (run verify_set with OT_PROJECT first)",
+        "covered_by": "tempo-bus"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_fx2lock: no project (OT_PROJECT=<dir>, --project or ~/.octabam_project)",
+        "covered_by": "fx2-lock"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_brain: no project (OT_PROJECT=<dir>, --project or ~/.octabam_project)",
+        "covered_by": "brain"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_loadmeter: no project (OT_PROJECT=<dir>, --project or ~/.octabam_project)",
+        "covered_by": "load-meter"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] port project test: supply --project DIR or OT_PROJECT (source is only read)",
+        "covered_by": "midi-follow"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] concert UART suite: supply --project DIR or OT_PROJECT",
+        "covered_by": "midi-concert"
+      },
+      {
+        "skipped_in_general_run": "[not run] full RTOS/project gate: supply --project DIR",
+        "covered_by": [
+          "loopback-notes",
+          "loopback-routing",
+          "loopback-controls"
+        ],
+        "evidence_scope": "Historical dedicated source run on identical firmware bytes."
+      }
+    ]
+  },
+  "other_checks": {
+    "emulator_ctest": {
+      "passed": 10,
+      "failed": 0
+    },
+    "source_tests": 15,
+    "sparse_sram_ledger_tests": 2,
+    "original_store_clients_tests": 1,
+    "author_to_integration_staging": {
+      "files": 207,
+      "differences": 0,
+      "tracked_tree_unchanged": true
+    }
+  },
+  "final_only_changes": "Public documentation, provenance modes, operational author URLs and one inherited EOF blank line; final rebuilt firmware is byte-identical.",
+  "historical_project_suites": "24 dedicated suites from the completed source receipt, on the same image bytes; not rerun wholesale during migration.",
+  "hardware_tested": false,
+  "private_artifacts": "Original ignored source worktree outputs retained locally; no firmware or project fixtures published.",
+  "final_rebuild_identical": true
+}

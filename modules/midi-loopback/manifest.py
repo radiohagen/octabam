@@ -4,7 +4,7 @@ from remix.schema import Category, Detour, Gate, Kind, Linked, Module, Proof, Sy
 MODULE = Module(
     name="midi-loopback", key="MIDI LOOPBACK", kind=Kind.CF_PATCH,
     category=Category.MIDI_USB, author="mattiaswolff",
-    author_url="https://github.com/mattiaswolff",
+    author_url="https://github.com/radiohagen/octatrack-modules",
     doc="Press CHAN for per-Part EXT/INT/BOTH routing of MIDI-track notes and controls.",
     proof=Proof.PORT, proof_note="Panel, native Part persistence and routing under emulator; no hardware",
     requires=("MIDI PART STATE",),

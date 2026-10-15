@@ -83,3 +83,19 @@ the combined selection. Preserve the completed branch's unique
 `tempo_note_publish`/`tempo_note_replay` names and installed-hook gate as a
 small compatibility PR before the final bus selection. This introduces no new
 effect behavior; the wrong hook is measurable without a hardware claim.
+
+## Prepared branch status
+
+The first independently extracted candidates are `codex/pr/plocks-editor`,
+`codex/pr/tempo-hook-symbols`, `codex/pr/kits-header` and
+`codex/pr/midi-scales`. Each starts at the recorded upstream base; none depends
+on the aggregate integration branch. Their exact commits, tests and limits are
+in the author repository’s `integration/review-branches.json`. KITS is held for broader recall
+qualification despite passing its dirty-header regression.
+
+MIDI Scales has a deliberately small, independent author-source review branch
+with the same name. Its pinned adapter demonstrates upstream's preferred
+submodule pattern without including Harmony or the other modules in that
+author history. The remaining feature stages above are planned boundaries,
+not yet submission-ready branches. Prepare them sequentially after predecessor
+review; validate their adapters and exact combinations before opening PRs.

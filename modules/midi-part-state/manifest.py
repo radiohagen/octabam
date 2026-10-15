@@ -4,7 +4,7 @@ from remix.schema import Category, Claims, Detour, Gate, Kind, Linked, Module, P
 MODULE = Module(
     name='midi-part-state', key='MIDI PART STATE', kind=Kind.CF_PATCH,
     category=Category.PARTS, author='Mattias Wolff',
-    author_url='https://github.com/mattiaswolff/octabam', proof=Proof.PORT,
+    author_url='https://github.com/radiohagen/octatrack-modules', proof=Proof.PORT,
     proof_note='verify_midi_part_copy and verify_midi_part_settings: linked native boundaries; hardware untested',
     doc='Shared native Part settings and coherent copy/clear publication; no KITS dependency.',
     linked=(Linked('midipartsetup', 'modules/midi-part-state/setup.s', dram=True,

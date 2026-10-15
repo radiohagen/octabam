@@ -6,7 +6,7 @@ def options(modules):
 
 MODULE = Module(
     name='midi-scales',key='MIDI SCALES',kind=Kind.CF_PATCH,
-    category=Category.MIDI_USB,author='Mattias Wolff',author_url='https://github.com/mattiaswolff/octabam',
+    category=Category.MIDI_USB,author='Mattias Wolff',author_url='https://github.com/radiohagen/octatrack-modules',
     proof=Proof.PORT,proof_note='verify_midi_scales: all 84 keys over 128 notes under the port; hardware untested',
     doc='Stock MIDI ARP SETUP KEY: OFF plus all 12 keys in seven diatonic modes, stored in the Part.',
     linked=(Linked('midiscales','modules/midi-scales/scales.s',dram=True,include=options),),

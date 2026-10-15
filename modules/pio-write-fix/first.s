@@ -19,4 +19,3 @@ pio_write_first:
         cmp.l   %a0,%d1
         bne.s   .Lw_word
         jmp     ATA_RET             | stock: return the count
-

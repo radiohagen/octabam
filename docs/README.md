@@ -13,6 +13,14 @@ Where each doc is, by who reads it. A module's own page is
 | [../remixes/README.md](../remixes/README.md) | the remixes you can flash, with where each has run |
 | [guide/REMIXER.md](guide/REMIXER.md) | composing your own remix: the `make remix` TUI, or a `remix.py` by hand |
 
+## radiohagen MIDI work
+
+- [Workspace and account routing](guide/RADIOHAGEN_WORKFLOW.md)
+- [Contribution sequence](guide/MIDI_UPSTREAM_PLAN.md)
+- [MIDI controls](guide/MIDI_MODULES.md)
+- [Original validation receipt](guide/MIDI_SOURCE_VALIDATION.json)
+- [MIDI remix manual](site/midi-modules.md)
+
 ## Writing a module or changing the build
 
 | doc | what it is |

@@ -13,7 +13,7 @@ def boundaries(_modules):
 MODULE = Module(
     name='midi-loopback-scenes', key='MIDI LOOPBACK SCENES', kind=Kind.CF_PATCH,
     category=Category.MIDI_USB, author='Mattias Wolff',
-    author_url='https://github.com/mattiaswolff/octabam',
+    author_url='https://github.com/radiohagen/octatrack-modules',
     doc='Compose MIDI Loopback destinations with MIDI Scenes CC output and USB MIDI.',
     proof=Proof.CHECK, proof_note='Combined producer and project routing gates; hardware untested',
     requires=('MIDI LOOPBACK', 'MIDI SCENES', 'USB MIDI'),

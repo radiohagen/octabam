@@ -42,3 +42,5 @@ Each remix's page lists its modules and how to flash it:
 - [octabam-bus](remix-bus.md)
 
 All three are verified under the port only. None has run on a unit.
+
+For the radiohagen experimental MIDI integration, see [MIDI modules](midi-modules.md).

@@ -18,3 +18,8 @@ separately verified contribution step; do not claim them completed.
 Preserved local firmware, fixtures and raw test logs remain in the original
 finished worktree's ignored output directories. Only source, documentation and
 sanitized validation records are published. No hardware acceptance is implied.
+
+See [migration verification](MIDI_MIGRATION_VALIDATION.json) for the checks
+rerun here, and the author repository’s review-branch receipts for standalone
+candidates. The Scales review branch demonstrates a pinned author adapter;
+remaining module adapters will be qualified sequentially.

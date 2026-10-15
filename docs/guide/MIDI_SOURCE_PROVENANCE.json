@@ -25,1369 +25,1607 @@
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "docs/guide/MIDI_MODULES.md",
       "sha256": "1190325271ce3ecaa5754a74bedb17be31eaf3ffa43969839f5228dafbb5a0f5",
-      "published_sha256": "1190325271ce3ecaa5754a74bedb17be31eaf3ffa43969839f5228dafbb5a0f5"
+      "published_sha256": "1190325271ce3ecaa5754a74bedb17be31eaf3ffa43969839f5228dafbb5a0f5",
+      "source_mode": "100644"
     },
     "modules/harmony-plocks/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/harmony-plocks/README.md",
       "sha256": "5124b20741b7290cd7186425660410623767423699e01e97e49d4f5faaea14b4",
-      "published_sha256": "5124b20741b7290cd7186425660410623767423699e01e97e49d4f5faaea14b4"
+      "published_sha256": "5124b20741b7290cd7186425660410623767423699e01e97e49d4f5faaea14b4",
+      "source_mode": "100644"
     },
     "modules/harmony-plocks/bridge.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/harmony-plocks/bridge.s",
       "sha256": "d60fce8a4f27c8c2991097c3d29adec072e4925f498c03accf56c400c71266d1",
-      "published_sha256": "d60fce8a4f27c8c2991097c3d29adec072e4925f498c03accf56c400c71266d1"
+      "published_sha256": "d60fce8a4f27c8c2991097c3d29adec072e4925f498c03accf56c400c71266d1",
+      "source_mode": "100644"
     },
     "modules/harmony-plocks/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/harmony-plocks/manifest.py",
       "sha256": "b4545beceb675e25ce080143c5632694922680914f5e74fd10229d59620c0275",
-      "published_sha256": "b4545beceb675e25ce080143c5632694922680914f5e74fd10229d59620c0275"
+      "published_sha256": "431373210d51821a24e867944665bef415dedcc72be4f417da9b78a06c1f13a9",
+      "source_mode": "100644",
+      "migration_note": "Operational author URL updated; original author name/credit preserved."
     },
     "modules/kits/kits.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/kits/kits.s",
       "sha256": "e80018d62b330909956225c4efc3be9a06984feed49d69c6d59dc947373c6c94",
-      "published_sha256": "e80018d62b330909956225c4efc3be9a06984feed49d69c6d59dc947373c6c94"
+      "published_sha256": "e80018d62b330909956225c4efc3be9a06984feed49d69c6d59dc947373c6c94",
+      "source_mode": "100644"
     },
     "modules/midi-follow/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-follow/README.md",
       "sha256": "b984d044ef4eb3bec749dd2752d07d004c137dc95d51cab13aca4bf8aa5e4b2c",
-      "published_sha256": "b984d044ef4eb3bec749dd2752d07d004c137dc95d51cab13aca4bf8aa5e4b2c"
+      "published_sha256": "b984d044ef4eb3bec749dd2752d07d004c137dc95d51cab13aca4bf8aa5e4b2c",
+      "source_mode": "100644"
     },
     "modules/midi-follow/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-follow/manifest.py",
       "sha256": "808bfa85b9c5a366c455bff56f5e38d6e625243348a260b3fc8211c5f8ac24d6",
-      "published_sha256": "808bfa85b9c5a366c455bff56f5e38d6e625243348a260b3fc8211c5f8ac24d6"
+      "published_sha256": "512ee3ac52dedd6289bdcb8f73269809e2238ece7c2318844121df354d32d2b8",
+      "source_mode": "100644",
+      "migration_note": "Operational author URL updated; original author name/credit preserved."
     },
     "modules/midi-follow/midi_follow.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-follow/midi_follow.s",
       "sha256": "79d5a4a8064e020c87735caebf5fc5e24cceed44dda3f41f28f3f75a74ec7356",
-      "published_sha256": "79d5a4a8064e020c87735caebf5fc5e24cceed44dda3f41f28f3f75a74ec7356"
+      "published_sha256": "79d5a4a8064e020c87735caebf5fc5e24cceed44dda3f41f28f3f75a74ec7356",
+      "source_mode": "100644"
     },
     "modules/midi-follow/page.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-follow/page.s",
       "sha256": "6f27a99e3472d55227a93704f2e23cd5c5401f569c5eb589b3bd0d64b9477a6b",
-      "published_sha256": "6f27a99e3472d55227a93704f2e23cd5c5401f569c5eb589b3bd0d64b9477a6b"
+      "published_sha256": "6f27a99e3472d55227a93704f2e23cd5c5401f569c5eb589b3bd0d64b9477a6b",
+      "source_mode": "100644"
     },
     "modules/midi-follow/register.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-follow/register.s",
       "sha256": "1c97d19675cc5bdb064726ae1bdf2ac2c402b1814dbbd71ac5b0d7647691e2f3",
-      "published_sha256": "1c97d19675cc5bdb064726ae1bdf2ac2c402b1814dbbd71ac5b0d7647691e2f3"
+      "published_sha256": "1c97d19675cc5bdb064726ae1bdf2ac2c402b1814dbbd71ac5b0d7647691e2f3",
+      "source_mode": "100644"
     },
     "modules/midi-follow/response.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-follow/response.s",
       "sha256": "6e48b8479733d9de6128b9ec9d82fd45f397eef970f7fd8eacec99b90bbbae53",
-      "published_sha256": "6e48b8479733d9de6128b9ec9d82fd45f397eef970f7fd8eacec99b90bbbae53"
+      "published_sha256": "6e48b8479733d9de6128b9ec9d82fd45f397eef970f7fd8eacec99b90bbbae53",
+      "source_mode": "100644"
     },
     "modules/midi-follow/settings.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-follow/settings.s",
       "sha256": "837983e13f1f46c72b14e8542b54d1935792d28f7a14f7d56eae24e94522f8ff",
-      "published_sha256": "837983e13f1f46c72b14e8542b54d1935792d28f7a14f7d56eae24e94522f8ff"
+      "published_sha256": "837983e13f1f46c72b14e8542b54d1935792d28f7a14f7d56eae24e94522f8ff",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/README.md",
       "sha256": "2503b41cfcdfaae42effb0ec2c17a9c6a3f0ffd11f74e623d3f78d94c7d4704e",
-      "published_sha256": "2503b41cfcdfaae42effb0ec2c17a9c6a3f0ffd11f74e623d3f78d94c7d4704e"
+      "published_sha256": "2503b41cfcdfaae42effb0ec2c17a9c6a3f0ffd11f74e623d3f78d94c7d4704e",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/VOICING.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/VOICING.md",
       "sha256": "9085a3817df718e2528ac77c77a6174e00e6c128c1343783ec85c946cbab4f5a",
-      "published_sha256": "9085a3817df718e2528ac77c77a6174e00e6c128c1343783ec85c946cbab4f5a"
+      "published_sha256": "9085a3817df718e2528ac77c77a6174e00e6c128c1343783ec85c946cbab4f5a",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/brain.lock": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/brain.lock",
       "sha256": "24d718550cfbabb1783d8601d0d76d80ee6bfc6a4a1a317b8418d5f21d112785",
-      "published_sha256": "24d718550cfbabb1783d8601d0d76d80ee6bfc6a4a1a317b8418d5f21d112785"
+      "published_sha256": "24d718550cfbabb1783d8601d0d76d80ee6bfc6a4a1a317b8418d5f21d112785",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/chord-display.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/chord-display.s",
       "sha256": "940481d0e82996fb59f0a5f21d11556309e82d4df608209527cbfebb880faaee",
-      "published_sha256": "940481d0e82996fb59f0a5f21d11556309e82d4df608209527cbfebb880faaee"
+      "published_sha256": "940481d0e82996fb59f0a5f21d11556309e82d4df608209527cbfebb880faaee",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/chord-files.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/chord-files.s",
       "sha256": "02f409079874d434c3ed82a2557418df819b20fef566ffb402d8cc7efae41706",
-      "published_sha256": "02f409079874d434c3ed82a2557418df819b20fef566ffb402d8cc7efae41706"
+      "published_sha256": "02f409079874d434c3ed82a2557418df819b20fef566ffb402d8cc7efae41706",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/chord-name.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/chord-name.s",
       "sha256": "34aacdb2dfa1e55c30ff2b60264309a670cf274216ba24a60c7cf12bd3be6fb5",
-      "published_sha256": "34aacdb2dfa1e55c30ff2b60264309a670cf274216ba24a60c7cf12bd3be6fb5"
+      "published_sha256": "34aacdb2dfa1e55c30ff2b60264309a670cf274216ba24a60c7cf12bd3be6fb5",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/chord-operations.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/chord-operations.s",
       "sha256": "98495d27511df9fcc0b9a2c43a2a94c6093191c1b33d73e28d3a0cfbf5002b69",
-      "published_sha256": "98495d27511df9fcc0b9a2c43a2a94c6093191c1b33d73e28d3a0cfbf5002b69"
+      "published_sha256": "98495d27511df9fcc0b9a2c43a2a94c6093191c1b33d73e28d3a0cfbf5002b69",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/chord-part.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/chord-part.s",
       "sha256": "ac08b4f2d29062404e45b6c0a4910da4248f0e51abdd58614f6ef1be66c45f36",
-      "published_sha256": "ac08b4f2d29062404e45b6c0a4910da4248f0e51abdd58614f6ef1be66c45f36"
+      "published_sha256": "ac08b4f2d29062404e45b6c0a4910da4248f0e51abdd58614f6ef1be66c45f36",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/chord-record.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/chord-record.s",
       "sha256": "d91e1d23adf338147fbb467466fa3d6ede39e9ec416adec8b3efd7592603d951",
-      "published_sha256": "d91e1d23adf338147fbb467466fa3d6ede39e9ec416adec8b3efd7592603d951"
+      "published_sha256": "d91e1d23adf338147fbb467466fa3d6ede39e9ec416adec8b3efd7592603d951",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/chord-sequence.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/chord-sequence.s",
       "sha256": "979932a6704451e4f4f58d25d10fab7c3157b363226680fbbb572323692e19fe",
-      "published_sha256": "979932a6704451e4f4f58d25d10fab7c3157b363226680fbbb572323692e19fe"
+      "published_sha256": "979932a6704451e4f4f58d25d10fab7c3157b363226680fbbb572323692e19fe",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/chord-ui.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/chord-ui.s",
       "sha256": "3d8521c1ea7868a37629b6fbfb54756c42ec97d2af9d861179012775fb2b80a3",
-      "published_sha256": "3d8521c1ea7868a37629b6fbfb54756c42ec97d2af9d861179012775fb2b80a3"
+      "published_sha256": "3d8521c1ea7868a37629b6fbfb54756c42ec97d2af9d861179012775fb2b80a3",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/chords.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/chords.s",
       "sha256": "b81a9ebf527c35f0a38e36d3bdcb27d82e190c2d6c255636d6c70125748adca2",
-      "published_sha256": "b81a9ebf527c35f0a38e36d3bdcb27d82e190c2d6c255636d6c70125748adca2"
+      "published_sha256": "b81a9ebf527c35f0a38e36d3bdcb27d82e190c2d6c255636d6c70125748adca2",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/ACCEPTANCE.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/ACCEPTANCE.md",
       "sha256": "3ab4a2799ca08f71667432da92a1f617558086d158bea193c2670b2ec64a0c56",
-      "published_sha256": "3ab4a2799ca08f71667432da92a1f617558086d158bea193c2670b2ec64a0c56"
+      "published_sha256": "3ab4a2799ca08f71667432da92a1f617558086d158bea193c2670b2ec64a0c56",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/KITS.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/KITS.md",
       "sha256": "019fdf4ffc8a5396551842562b5f4ce9ee8b96b2f1736e7a3d54149255038879",
-      "published_sha256": "019fdf4ffc8a5396551842562b5f4ce9ee8b96b2f1736e7a3d54149255038879"
+      "published_sha256": "019fdf4ffc8a5396551842562b5f4ce9ee8b96b2f1736e7a3d54149255038879",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/README.md",
       "sha256": "00e9b47b948ffc4e6e46a62aba5fbb1f7e56a992a1b965665c3bf7d49a2b9cce",
-      "published_sha256": "00e9b47b948ffc4e6e46a62aba5fbb1f7e56a992a1b965665c3bf7d49a2b9cce"
+      "published_sha256": "00e9b47b948ffc4e6e46a62aba5fbb1f7e56a992a1b965665c3bf7d49a2b9cce",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/SCENES.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/SCENES.md",
       "sha256": "1d298cc7ef6b209c136f06883b48959d9f6a4e9250fcc55db35bd5748e53ad91",
-      "published_sha256": "1d298cc7ef6b209c136f06883b48959d9f6a4e9250fcc55db35bd5748e53ad91"
+      "published_sha256": "1d298cc7ef6b209c136f06883b48959d9f6a4e9250fcc55db35bd5748e53ad91",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/codec.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/codec.s",
       "sha256": "e778ae512c9c03a0aebbdd59d37b7a8d2d8eff562732280242268c0505cb0c66",
-      "published_sha256": "e778ae512c9c03a0aebbdd59d37b7a8d2d8eff562732280242268c0505cb0c66"
+      "published_sha256": "e778ae512c9c03a0aebbdd59d37b7a8d2d8eff562732280242268c0505cb0c66",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/core.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/core.c",
       "sha256": "0dcd55a24efbf37a30431fb37c6915cd8b75202287073dd93b04ea49bc1e9f45",
-      "published_sha256": "0dcd55a24efbf37a30431fb37c6915cd8b75202287073dd93b04ea49bc1e9f45"
+      "published_sha256": "0dcd55a24efbf37a30431fb37c6915cd8b75202287073dd93b04ea49bc1e9f45",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/core.h": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/core.h",
       "sha256": "e619e95a3698f8d2c24acbcd23f6c9faa63c4a62a8999e9a83fedb9f1b530260",
-      "published_sha256": "e619e95a3698f8d2c24acbcd23f6c9faa63c4a62a8999e9a83fedb9f1b530260"
+      "published_sha256": "e619e95a3698f8d2c24acbcd23f6c9faa63c4a62a8999e9a83fedb9f1b530260",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/core.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/core.s",
       "sha256": "6f09006c7387486e079e6ff9982972bc8307f8c9aaf150dde8f94a0e3266d91b",
-      "published_sha256": "6f09006c7387486e079e6ff9982972bc8307f8c9aaf150dde8f94a0e3266d91b"
+      "published_sha256": "6f09006c7387486e079e6ff9982972bc8307f8c9aaf150dde8f94a0e3266d91b",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/edit-hooks.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/edit-hooks.s",
       "sha256": "a13ee3dd55c007a4787596333d3ba452152359b936286aff2c7e121bcad42c69",
-      "published_sha256": "a13ee3dd55c007a4787596333d3ba452152359b936286aff2c7e121bcad42c69"
+      "published_sha256": "a13ee3dd55c007a4787596333d3ba452152359b936286aff2c7e121bcad42c69",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/events.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/events.c",
       "sha256": "beaaa9aa1a75e64fab80a16a6afc8c86129638baa9d195736244c6185f4ea9e8",
-      "published_sha256": "beaaa9aa1a75e64fab80a16a6afc8c86129638baa9d195736244c6185f4ea9e8"
+      "published_sha256": "beaaa9aa1a75e64fab80a16a6afc8c86129638baa9d195736244c6185f4ea9e8",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/events.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/events.s",
       "sha256": "522903fbd2503053a3aaf8c9835ee95ceeb07f03a2a56cfd21cf1033f6901e30",
-      "published_sha256": "522903fbd2503053a3aaf8c9835ee95ceeb07f03a2a56cfd21cf1033f6901e30"
+      "published_sha256": "522903fbd2503053a3aaf8c9835ee95ceeb07f03a2a56cfd21cf1033f6901e30",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/generate.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/generate.py",
       "sha256": "24a1c9eb31bccda869b3c4a0ab0f3c303becae38fa9a05095f8643f0a1f34d70",
-      "published_sha256": "24a1c9eb31bccda869b3c4a0ab0f3c303becae38fa9a05095f8643f0a1f34d70"
+      "published_sha256": "24a1c9eb31bccda869b3c4a0ab0f3c303becae38fa9a05095f8643f0a1f34d70",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/hooks.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/hooks.s",
       "sha256": "3647bc4e78b124aebedef965eff1ecea6efc703ac70e16c59e42f2123684788f",
-      "published_sha256": "3647bc4e78b124aebedef965eff1ecea6efc703ac70e16c59e42f2123684788f"
+      "published_sha256": "3647bc4e78b124aebedef965eff1ecea6efc703ac70e16c59e42f2123684788f",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/operations.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/operations.c",
       "sha256": "af6c37aab397417a125afc3abc39cae5c646c81d1bb4040fd8ebad6c6c8f7b4e",
-      "published_sha256": "af6c37aab397417a125afc3abc39cae5c646c81d1bb4040fd8ebad6c6c8f7b4e"
+      "published_sha256": "af6c37aab397417a125afc3abc39cae5c646c81d1bb4040fd8ebad6c6c8f7b4e",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/operations.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/operations.s",
       "sha256": "c5f337d770da7b86b485f4469607d8e33b0eaf8a689c08ed9b40210293247606",
-      "published_sha256": "c5f337d770da7b86b485f4469607d8e33b0eaf8a689c08ed9b40210293247606"
+      "published_sha256": "c5f337d770da7b86b485f4469607d8e33b0eaf8a689c08ed9b40210293247606",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/packed.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/packed.c",
       "sha256": "39cec93c513b040deae655b40c3279ae97af0e46dec06a5b882c0e1492b11697",
-      "published_sha256": "39cec93c513b040deae655b40c3279ae97af0e46dec06a5b882c0e1492b11697"
+      "published_sha256": "39cec93c513b040deae655b40c3279ae97af0e46dec06a5b882c0e1492b11697",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/packed.h": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/packed.h",
       "sha256": "3bcd89d00b29e8320c3f7ef8e30f3975518b1bde7544399d1adcd8dc80b46355",
-      "published_sha256": "3bcd89d00b29e8320c3f7ef8e30f3975518b1bde7544399d1adcd8dc80b46355"
+      "published_sha256": "3bcd89d00b29e8320c3f7ef8e30f3975518b1bde7544399d1adcd8dc80b46355",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/packed.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/packed.s",
       "sha256": "aca3b286fd10255f8df977d040b1b065e770bb8d5b069e8b55b9e569322c5bfb",
-      "published_sha256": "aca3b286fd10255f8df977d040b1b065e770bb8d5b069e8b55b9e569322c5bfb"
+      "published_sha256": "aca3b286fd10255f8df977d040b1b065e770bb8d5b069e8b55b9e569322c5bfb",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/panel.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/panel.s",
       "sha256": "36747da9645769dd25099eabffbf1becf8885b5046c5b981dfd51b86f11498a5",
-      "published_sha256": "36747da9645769dd25099eabffbf1becf8885b5046c5b981dfd51b86f11498a5"
+      "published_sha256": "36747da9645769dd25099eabffbf1becf8885b5046c5b981dfd51b86f11498a5",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/part-access.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/part-access.s",
       "sha256": "7cb3b1bbdafb1cb06cca721633f9fe0e90db2595205e8851711ce62f04e4c1b0",
-      "published_sha256": "7cb3b1bbdafb1cb06cca721633f9fe0e90db2595205e8851711ce62f04e4c1b0"
+      "published_sha256": "7cb3b1bbdafb1cb06cca721633f9fe0e90db2595205e8851711ce62f04e4c1b0",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/pool.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/pool.s",
       "sha256": "24d0f0f81dadcc4cf01c0963d298a2278a4bec27438cf5b373e8be6aada64063",
-      "published_sha256": "24d0f0f81dadcc4cf01c0963d298a2278a4bec27438cf5b373e8be6aada64063"
+      "published_sha256": "24d0f0f81dadcc4cf01c0963d298a2278a4bec27438cf5b373e8be6aada64063",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/recording.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/recording.c",
       "sha256": "d4455ab41d06fd1d075b3353cc1e6663237bffac1f0f1352ae10610ff086613b",
-      "published_sha256": "d4455ab41d06fd1d075b3353cc1e6663237bffac1f0f1352ae10610ff086613b"
+      "published_sha256": "d4455ab41d06fd1d075b3353cc1e6663237bffac1f0f1352ae10610ff086613b",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/recording.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/recording.s",
       "sha256": "1aa2e8c854e8c115a4c340cf443b4e7c4427b930c72db9716301aecedeb10210",
-      "published_sha256": "1aa2e8c854e8c115a4c340cf443b4e7c4427b930c72db9716301aecedeb10210"
+      "published_sha256": "1aa2e8c854e8c115a4c340cf443b4e7c4427b930c72db9716301aecedeb10210",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/roots.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/roots.c",
       "sha256": "28fad13358d37a1817f0b9dc10282b3053ba87117d22c79db096b9c6fcea63cf",
-      "published_sha256": "28fad13358d37a1817f0b9dc10282b3053ba87117d22c79db096b9c6fcea63cf"
+      "published_sha256": "28fad13358d37a1817f0b9dc10282b3053ba87117d22c79db096b9c6fcea63cf",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/roots.h": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/roots.h",
       "sha256": "9cdc343ebf2e22249b4d2c43a984e227559c6d1567800c412a3fca74b42e629b",
-      "published_sha256": "9cdc343ebf2e22249b4d2c43a984e227559c6d1567800c412a3fca74b42e629b"
+      "published_sha256": "9cdc343ebf2e22249b4d2c43a984e227559c6d1567800c412a3fca74b42e629b",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/roots.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/roots.s",
       "sha256": "4f7ccacbc6ad2a2eaf74772beede99605b1a4a80b5819908a3bbfe878cde97af",
-      "published_sha256": "4f7ccacbc6ad2a2eaf74772beede99605b1a4a80b5819908a3bbfe878cde97af"
+      "published_sha256": "4f7ccacbc6ad2a2eaf74772beede99605b1a4a80b5819908a3bbfe878cde97af",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/scene-access.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/scene-access.s",
       "sha256": "057759bb2f56f9a31b931ea51d4d591d4e936ef0cdb7864b0454dadbf5780123",
-      "published_sha256": "057759bb2f56f9a31b931ea51d4d591d4e936ef0cdb7864b0454dadbf5780123"
+      "published_sha256": "057759bb2f56f9a31b931ea51d4d591d4e936ef0cdb7864b0454dadbf5780123",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/scenes.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/scenes.c",
       "sha256": "92e0761adec5b61e4c597a48e4c318eb0273743028320f38c1ec12307710fdba",
-      "published_sha256": "92e0761adec5b61e4c597a48e4c318eb0273743028320f38c1ec12307710fdba"
+      "published_sha256": "92e0761adec5b61e4c597a48e4c318eb0273743028320f38c1ec12307710fdba",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/scenes.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/scenes.s",
       "sha256": "073c28c125d1c1a8ba8c50019301c99d0acf0e3f3e8bfea728a0b6a7a82a4ed7",
-      "published_sha256": "073c28c125d1c1a8ba8c50019301c99d0acf0e3f3e8bfea728a0b6a7a82a4ed7"
+      "published_sha256": "073c28c125d1c1a8ba8c50019301c99d0acf0e3f3e8bfea728a0b6a7a82a4ed7",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/storage-track.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/storage-track.s",
       "sha256": "d813bcf2fee42ce3e2f9af3ef0cb75d9c63316697d2772894a424ad67af9cc2e",
-      "published_sha256": "d813bcf2fee42ce3e2f9af3ef0cb75d9c63316697d2772894a424ad67af9cc2e"
+      "published_sha256": "d813bcf2fee42ce3e2f9af3ef0cb75d9c63316697d2772894a424ad67af9cc2e",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/storage.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/storage.c",
       "sha256": "02e6f4204ddebfcc6128a8379919ab1aae269bdd4bf1f285e3e5c80745dcda8f",
-      "published_sha256": "02e6f4204ddebfcc6128a8379919ab1aae269bdd4bf1f285e3e5c80745dcda8f"
+      "published_sha256": "02e6f4204ddebfcc6128a8379919ab1aae269bdd4bf1f285e3e5c80745dcda8f",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/storage.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/storage.s",
       "sha256": "44b76769855b967e751a394d1a59aab5995b7d81597646292164a38bc74773bf",
-      "published_sha256": "44b76769855b967e751a394d1a59aab5995b7d81597646292164a38bc74773bf"
+      "published_sha256": "44b76769855b967e751a394d1a59aab5995b7d81597646292164a38bc74773bf",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/track-retention.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/track-retention.c",
       "sha256": "371295609e6058c25939563cac9b276c1febdaeb93b5c4c1e5fe33b37a0d0161",
-      "published_sha256": "371295609e6058c25939563cac9b276c1febdaeb93b5c4c1e5fe33b37a0d0161"
+      "published_sha256": "371295609e6058c25939563cac9b276c1febdaeb93b5c4c1e5fe33b37a0d0161",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/track-retention.h": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/track-retention.h",
       "sha256": "de4a1b6fac62755ea4266c418bf1671a6fc203da78d1cf9d0fde6e9a9e6d87be",
-      "published_sha256": "de4a1b6fac62755ea4266c418bf1671a6fc203da78d1cf9d0fde6e9a9e6d87be"
+      "published_sha256": "de4a1b6fac62755ea4266c418bf1671a6fc203da78d1cf9d0fde6e9a9e6d87be",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/track-retention.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/track-retention.s",
       "sha256": "273b3f6003844f1c796791764f50cd14ed36d869991b22d382a42c27d1cbbf44",
-      "published_sha256": "273b3f6003844f1c796791764f50cd14ed36d869991b22d382a42c27d1cbbf44"
+      "published_sha256": "273b3f6003844f1c796791764f50cd14ed36d869991b22d382a42c27d1cbbf44",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/ui.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/ui.c",
       "sha256": "ed7b4574e7924802e14999be0f35c33ee2b907396110306fe76ac8f6f7e8cfdc",
-      "published_sha256": "ed7b4574e7924802e14999be0f35c33ee2b907396110306fe76ac8f6f7e8cfdc"
+      "published_sha256": "ed7b4574e7924802e14999be0f35c33ee2b907396110306fe76ac8f6f7e8cfdc",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/degrees/ui.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/degrees/ui.s",
       "sha256": "10319a7b8b7279ea16a9e3de48ffa64d1de9ca32e28ff79309c8154ba0f09768",
-      "published_sha256": "10319a7b8b7279ea16a9e3de48ffa64d1de9ca32e28ff79309c8154ba0f09768"
+      "published_sha256": "10319a7b8b7279ea16a9e3de48ffa64d1de9ca32e28ff79309c8154ba0f09768",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/generate.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/generate.py",
       "sha256": "262e111325328c88c784f40c17ebd3defbf2be1e1e1278ba89fdd2408fd3a286",
-      "published_sha256": "262e111325328c88c784f40c17ebd3defbf2be1e1e1278ba89fdd2408fd3a286"
+      "published_sha256": "262e111325328c88c784f40c17ebd3defbf2be1e1e1278ba89fdd2408fd3a286",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/harmony.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/harmony.s",
       "sha256": "de9434a5d4ceb65664344ca39f132a00f605a020c2c4ae4954ff66fe480814d9",
-      "published_sha256": "de9434a5d4ceb65664344ca39f132a00f605a020c2c4ae4954ff66fe480814d9"
+      "published_sha256": "de9434a5d4ceb65664344ca39f132a00f605a020c2c4ae4954ff66fe480814d9",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/locks.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/locks.s",
       "sha256": "521668d394476f66a61e6b33cde82fec0328dc34609ad12d4ae5495950d9d177",
-      "published_sha256": "521668d394476f66a61e6b33cde82fec0328dc34609ad12d4ae5495950d9d177"
+      "published_sha256": "521668d394476f66a61e6b33cde82fec0328dc34609ad12d4ae5495950d9d177",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/manifest.py",
       "sha256": "8691286ad370961aafba521e00a070797d2b70f257dddea18eb4874f70893097",
-      "published_sha256": "8691286ad370961aafba521e00a070797d2b70f257dddea18eb4874f70893097"
+      "published_sha256": "6d0dca25df22236211fc3f0d01e7dc858069e0e6b3ef06b2d5053f0825c16f3f",
+      "source_mode": "100644",
+      "migration_note": "Operational author URL updated; original author name/credit preserved."
     },
     "modules/midi-harmony/ownership.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/ownership.s",
       "sha256": "2eb6b4d761af84605f0a24b84c0af1af55d3ab836a445697591d8e094a550d5e",
-      "published_sha256": "2eb6b4d761af84605f0a24b84c0af1af55d3ab836a445697591d8e094a550d5e"
+      "published_sha256": "2eb6b4d761af84605f0a24b84c0af1af55d3ab836a445697591d8e094a550d5e",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/page.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/page.s",
       "sha256": "d5db930104a9b1a30bc0626d9a68a850b1833448ac9ccb4e0f6fe9c97bb9c20e",
-      "published_sha256": "d5db930104a9b1a30bc0626d9a68a850b1833448ac9ccb4e0f6fe9c97bb9c20e"
+      "published_sha256": "d5db930104a9b1a30bc0626d9a68a850b1833448ac9ccb4e0f6fe9c97bb9c20e",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/play.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/play.s",
       "sha256": "16ef9d78404adce6f024583386ed51419ed0045a33e3cecbe183e7b9e0c7e696",
-      "published_sha256": "16ef9d78404adce6f024583386ed51419ed0045a33e3cecbe183e7b9e0c7e696"
+      "published_sha256": "16ef9d78404adce6f024583386ed51419ed0045a33e3cecbe183e7b9e0c7e696",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/settings.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/settings.s",
       "sha256": "98d9e21ec8f715d6f79729026cc1f7ac0fa6bf7c89963b2ffb722c782bf0b607",
-      "published_sha256": "98d9e21ec8f715d6f79729026cc1f7ac0fa6bf7c89963b2ffb722c782bf0b607"
+      "published_sha256": "98d9e21ec8f715d6f79729026cc1f7ac0fa6bf7c89963b2ffb722c782bf0b607",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/size.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/size.c",
       "sha256": "355c660ccc1ffef469036c20e36c447fd45fb8936df00006efd3fa76088b9f66",
-      "published_sha256": "355c660ccc1ffef469036c20e36c447fd45fb8936df00006efd3fa76088b9f66"
+      "published_sha256": "355c660ccc1ffef469036c20e36c447fd45fb8936df00006efd3fa76088b9f66",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/size.h": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/size.h",
       "sha256": "9465930cc6ba618ed8b4e4a6cb1fef91b4145c11f5eb94e13a3a22648c5d03ed",
-      "published_sha256": "9465930cc6ba618ed8b4e4a6cb1fef91b4145c11f5eb94e13a3a22648c5d03ed"
+      "published_sha256": "9465930cc6ba618ed8b4e4a6cb1fef91b4145c11f5eb94e13a3a22648c5d03ed",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/size.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/size.s",
       "sha256": "6c532833ae77ee442078a95c078903fe221a251c8c8e4fa0fa859e72713f3ec0",
-      "published_sha256": "6c532833ae77ee442078a95c078903fe221a251c8c8e4fa0fa859e72713f3ec0"
+      "published_sha256": "6c532833ae77ee442078a95c078903fe221a251c8c8e4fa0fa859e72713f3ec0",
+      "source_mode": "100644"
     },
     "modules/midi-harmony/voicing.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-harmony/voicing.s",
       "sha256": "47326aa2bafe8db8aeb85718a77a8618f9d73497a2f9689916483e2a06090268",
-      "published_sha256": "47326aa2bafe8db8aeb85718a77a8618f9d73497a2f9689916483e2a06090268"
+      "published_sha256": "47326aa2bafe8db8aeb85718a77a8618f9d73497a2f9689916483e2a06090268",
+      "source_mode": "100644"
     },
     "modules/midi-loopback-scenes/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-loopback-scenes/README.md",
       "sha256": "bbf26adc6ca71cde425f8db1b36c618114ce0097ccebdc7da382bc90e5614250",
-      "published_sha256": "bbf26adc6ca71cde425f8db1b36c618114ce0097ccebdc7da382bc90e5614250"
+      "published_sha256": "bbf26adc6ca71cde425f8db1b36c618114ce0097ccebdc7da382bc90e5614250",
+      "source_mode": "100644"
     },
     "modules/midi-loopback-scenes/bridge.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-loopback-scenes/bridge.s",
       "sha256": "12a45b388c70b2578ab261b201d5113196e8888d2b80790bf8ad3f869ef381f3",
-      "published_sha256": "12a45b388c70b2578ab261b201d5113196e8888d2b80790bf8ad3f869ef381f3"
+      "published_sha256": "12a45b388c70b2578ab261b201d5113196e8888d2b80790bf8ad3f869ef381f3",
+      "source_mode": "100644"
     },
     "modules/midi-loopback-scenes/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-loopback-scenes/manifest.py",
       "sha256": "adb01c874784544e0c1379e7d17c5d9b31805a34eec69a0db99b2883483dc407",
-      "published_sha256": "adb01c874784544e0c1379e7d17c5d9b31805a34eec69a0db99b2883483dc407"
+      "published_sha256": "5320048c1b5a19357189b54b6791d9bba7b6bbf5990d1986cf68aae20a90254b",
+      "source_mode": "100644",
+      "migration_note": "Operational author URL updated; original author name/credit preserved."
     },
     "modules/midi-loopback/DESIGN.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-loopback/DESIGN.md",
       "sha256": "e9a9aa9fac1335b9e236356730536ab807a0bb7465d4f11ee86fce78482dd29b",
-      "published_sha256": "04fbcea7c9a666d817cb55ac747b9cfbb77793a90cd3166d1218eaa6f8eb5cd3"
+      "published_sha256": "04fbcea7c9a666d817cb55ac747b9cfbb77793a90cd3166d1218eaa6f8eb5cd3",
+      "source_mode": "100644"
     },
     "modules/midi-loopback/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-loopback/README.md",
       "sha256": "c1cb745934351515f196bcc441726a492d8cd3151d59532539fac82fe1abbf31",
-      "published_sha256": "c1cb745934351515f196bcc441726a492d8cd3151d59532539fac82fe1abbf31"
+      "published_sha256": "c1cb745934351515f196bcc441726a492d8cd3151d59532539fac82fe1abbf31",
+      "source_mode": "100644"
     },
     "modules/midi-loopback/loopback.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-loopback/loopback.s",
       "sha256": "825f6d64eccabfca2cda70bd22e83b49729f4f8f1bb323fd60fa8a229877a83a",
-      "published_sha256": "825f6d64eccabfca2cda70bd22e83b49729f4f8f1bb323fd60fa8a229877a83a"
+      "published_sha256": "825f6d64eccabfca2cda70bd22e83b49729f4f8f1bb323fd60fa8a229877a83a",
+      "source_mode": "100644"
     },
     "modules/midi-loopback/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-loopback/manifest.py",
       "sha256": "80faa30df46576c906544a8b61c50f3c879b0b22c9800f245f9a04d6e55c1783",
-      "published_sha256": "80faa30df46576c906544a8b61c50f3c879b0b22c9800f245f9a04d6e55c1783"
+      "published_sha256": "0999924ac329de8fc23cb322955203fd6ee254f40d5a225374805bb54c49f0b2",
+      "source_mode": "100644",
+      "migration_note": "Operational author URL updated; original author name/credit preserved."
     },
     "modules/midi-loopback/page.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-loopback/page.s",
       "sha256": "8ee13c9669698bae0f93d4db2d23ab9c363cf1c87fe2ec677f3f3f519502fb04",
-      "published_sha256": "8ee13c9669698bae0f93d4db2d23ab9c363cf1c87fe2ec677f3f3f519502fb04"
+      "published_sha256": "8ee13c9669698bae0f93d4db2d23ab9c363cf1c87fe2ec677f3f3f519502fb04",
+      "source_mode": "100644"
     },
     "modules/midi-loopback/producers.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-loopback/producers.s",
       "sha256": "82877c8bb20f996adc2281406f3ca308ffbe68510b72e5027520aca5debd0e43",
-      "published_sha256": "82877c8bb20f996adc2281406f3ca308ffbe68510b72e5027520aca5debd0e43"
+      "published_sha256": "82877c8bb20f996adc2281406f3ca308ffbe68510b72e5027520aca5debd0e43",
+      "source_mode": "100644"
     },
     "modules/midi-loopback/settings.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-loopback/settings.s",
       "sha256": "1d023b80ef916ab2330059a06d7565af3fc7b2119dcd7009f0e0b639558b4f22",
-      "published_sha256": "1d023b80ef916ab2330059a06d7565af3fc7b2119dcd7009f0e0b639558b4f22"
+      "published_sha256": "1d023b80ef916ab2330059a06d7565af3fc7b2119dcd7009f0e0b639558b4f22",
+      "source_mode": "100644"
     },
     "modules/midi-part-state/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-part-state/README.md",
       "sha256": "0ae279aa0608c564929adde53d5debf54b20a0dd69430482c45aeeb731f6eff4",
-      "published_sha256": "0ae279aa0608c564929adde53d5debf54b20a0dd69430482c45aeeb731f6eff4"
+      "published_sha256": "0ae279aa0608c564929adde53d5debf54b20a0dd69430482c45aeeb731f6eff4",
+      "source_mode": "100644"
     },
     "modules/midi-part-state/entry.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-part-state/entry.s",
       "sha256": "2d9e49ab98f7d85637075cc8746600de50878c1813e24da66c2871e53999ce7c",
-      "published_sha256": "2d9e49ab98f7d85637075cc8746600de50878c1813e24da66c2871e53999ce7c"
+      "published_sha256": "2d9e49ab98f7d85637075cc8746600de50878c1813e24da66c2871e53999ce7c",
+      "source_mode": "100644"
     },
     "modules/midi-part-state/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-part-state/manifest.py",
       "sha256": "81c7476e3c5fcf2571f0a5a0fba9eeb86362ff6de1ff73327530552b68ccc5d0",
-      "published_sha256": "81c7476e3c5fcf2571f0a5a0fba9eeb86362ff6de1ff73327530552b68ccc5d0"
+      "published_sha256": "70d77497a08c630ba6928d0e7341de0aac472f45ccc6e2c5caa85e2b98efe714",
+      "source_mode": "100644",
+      "migration_note": "Operational author URL updated; original author name/credit preserved."
     },
     "modules/midi-part-state/part-copy.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-part-state/part-copy.s",
       "sha256": "e1ea84ef32bcb7887cf40b827e5ad598b423a3f14799b8e64bc0b3ca8fc488a0",
-      "published_sha256": "e1ea84ef32bcb7887cf40b827e5ad598b423a3f14799b8e64bc0b3ca8fc488a0"
+      "published_sha256": "e1ea84ef32bcb7887cf40b827e5ad598b423a3f14799b8e64bc0b3ca8fc488a0",
+      "source_mode": "100644"
     },
     "modules/midi-part-state/part.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-part-state/part.s",
       "sha256": "6be90ad565806563a2d1d68ec69709eeff24391688b0c520236d15a37bc06051",
-      "published_sha256": "6be90ad565806563a2d1d68ec69709eeff24391688b0c520236d15a37bc06051"
+      "published_sha256": "6be90ad565806563a2d1d68ec69709eeff24391688b0c520236d15a37bc06051",
+      "source_mode": "100644"
     },
     "modules/midi-part-state/setup.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-part-state/setup.s",
       "sha256": "207c8d1b4786d44dd385f35d29b7871c9112b915bdb648f0f4e1ecc9d579cc04",
-      "published_sha256": "207c8d1b4786d44dd385f35d29b7871c9112b915bdb648f0f4e1ecc9d579cc04"
+      "published_sha256": "207c8d1b4786d44dd385f35d29b7871c9112b915bdb648f0f4e1ecc9d579cc04",
+      "source_mode": "100644"
     },
     "modules/midi-scales/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-scales/README.md",
       "sha256": "6e4bed6bc1dd7865ed2325a35d52053ae56ad902b6bc09ae2026dd5beaf049f2",
-      "published_sha256": "6e4bed6bc1dd7865ed2325a35d52053ae56ad902b6bc09ae2026dd5beaf049f2"
+      "published_sha256": "6e4bed6bc1dd7865ed2325a35d52053ae56ad902b6bc09ae2026dd5beaf049f2",
+      "source_mode": "100644"
     },
     "modules/midi-scales/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-scales/manifest.py",
       "sha256": "bb9dc9c03b1d5a7ae862808e085ec131bd5c0e505f206e8c9fd49343aaf8c56c",
-      "published_sha256": "bb9dc9c03b1d5a7ae862808e085ec131bd5c0e505f206e8c9fd49343aaf8c56c"
+      "published_sha256": "85b4dda867c5fe513f7d7a6e939595aa99d30e95a3e6bc9627d7004db247305e",
+      "source_mode": "100644",
+      "migration_note": "Operational author URL updated; original author name/credit preserved."
     },
     "modules/midi-scales/scales.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-scales/scales.s",
       "sha256": "b338ecd94517269fe6d1768ff640fc7a79a7d1f6a48bd4ba990f6141afab8f55",
-      "published_sha256": "b338ecd94517269fe6d1768ff640fc7a79a7d1f6a48bd4ba990f6141afab8f55"
+      "published_sha256": "b338ecd94517269fe6d1768ff640fc7a79a7d1f6a48bd4ba990f6141afab8f55",
+      "source_mode": "100644"
     },
     "modules/midi-sram/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-sram/README.md",
       "sha256": "1142643d9758ec20f1a9aa0792cf215ebae632aeed8f3d41926b35028487baf8",
-      "published_sha256": "1142643d9758ec20f1a9aa0792cf215ebae632aeed8f3d41926b35028487baf8"
+      "published_sha256": "1142643d9758ec20f1a9aa0792cf215ebae632aeed8f3d41926b35028487baf8",
+      "source_mode": "100644"
     },
     "modules/midi-sram/generate.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-sram/generate.py",
       "sha256": "790e273f0ec800b174303312add697e3ba57eea0f51245fa75744890b54bab22",
-      "published_sha256": "790e273f0ec800b174303312add697e3ba57eea0f51245fa75744890b54bab22"
+      "published_sha256": "790e273f0ec800b174303312add697e3ba57eea0f51245fa75744890b54bab22",
+      "source_mode": "100644"
     },
     "modules/midi-sram/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-sram/manifest.py",
       "sha256": "9055ae36facb56a17ad2542f69edcb3f13add6121df2d5280326f9a8c748cb71",
-      "published_sha256": "9055ae36facb56a17ad2542f69edcb3f13add6121df2d5280326f9a8c748cb71"
+      "published_sha256": "e2d46cd3d58cd4868fbffaabc08e00e21c68ee2f6e5fc97cdea7fb49e2b7926b",
+      "source_mode": "100644",
+      "migration_note": "Operational author URL updated; original author name/credit preserved."
     },
     "modules/midi-sram/pool.c": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-sram/pool.c",
       "sha256": "5efb62bf5c02d34fdbc281720778805cf9a8f485f2c73f31579b4a623cde48c0",
-      "published_sha256": "5efb62bf5c02d34fdbc281720778805cf9a8f485f2c73f31579b4a623cde48c0"
+      "published_sha256": "5efb62bf5c02d34fdbc281720778805cf9a8f485f2c73f31579b4a623cde48c0",
+      "source_mode": "100644"
     },
     "modules/midi-sram/pool.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/midi-sram/pool.s",
       "sha256": "66313021b04902e0472b9217537e6df2071eb9b7507441f7d4394358ee37800b",
-      "published_sha256": "66313021b04902e0472b9217537e6df2071eb9b7507441f7d4394358ee37800b"
+      "published_sha256": "66313021b04902e0472b9217537e6df2071eb9b7507441f7d4394358ee37800b",
+      "source_mode": "100644"
     },
     "modules/pio-write-fix/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/pio-write-fix/README.md",
       "sha256": "2eee68c25224379fddcd10d325c1f374cb25079e349290d2b6e1b92dafbd69b1",
-      "published_sha256": "ef0aeca8bd8147fdcad2f1030e5212b73c0eb23e1d125e79dc6e02be09d16a93"
+      "published_sha256": "ef0aeca8bd8147fdcad2f1030e5212b73c0eb23e1d125e79dc6e02be09d16a93",
+      "source_mode": "100644"
     },
     "modules/pio-write-fix/first.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/pio-write-fix/first.s",
       "sha256": "68b27a8f76f88382fea7bf2ac58a32456ffa2c5a740071dac91aa79793864047",
-      "published_sha256": "68b27a8f76f88382fea7bf2ac58a32456ffa2c5a740071dac91aa79793864047"
+      "published_sha256": "a33fd41aa4909e0aa57ec7845bed53e868051ff9de9105e3b17d45be21f29f42",
+      "source_mode": "100644",
+      "migration_note": "Normalize inherited extra blank line at EOF; no instruction change."
     },
     "modules/pio-write-fix/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/pio-write-fix/manifest.py",
       "sha256": "354312abf6302520438c92aea3a905fd83bbd1ee4ee14e36e926d32d9037ce79",
-      "published_sha256": "354312abf6302520438c92aea3a905fd83bbd1ee4ee14e36e926d32d9037ce79"
+      "published_sha256": "354312abf6302520438c92aea3a905fd83bbd1ee4ee14e36e926d32d9037ce79",
+      "source_mode": "100644"
     },
     "modules/plocks-p2/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/plocks-p2/README.md",
       "sha256": "b0309494de51dc3d40d4bbc33edc0aa0b6957feb4fc28edcb16ee89eacc1ae26",
-      "published_sha256": "b0309494de51dc3d40d4bbc33edc0aa0b6957feb4fc28edcb16ee89eacc1ae26"
+      "published_sha256": "b0309494de51dc3d40d4bbc33edc0aa0b6957feb4fc28edcb16ee89eacc1ae26",
+      "source_mode": "100644"
     },
     "modules/plocks-p2/p2locks.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/plocks-p2/p2locks.s",
       "sha256": "26768448b74985727eaa54c66ac16c8aabe4f2aef644136d1e0aa002ca094243",
-      "published_sha256": "26768448b74985727eaa54c66ac16c8aabe4f2aef644136d1e0aa002ca094243"
+      "published_sha256": "26768448b74985727eaa54c66ac16c8aabe4f2aef644136d1e0aa002ca094243",
+      "source_mode": "100644"
     },
     "modules/quantizer-midi-drawer/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/quantizer-midi-drawer/README.md",
       "sha256": "5f4e48b619ccd2c1a5528eeac06f945fbf3fad4528bf09da937691a09dd09140",
-      "published_sha256": "5f4e48b619ccd2c1a5528eeac06f945fbf3fad4528bf09da937691a09dd09140"
+      "published_sha256": "5f4e48b619ccd2c1a5528eeac06f945fbf3fad4528bf09da937691a09dd09140",
+      "source_mode": "100644"
     },
     "modules/quantizer-midi-drawer/drawer.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/quantizer-midi-drawer/drawer.s",
       "sha256": "e2397f5b1d5fdcfa8641f0ac85abee0c6f8d61417f0d09da774caed8c56e16e5",
-      "published_sha256": "e2397f5b1d5fdcfa8641f0ac85abee0c6f8d61417f0d09da774caed8c56e16e5"
+      "published_sha256": "e2397f5b1d5fdcfa8641f0ac85abee0c6f8d61417f0d09da774caed8c56e16e5",
+      "source_mode": "100644"
     },
     "modules/quantizer-midi-drawer/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/quantizer-midi-drawer/manifest.py",
       "sha256": "9faea6938bf4fb504ce6c94cdb9e9a47d31014aeef282f227fd942be833b5827",
-      "published_sha256": "9faea6938bf4fb504ce6c94cdb9e9a47d31014aeef282f227fd942be833b5827"
+      "published_sha256": "54116254199f1e1ac72f1a54fa562ec5eabeccbb774d242ff1e6e48d7546c919",
+      "source_mode": "100644",
+      "migration_note": "Operational author URL updated; original author name/credit preserved."
     },
     "modules/store/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/store/README.md",
       "sha256": "bbd5b8dd81d3dd99e3fdcf5fea4aec91e1990eac5cace1d00f3110677d49a0fd",
-      "published_sha256": "bbd5b8dd81d3dd99e3fdcf5fea4aec91e1990eac5cace1d00f3110677d49a0fd"
+      "published_sha256": "bbd5b8dd81d3dd99e3fdcf5fea4aec91e1990eac5cace1d00f3110677d49a0fd",
+      "source_mode": "100644"
     },
     "modules/store/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/store/manifest.py",
       "sha256": "9b6dc43fe9e233f22dceb5940992aa88dcc31010c34a3b5c9c1242a43e1d32b4",
-      "published_sha256": "9b6dc43fe9e233f22dceb5940992aa88dcc31010c34a3b5c9c1242a43e1d32b4"
+      "published_sha256": "9b6dc43fe9e233f22dceb5940992aa88dcc31010c34a3b5c9c1242a43e1d32b4",
+      "source_mode": "100644"
     },
     "modules/store/store.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/store/store.s",
       "sha256": "40bb5641a017b943f74f4921299232597cd566429de362c09123722032969e27",
-      "published_sha256": "40bb5641a017b943f74f4921299232597cd566429de362c09123722032969e27"
+      "published_sha256": "40bb5641a017b943f74f4921299232597cd566429de362c09123722032969e27",
+      "source_mode": "100644"
     },
     "remixes/harmony-track-bus/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/harmony-track-bus/README.md",
       "sha256": "52021999ce360179e508f20b8219c78f07dfb60ebec9ace277c1686ef3900b34",
-      "published_sha256": "24ae0df60bd7c840843f851e8098fe8d3a7fa91dc0f0c7924f3aac11c8002b54"
+      "published_sha256": "6d107a6c4825573feda974cca9cab61c25d90d42276aeeece2fe0757fc9f27e3",
+      "source_mode": "100644",
+      "migration_note": "Public branch instructions and links updated; original source validation explicitly marked historical."
     },
     "remixes/harmony-track-bus/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/harmony-track-bus/remix.py",
       "sha256": "932901d41ef11553d4828a3ff7b3baa25a3fc3ca11983c52e531df019649e039",
-      "published_sha256": "932901d41ef11553d4828a3ff7b3baa25a3fc3ca11983c52e531df019649e039"
+      "published_sha256": "932901d41ef11553d4828a3ff7b3baa25a3fc3ca11983c52e531df019649e039",
+      "source_mode": "100644"
     },
     "remixes/test/harmony-degrees/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/harmony-degrees/README.md",
       "sha256": "3738e6edeb85096b07ca75e4b085cb3500bd7da950beabf3e2ff2247895f775e",
-      "published_sha256": "3738e6edeb85096b07ca75e4b085cb3500bd7da950beabf3e2ff2247895f775e"
+      "published_sha256": "3738e6edeb85096b07ca75e4b085cb3500bd7da950beabf3e2ff2247895f775e",
+      "source_mode": "100644"
     },
     "remixes/test/harmony-degrees/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/harmony-degrees/remix.py",
       "sha256": "9a81aecdae7ecec400d9db0840c552a7f0b2347d513bf88e9bfdae4b5e5505cf",
-      "published_sha256": "9a81aecdae7ecec400d9db0840c552a7f0b2347d513bf88e9bfdae4b5e5505cf"
+      "published_sha256": "9a81aecdae7ecec400d9db0840c552a7f0b2347d513bf88e9bfdae4b5e5505cf",
+      "source_mode": "100644"
     },
     "remixes/test/harmony-plocks/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/harmony-plocks/README.md",
       "sha256": "ecc64f90735db6f062dfb01c46bf49e714dfbf9787c47409f2271e6e56158509",
-      "published_sha256": "ecc64f90735db6f062dfb01c46bf49e714dfbf9787c47409f2271e6e56158509"
+      "published_sha256": "ecc64f90735db6f062dfb01c46bf49e714dfbf9787c47409f2271e6e56158509",
+      "source_mode": "100644"
     },
     "remixes/test/harmony-plocks/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/harmony-plocks/remix.py",
       "sha256": "cdad144aab1eee90f8b886e71ea51ea15aed5652952f1975e238d782b604667d",
-      "published_sha256": "cdad144aab1eee90f8b886e71ea51ea15aed5652952f1975e238d782b604667d"
+      "published_sha256": "cdad144aab1eee90f8b886e71ea51ea15aed5652952f1975e238d782b604667d",
+      "source_mode": "100644"
     },
     "remixes/test/midi-ensemble/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-ensemble/README.md",
       "sha256": "ced1ec5bf012b0bef8b754deb7427908d45a12344d2a18aa556ef2437758f3ac",
-      "published_sha256": "ced1ec5bf012b0bef8b754deb7427908d45a12344d2a18aa556ef2437758f3ac"
+      "published_sha256": "ced1ec5bf012b0bef8b754deb7427908d45a12344d2a18aa556ef2437758f3ac",
+      "source_mode": "100644"
     },
     "remixes/test/midi-ensemble/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-ensemble/remix.py",
       "sha256": "d4bf7e6b303bf15327c27655701c1431fa7476a23579edb9bd6b02d558461ac4",
-      "published_sha256": "d4bf7e6b303bf15327c27655701c1431fa7476a23579edb9bd6b02d558461ac4"
+      "published_sha256": "d4bf7e6b303bf15327c27655701c1431fa7476a23579edb9bd6b02d558461ac4",
+      "source_mode": "100644"
     },
     "remixes/test/midi-follow/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-follow/README.md",
       "sha256": "89656abfdb4588fc8000b9965d84f19e0b5b57ee1dd105a5d67fbe42c8fb286d",
-      "published_sha256": "89656abfdb4588fc8000b9965d84f19e0b5b57ee1dd105a5d67fbe42c8fb286d"
+      "published_sha256": "89656abfdb4588fc8000b9965d84f19e0b5b57ee1dd105a5d67fbe42c8fb286d",
+      "source_mode": "100644"
     },
     "remixes/test/midi-follow/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-follow/remix.py",
       "sha256": "89270f69d4ed891a5c779796de6ae718f67e4c4dff87fdafb2f5e5a220167007",
-      "published_sha256": "89270f69d4ed891a5c779796de6ae718f67e4c4dff87fdafb2f5e5a220167007"
+      "published_sha256": "89270f69d4ed891a5c779796de6ae718f67e4c4dff87fdafb2f5e5a220167007",
+      "source_mode": "100644"
     },
     "remixes/test/midi-harmony-follow/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-harmony-follow/README.md",
       "sha256": "14564996ba773865230bec020561b461f59f16bd126b98f478cef712177a3a49",
-      "published_sha256": "14564996ba773865230bec020561b461f59f16bd126b98f478cef712177a3a49"
+      "published_sha256": "14564996ba773865230bec020561b461f59f16bd126b98f478cef712177a3a49",
+      "source_mode": "100644"
     },
     "remixes/test/midi-harmony-follow/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-harmony-follow/remix.py",
       "sha256": "55a5303fed85d87e756c5206f9789ea248f39c9d0a9961a7c5292614a8ebd2a9",
-      "published_sha256": "55a5303fed85d87e756c5206f9789ea248f39c9d0a9961a7c5292614a8ebd2a9"
+      "published_sha256": "55a5303fed85d87e756c5206f9789ea248f39c9d0a9961a7c5292614a8ebd2a9",
+      "source_mode": "100644"
     },
     "remixes/test/midi-harmony/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-harmony/README.md",
       "sha256": "2ae231d6451acb319613b03e1a82d5e865115d6400b9d4e7b59f8597fb6dd7b2",
-      "published_sha256": "2ae231d6451acb319613b03e1a82d5e865115d6400b9d4e7b59f8597fb6dd7b2"
+      "published_sha256": "2ae231d6451acb319613b03e1a82d5e865115d6400b9d4e7b59f8597fb6dd7b2",
+      "source_mode": "100644"
     },
     "remixes/test/midi-harmony/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-harmony/remix.py",
       "sha256": "4ff913dc4f7cd7014f593e713a87c0cc6d547d01e6c918816ade4c28227d48a9",
-      "published_sha256": "4ff913dc4f7cd7014f593e713a87c0cc6d547d01e6c918816ade4c28227d48a9"
+      "published_sha256": "4ff913dc4f7cd7014f593e713a87c0cc6d547d01e6c918816ade4c28227d48a9",
+      "source_mode": "100644"
     },
     "remixes/test/midi-loopback-follow/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-loopback-follow/README.md",
       "sha256": "cd7bdd741ad67ec9735f5ecf11dc0c2cf74c61d45913be453c1866a09b6aad49",
-      "published_sha256": "cd7bdd741ad67ec9735f5ecf11dc0c2cf74c61d45913be453c1866a09b6aad49"
+      "published_sha256": "cd7bdd741ad67ec9735f5ecf11dc0c2cf74c61d45913be453c1866a09b6aad49",
+      "source_mode": "100644"
     },
     "remixes/test/midi-loopback-follow/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-loopback-follow/remix.py",
       "sha256": "9a9d98f1d7924945b9356ed3a6d20e9bbbc090d98d867ba5ebec87f54b08d909",
-      "published_sha256": "9a9d98f1d7924945b9356ed3a6d20e9bbbc090d98d867ba5ebec87f54b08d909"
+      "published_sha256": "9a9d98f1d7924945b9356ed3a6d20e9bbbc090d98d867ba5ebec87f54b08d909",
+      "source_mode": "100644"
     },
     "remixes/test/midi-loopback-usb/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-loopback-usb/README.md",
       "sha256": "5ad1cbecae47c3b73ec9abbc807857618dce3646956260d700012de3ed4ed1f2",
-      "published_sha256": "b945c2a295d29243dc8bcd340b0fbc89d12f99a107e1985780f6f789a7c770a1"
+      "published_sha256": "b945c2a295d29243dc8bcd340b0fbc89d12f99a107e1985780f6f789a7c770a1",
+      "source_mode": "100644"
     },
     "remixes/test/midi-loopback-usb/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-loopback-usb/remix.py",
       "sha256": "246af19674b7737cd4a4b8ec8c20e8adfd844c38167930de6b280a464edbbf56",
-      "published_sha256": "246af19674b7737cd4a4b8ec8c20e8adfd844c38167930de6b280a464edbbf56"
+      "published_sha256": "246af19674b7737cd4a4b8ec8c20e8adfd844c38167930de6b280a464edbbf56",
+      "source_mode": "100644"
     },
     "remixes/test/midi-loopback/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-loopback/README.md",
       "sha256": "80e7d45457217bc27d55368e09f1b5765115e3961000ddf26b3938ad5fd09ef1",
-      "published_sha256": "80e7d45457217bc27d55368e09f1b5765115e3961000ddf26b3938ad5fd09ef1"
+      "published_sha256": "80e7d45457217bc27d55368e09f1b5765115e3961000ddf26b3938ad5fd09ef1",
+      "source_mode": "100644"
     },
     "remixes/test/midi-loopback/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-loopback/remix.py",
       "sha256": "4220cbd2496226dc8a8e299e3835ff5fdfe542ea5fbb07bb4bcb36e0a10872df",
-      "published_sha256": "4220cbd2496226dc8a8e299e3835ff5fdfe542ea5fbb07bb4bcb36e0a10872df"
+      "published_sha256": "4220cbd2496226dc8a8e299e3835ff5fdfe542ea5fbb07bb4bcb36e0a10872df",
+      "source_mode": "100644"
     },
     "remixes/test/midi-part-state/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-part-state/README.md",
       "sha256": "4d0dc02cba8558a06bd605bac3af87ca34e28a829d72a305cbfc5a490de152bc",
-      "published_sha256": "4d0dc02cba8558a06bd605bac3af87ca34e28a829d72a305cbfc5a490de152bc"
+      "published_sha256": "4d0dc02cba8558a06bd605bac3af87ca34e28a829d72a305cbfc5a490de152bc",
+      "source_mode": "100644"
     },
     "remixes/test/midi-part-state/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-part-state/remix.py",
       "sha256": "814ff56217d8a7f51403eaeba1f68f8c75ab59421fd6c0b3c26efb73bdff1a94",
-      "published_sha256": "814ff56217d8a7f51403eaeba1f68f8c75ab59421fd6c0b3c26efb73bdff1a94"
+      "published_sha256": "814ff56217d8a7f51403eaeba1f68f8c75ab59421fd6c0b3c26efb73bdff1a94",
+      "source_mode": "100644"
     },
     "remixes/test/midi-scales/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-scales/README.md",
       "sha256": "347d15ff881bc0a1b91de8ca1ada7c9919156e22f209dbb41dcda1728904d63a",
-      "published_sha256": "347d15ff881bc0a1b91de8ca1ada7c9919156e22f209dbb41dcda1728904d63a"
+      "published_sha256": "347d15ff881bc0a1b91de8ca1ada7c9919156e22f209dbb41dcda1728904d63a",
+      "source_mode": "100644"
     },
     "remixes/test/midi-scales/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-scales/remix.py",
       "sha256": "d7b22707ee24330d25126fe193b72adef27d03b0a5200bf0c1ae08d4b4af2851",
-      "published_sha256": "d7b22707ee24330d25126fe193b72adef27d03b0a5200bf0c1ae08d4b4af2851"
+      "published_sha256": "d7b22707ee24330d25126fe193b72adef27d03b0a5200bf0c1ae08d4b4af2851",
+      "source_mode": "100644"
     },
     "remixes/test/midi-sram/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-sram/README.md",
       "sha256": "4a75e91007144afc2edccb37443ac562819c3846f007c9c59dd4a3574dbfaf87",
-      "published_sha256": "4a75e91007144afc2edccb37443ac562819c3846f007c9c59dd4a3574dbfaf87"
+      "published_sha256": "4a75e91007144afc2edccb37443ac562819c3846f007c9c59dd4a3574dbfaf87",
+      "source_mode": "100644"
     },
     "remixes/test/midi-sram/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/midi-sram/remix.py",
       "sha256": "1047892f0fa545621853602affc270727e21f9f6dc22a137220f913a32e1855a",
-      "published_sha256": "1047892f0fa545621853602affc270727e21f9f6dc22a137220f913a32e1855a"
+      "published_sha256": "1047892f0fa545621853602affc270727e21f9f6dc22a137220f913a32e1855a",
+      "source_mode": "100644"
     },
     "remixes/test/pio-write-fix/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/pio-write-fix/README.md",
       "sha256": "46c4eafb517be6d2b95a173216cdb9f92aa4b51c5e3eb1f784f35d05227269f8",
-      "published_sha256": "46c4eafb517be6d2b95a173216cdb9f92aa4b51c5e3eb1f784f35d05227269f8"
+      "published_sha256": "46c4eafb517be6d2b95a173216cdb9f92aa4b51c5e3eb1f784f35d05227269f8",
+      "source_mode": "100644"
     },
     "remixes/test/pio-write-fix/remix.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "remixes/test/pio-write-fix/remix.py",
       "sha256": "1234c73c88fce02dd7276fcba8c7086fbd0763e3d9f404a57052061e40b1555a",
-      "published_sha256": "1234c73c88fce02dd7276fcba8c7086fbd0763e3d9f404a57052061e40b1555a"
+      "published_sha256": "1234c73c88fce02dd7276fcba8c7086fbd0763e3d9f404a57052061e40b1555a",
+      "source_mode": "100644"
     },
     "tools/emu/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/emu/README.md",
       "sha256": "ebc8c2f25c55e4bd7a9da827ea4db8b5982de09d16547fe335a68d25a484413b",
-      "published_sha256": "ebc8c2f25c55e4bd7a9da827ea4db8b5982de09d16547fe335a68d25a484413b"
+      "published_sha256": "ebc8c2f25c55e4bd7a9da827ea4db8b5982de09d16547fe335a68d25a484413b",
+      "source_mode": "100644"
     },
     "tools/emu/ot_emu/CMakeLists.txt": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/emu/ot_emu/CMakeLists.txt",
       "sha256": "3b0b09bc077482561c84ddd103a3b9cc26b89a3ada4674634843aa941ff52032",
-      "published_sha256": "3b0b09bc077482561c84ddd103a3b9cc26b89a3ada4674634843aa941ff52032"
+      "published_sha256": "3b0b09bc077482561c84ddd103a3b9cc26b89a3ada4674634843aa941ff52032",
+      "source_mode": "100644"
     },
     "tools/emu/ot_emu/main.cpp": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/emu/ot_emu/main.cpp",
       "sha256": "bd419f372fd381d756f78bb728ac86a3f81e4163371562e8a659ef49f3558c61",
-      "published_sha256": "bd419f372fd381d756f78bb728ac86a3f81e4163371562e8a659ef49f3558c61"
+      "published_sha256": "bd419f372fd381d756f78bb728ac86a3f81e4163371562e8a659ef49f3558c61",
+      "source_mode": "100644"
     },
     "tools/emu/ot_emu/rtos.cpp": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/emu/ot_emu/rtos.cpp",
       "sha256": "bfe1fb42e4cc3e74810a238bb643ffb587b00ab45413d305a21e1155f1222090",
-      "published_sha256": "bfe1fb42e4cc3e74810a238bb643ffb587b00ab45413d305a21e1155f1222090"
+      "published_sha256": "bfe1fb42e4cc3e74810a238bb643ffb587b00ab45413d305a21e1155f1222090",
+      "source_mode": "100644"
     },
     "tools/emu/ot_emu/rtos.h": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/emu/ot_emu/rtos.h",
       "sha256": "3e7e2865ba36685dbad6d1d02891771423e0c617459fb65012ac115761e7bc35",
-      "published_sha256": "3e7e2865ba36685dbad6d1d02891771423e0c617459fb65012ac115761e7bc35"
+      "published_sha256": "3e7e2865ba36685dbad6d1d02891771423e0c617459fb65012ac115761e7bc35",
+      "source_mode": "100644"
     },
     "tools/emu/ot_emu/test_boot_progress.cpp": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/emu/ot_emu/test_boot_progress.cpp",
       "sha256": "cdabd6ce5645e1be48760a0c834f0e61c5d0afb069903e740df2a99f998b84c3",
-      "published_sha256": "cdabd6ce5645e1be48760a0c834f0e61c5d0afb069903e740df2a99f998b84c3"
+      "published_sha256": "cdabd6ce5645e1be48760a0c834f0e61c5d0afb069903e740df2a99f998b84c3",
+      "source_mode": "100644"
     },
     "tools/emu/ot_emu/test_rtos.cpp": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/emu/ot_emu/test_rtos.cpp",
       "sha256": "868184970fd615a5a1b4bcd4f866fe40e5dc4c6e0a3a7fbcfb2ab560929fcf0d",
-      "published_sha256": "868184970fd615a5a1b4bcd4f866fe40e5dc4c6e0a3a7fbcfb2ab560929fcf0d"
+      "published_sha256": "868184970fd615a5a1b4bcd4f866fe40e5dc4c6e0a3a7fbcfb2ab560929fcf0d",
+      "source_mode": "100644"
     },
     "tools/remix/ledger.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/remix/ledger.py",
       "sha256": "a0a228077af9febe626f8e5c926a2aeaf5d0882460e11e6b51f718b81e0bd334",
-      "published_sha256": "a0a228077af9febe626f8e5c926a2aeaf5d0882460e11e6b51f718b81e0bd334"
+      "published_sha256": "a0a228077af9febe626f8e5c926a2aeaf5d0882460e11e6b51f718b81e0bd334",
+      "source_mode": "100644"
     },
     "tools/remix/selftest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/remix/selftest.py",
       "sha256": "c04c67ab4302e7db72f8e36da689fa4b4e55cd495f4e2385da202a7ca53e9483",
       "migration_note": "Removed expectations for excluded personal/synth/ARP remixes.",
-      "published_sha256": "4d4c29b34f623e2a091dcda5a623582c622e7d8dcf6a386aea9eb4d0de7d5124"
+      "published_sha256": "4d4c29b34f623e2a091dcda5a623582c622e7d8dcf6a386aea9eb4d0de7d5124",
+      "source_mode": "100644"
     },
     "tools/verify/benchmark_midi.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/benchmark_midi.py",
       "sha256": "b4aaa0f7cf1ab4be45590c1d39255c061755f2a0c7017d27d30d3e614e121737",
-      "published_sha256": "b4aaa0f7cf1ab4be45590c1d39255c061755f2a0c7017d27d30d3e614e121737"
+      "published_sha256": "b4aaa0f7cf1ab4be45590c1d39255c061755f2a0c7017d27d30d3e614e121737",
+      "source_mode": "100644"
     },
     "tools/verify/fixtures/plocks_p2_nv_v1.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/fixtures/plocks_p2_nv_v1.s",
       "sha256": "95934855fc1525f5e2bbd60921f23495c91a2b48772562b21bf882f305336fbf",
-      "published_sha256": "95934855fc1525f5e2bbd60921f23495c91a2b48772562b21bf882f305336fbf"
+      "published_sha256": "95934855fc1525f5e2bbd60921f23495c91a2b48772562b21bf882f305336fbf",
+      "source_mode": "100644"
     },
     "tools/verify/harmony_retained.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/harmony_retained.py",
       "sha256": "6a8f121e11aceb0a7af9c3d2bce3b5460b6337251552dc8a3f394d3c446f80ee",
-      "published_sha256": "6a8f121e11aceb0a7af9c3d2bce3b5460b6337251552dc8a3f394d3c446f80ee"
+      "published_sha256": "6a8f121e11aceb0a7af9c3d2bce3b5460b6337251552dc8a3f394d3c446f80ee",
+      "source_mode": "100644"
     },
     "tools/verify/midi_fixture.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/midi_fixture.py",
       "sha256": "58aa21462e08d67ddd64d2b98de5778037a9bb31c3503e6005439ba461f61dbb",
-      "published_sha256": "58aa21462e08d67ddd64d2b98de5778037a9bb31c3503e6005439ba461f61dbb"
+      "published_sha256": "58aa21462e08d67ddd64d2b98de5778037a9bb31c3503e6005439ba461f61dbb",
+      "source_mode": "100644"
     },
     "tools/verify/midi_machine.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/midi_machine.py",
       "sha256": "2348ad9d4dd6c4eb7b0e550bf00b40d81fbc6d03131f49cff9609e242ab646b9",
-      "published_sha256": "2348ad9d4dd6c4eb7b0e550bf00b40d81fbc6d03131f49cff9609e242ab646b9"
+      "published_sha256": "2348ad9d4dd6c4eb7b0e550bf00b40d81fbc6d03131f49cff9609e242ab646b9",
+      "source_mode": "100644"
     },
     "tools/verify/prepare_degree_kits_fixture.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/prepare_degree_kits_fixture.py",
       "sha256": "9e866f818abe44ddb9885ddcc9bb540ef94f6c83be5bab2073669c2f5ddda0e4",
-      "published_sha256": "9e866f818abe44ddb9885ddcc9bb540ef94f6c83be5bab2073669c2f5ddda0e4"
+      "published_sha256": "9e866f818abe44ddb9885ddcc9bb540ef94f6c83be5bab2073669c2f5ddda0e4",
+      "source_mode": "100644"
     },
     "tools/verify/prepare_kits_acceptance_fixture.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/prepare_kits_acceptance_fixture.py",
       "sha256": "5c2e28650f9b0c94db4996b496a3b8db34b63847642655165d9e8fe35a92c901",
-      "published_sha256": "5c2e28650f9b0c94db4996b496a3b8db34b63847642655165d9e8fe35a92c901"
+      "published_sha256": "5c2e28650f9b0c94db4996b496a3b8db34b63847642655165d9e8fe35a92c901",
+      "source_mode": "100644"
     },
     "tools/verify/prepare_mattias_fixture.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/prepare_mattias_fixture.py",
       "sha256": "dad8460ddb39330c7b162a50f807baaee889dd51787f239cc69d787c59c17cd0",
       "published_sha256": "70ffb2dcbb0381681d41e34cee9c2b4d293afa57c0f0985b4990afc865d3c35a",
-      "migration_note": "Updated documentation pointer to the new workflow; executable code unchanged."
+      "migration_note": "Updated documentation pointer to the new workflow; executable code unchanged.",
+      "source_mode": "100644"
     },
     "tools/verify/tests/test_sram_ledger.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/tests/test_sram_ledger.py",
       "sha256": "bc084605c3ff036a47bfe51c3f8e60663e3966fab500262f952ec6761b4afb5a",
-      "published_sha256": "bc084605c3ff036a47bfe51c3f8e60663e3966fab500262f952ec6761b4afb5a"
+      "published_sha256": "bc084605c3ff036a47bfe51c3f8e60663e3966fab500262f952ec6761b4afb5a",
+      "source_mode": "100644"
     },
     "tools/verify/tests/test_store_copy.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/tests/test_store_copy.py",
       "sha256": "a4676e429260dfeb9bacbaeb390c04b3bb69a6db73b57b2a130bb71e01492799",
-      "published_sha256": "a4676e429260dfeb9bacbaeb390c04b3bb69a6db73b57b2a130bb71e01492799"
+      "published_sha256": "a4676e429260dfeb9bacbaeb390c04b3bb69a6db73b57b2a130bb71e01492799",
+      "source_mode": "100644"
     },
     "tools/verify/verify_brain.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_brain.py",
       "sha256": "a261b17911b23714d0b109f09605a9a7145f06d68a2930d847078498c8f92cac",
-      "published_sha256": "a261b17911b23714d0b109f09605a9a7145f06d68a2930d847078498c8f92cac"
+      "published_sha256": "a261b17911b23714d0b109f09605a9a7145f06d68a2930d847078498c8f92cac",
+      "source_mode": "100644"
     },
     "tools/verify/verify_chord_display.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_chord_display.py",
       "sha256": "647e5510756717e93dd220317eed6538b1b311b77b5f2aced415aa7b6b033794",
-      "published_sha256": "647e5510756717e93dd220317eed6538b1b311b77b5f2aced415aa7b6b033794"
+      "published_sha256": "647e5510756717e93dd220317eed6538b1b311b77b5f2aced415aa7b6b033794",
+      "source_mode": "100644"
     },
     "tools/verify/verify_chord_part.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_chord_part.py",
       "sha256": "0fcbb19626a1aa39e6ffea6fac7cdce58c314a67e32141b1008e8a8d0fc2cc05",
-      "published_sha256": "0fcbb19626a1aa39e6ffea6fac7cdce58c314a67e32141b1008e8a8d0fc2cc05"
+      "published_sha256": "0fcbb19626a1aa39e6ffea6fac7cdce58c314a67e32141b1008e8a8d0fc2cc05",
+      "source_mode": "100644"
     },
     "tools/verify/verify_chord_play.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_chord_play.py",
       "sha256": "1acc2abed955a1ea1c65a77e4a1318cac88d3f32a679883390dc627bdae639a9",
-      "published_sha256": "1acc2abed955a1ea1c65a77e4a1318cac88d3f32a679883390dc627bdae639a9"
+      "published_sha256": "1acc2abed955a1ea1c65a77e4a1318cac88d3f32a679883390dc627bdae639a9",
+      "source_mode": "100644"
     },
     "tools/verify/verify_chord_play_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_chord_play_port.py",
       "sha256": "80e337aecee4bb5a715bdf1b81f542bc563b33258d2a1d80dad1b5f01a48c96c",
-      "published_sha256": "80e337aecee4bb5a715bdf1b81f542bc563b33258d2a1d80dad1b5f01a48c96c"
+      "published_sha256": "80e337aecee4bb5a715bdf1b81f542bc563b33258d2a1d80dad1b5f01a48c96c",
+      "source_mode": "100644"
     },
     "tools/verify/verify_chord_playability_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_chord_playability_port.py",
       "sha256": "d1512ba5aac07bf8140203f0e98e2f7a434dd43fdd86ced409104885d3ee4e3a",
-      "published_sha256": "d1512ba5aac07bf8140203f0e98e2f7a434dd43fdd86ced409104885d3ee4e3a"
+      "published_sha256": "d1512ba5aac07bf8140203f0e98e2f7a434dd43fdd86ced409104885d3ee4e3a",
+      "source_mode": "100644"
     },
     "tools/verify/verify_chord_storage.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_chord_storage.py",
       "sha256": "e88aab551464e9f5c3377842e731985069f38278f6bbbc5279db321c87a966f0",
-      "published_sha256": "e88aab551464e9f5c3377842e731985069f38278f6bbbc5279db321c87a966f0"
+      "published_sha256": "e88aab551464e9f5c3377842e731985069f38278f6bbbc5279db321c87a966f0",
+      "source_mode": "100644"
     },
     "tools/verify/verify_dram_boot.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_dram_boot.py",
       "sha256": "640c9a56b267528993074d3feb9419d4d0fc065fe06d3cfd32d956fb9d789a1a",
-      "published_sha256": "640c9a56b267528993074d3feb9419d4d0fc065fe06d3cfd32d956fb9d789a1a"
+      "published_sha256": "640c9a56b267528993074d3feb9419d4d0fc065fe06d3cfd32d956fb9d789a1a",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_codec.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_codec.py",
       "sha256": "bfe8a13b7c66ad13d476da1308953ef0f029ce7eeccd36681a9de56701f8796d",
-      "published_sha256": "bfe8a13b7c66ad13d476da1308953ef0f029ce7eeccd36681a9de56701f8796d"
+      "published_sha256": "bfe8a13b7c66ad13d476da1308953ef0f029ce7eeccd36681a9de56701f8796d",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_core.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_core.py",
       "sha256": "b2c4f457f361ea7247d5535c281e2927d6eea8d138e4fc563c4d6d1d0478e85b",
-      "published_sha256": "b2c4f457f361ea7247d5535c281e2927d6eea8d138e4fc563c4d6d1d0478e85b"
+      "published_sha256": "b2c4f457f361ea7247d5535c281e2927d6eea8d138e4fc563c4d6d1d0478e85b",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_files.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_files.py",
       "sha256": "5c84b117cd30618261a9cbebf096a740ad24b8c91a0f807f0805733ba06c4b31",
-      "published_sha256": "5c84b117cd30618261a9cbebf096a740ad24b8c91a0f807f0805733ba06c4b31"
+      "published_sha256": "5c84b117cd30618261a9cbebf096a740ad24b8c91a0f807f0805733ba06c4b31",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_integration.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_integration.py",
       "sha256": "c22fccd73b1b26823b3faefa8e97638975a1ab086d4a8088f4595064f4ffb4bf",
-      "published_sha256": "c22fccd73b1b26823b3faefa8e97638975a1ab086d4a8088f4595064f4ffb4bf"
+      "published_sha256": "c22fccd73b1b26823b3faefa8e97638975a1ab086d4a8088f4595064f4ffb4bf",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_kits_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_kits_port.py",
       "sha256": "5f2390f91648bc7e7033fc6f4fb5a65c02159cc3ee75712733e8b8a947d04dc7",
-      "published_sha256": "5f2390f91648bc7e7033fc6f4fb5a65c02159cc3ee75712733e8b8a947d04dc7"
+      "published_sha256": "5f2390f91648bc7e7033fc6f4fb5a65c02159cc3ee75712733e8b8a947d04dc7",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_packed.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_packed.py",
       "sha256": "b4c0d5dc3a126946d970ce0628f4b90428b9bec428e326cf34065258fa23f080",
-      "published_sha256": "b4c0d5dc3a126946d970ce0628f4b90428b9bec428e326cf34065258fa23f080"
+      "published_sha256": "b4c0d5dc3a126946d970ce0628f4b90428b9bec428e326cf34065258fa23f080",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_part_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_part_port.py",
       "sha256": "8b2d7f76c62537b861202c46389d0fbd595a0c6956c897acb74114ce438df263",
-      "published_sha256": "8b2d7f76c62537b861202c46389d0fbd595a0c6956c897acb74114ce438df263"
+      "published_sha256": "8b2d7f76c62537b861202c46389d0fbd595a0c6956c897acb74114ce438df263",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_part_state.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_part_state.py",
       "sha256": "7e91abaaa9a34df299f4338d63763f23ef17a7fa16ff3765b4e30be879d48fcf",
-      "published_sha256": "7e91abaaa9a34df299f4338d63763f23ef17a7fa16ff3765b4e30be879d48fcf"
+      "published_sha256": "7e91abaaa9a34df299f4338d63763f23ef17a7fa16ff3765b4e30be879d48fcf",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_port.py",
       "sha256": "0b80e5d35f813feff540cb72e216a9c4aa988d5a84e64c7c184a88f0075e49b3",
-      "published_sha256": "0b80e5d35f813feff540cb72e216a9c4aa988d5a84e64c7c184a88f0075e49b3"
+      "published_sha256": "0b80e5d35f813feff540cb72e216a9c4aa988d5a84e64c7c184a88f0075e49b3",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_publication.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_publication.py",
       "sha256": "9ea0216e541f1a18fc59d2fd948210739e78603d663b04dd8e7b990b0a94d0ff",
-      "published_sha256": "9ea0216e541f1a18fc59d2fd948210739e78603d663b04dd8e7b990b0a94d0ff"
+      "published_sha256": "9ea0216e541f1a18fc59d2fd948210739e78603d663b04dd8e7b990b0a94d0ff",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_roots.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_roots.py",
       "sha256": "9b570f5fd46b34a5e397c527daf76063ba4b644167511adf86520cb154c3caee",
-      "published_sha256": "9b570f5fd46b34a5e397c527daf76063ba4b644167511adf86520cb154c3caee"
+      "published_sha256": "9b570f5fd46b34a5e397c527daf76063ba4b644167511adf86520cb154c3caee",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_scenes.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_scenes.py",
       "sha256": "ed4c604f868215aef5959ecb92a5c3cd0845882c1cbe4775a65d8948b51fc2ff",
-      "published_sha256": "ed4c604f868215aef5959ecb92a5c3cd0845882c1cbe4775a65d8948b51fc2ff"
+      "published_sha256": "ed4c604f868215aef5959ecb92a5c3cd0845882c1cbe4775a65d8948b51fc2ff",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_degree_scenes_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_degree_scenes_port.py",
       "sha256": "21cc6d8fdf0066459b11e3600510db5a415e8fd395894f7703175fb83f8d735f",
-      "published_sha256": "21cc6d8fdf0066459b11e3600510db5a415e8fd395894f7703175fb83f8d735f"
+      "published_sha256": "21cc6d8fdf0066459b11e3600510db5a415e8fd395894f7703175fb83f8d735f",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_load_hooks.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_load_hooks.py",
       "sha256": "3681eda1617ed0452985ad3fd17f1f775cfe3d2e1bc98bd0d5ab5aba2ce0ece0",
-      "published_sha256": "3681eda1617ed0452985ad3fd17f1f775cfe3d2e1bc98bd0d5ab5aba2ce0ece0"
+      "published_sha256": "3681eda1617ed0452985ad3fd17f1f775cfe3d2e1bc98bd0d5ab5aba2ce0ece0",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_playability.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_playability.py",
       "sha256": "e5f97c5626370e15553a1e724e5a91881bab5cad66e51be2d25544f263c990b2",
-      "published_sha256": "e5f97c5626370e15553a1e724e5a91881bab5cad66e51be2d25544f263c990b2"
+      "published_sha256": "e5f97c5626370e15553a1e724e5a91881bab5cad66e51be2d25544f263c990b2",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_plocks.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_plocks.py",
       "sha256": "dc9c03c4db124e07b7275c1c3a04289a8459aacb5549ed8cdc0c0de57c9c396d",
-      "published_sha256": "dc9c03c4db124e07b7275c1c3a04289a8459aacb5549ed8cdc0c0de57c9c396d"
+      "published_sha256": "dc9c03c4db124e07b7275c1c3a04289a8459aacb5549ed8cdc0c0de57c9c396d",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_size.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_size.py",
       "sha256": "839354f414ca432d4acfe735ce4d28ed6ee3f337a97c1f6947c72088f8dd359d",
-      "published_sha256": "839354f414ca432d4acfe735ce4d28ed6ee3f337a97c1f6947c72088f8dd359d"
+      "published_sha256": "839354f414ca432d4acfe735ce4d28ed6ee3f337a97c1f6947c72088f8dd359d",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_size_musical.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_size_musical.py",
       "sha256": "f59655def602bb00c49a6adbbc373dc224adfb4ea108f441766593a018cf93e8",
-      "published_sha256": "f59655def602bb00c49a6adbbc373dc224adfb4ea108f441766593a018cf93e8"
+      "published_sha256": "f59655def602bb00c49a6adbbc373dc224adfb4ea108f441766593a018cf93e8",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_size_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_size_port.py",
       "sha256": "76583d7f636553d2fcc2526e7ce237ee5aa9a0c8e97430144ed7a1daa5332bd3",
-      "published_sha256": "76583d7f636553d2fcc2526e7ce237ee5aa9a0c8e97430144ed7a1daa5332bd3"
+      "published_sha256": "76583d7f636553d2fcc2526e7ce237ee5aa9a0c8e97430144ed7a1daa5332bd3",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_size_scenes_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_size_scenes_port.py",
       "sha256": "c840daba49564efdc1547c34a2942d7752d0ccb57016d0a36b54fda48a38c67c",
-      "published_sha256": "c840daba49564efdc1547c34a2942d7752d0ccb57016d0a36b54fda48a38c67c"
+      "published_sha256": "c840daba49564efdc1547c34a2942d7752d0ccb57016d0a36b54fda48a38c67c",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_store.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_store.py",
       "sha256": "5d02ae963fe893d3ed87ba856bfe947eeb5dc0225e9c99c52c263c9cb2b1c7a0",
-      "published_sha256": "5d02ae963fe893d3ed87ba856bfe947eeb5dc0225e9c99c52c263c9cb2b1c7a0"
+      "published_sha256": "5d02ae963fe893d3ed87ba856bfe947eeb5dc0225e9c99c52c263c9cb2b1c7a0",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_track_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_track_port.py",
       "sha256": "7701263fa11fd88514c037876eba18c7e0f0bcb920b89db42c2f427c75bc6d8f",
-      "published_sha256": "7701263fa11fd88514c037876eba18c7e0f0bcb920b89db42c2f427c75bc6d8f"
+      "published_sha256": "7701263fa11fd88514c037876eba18c7e0f0bcb920b89db42c2f427c75bc6d8f",
+      "source_mode": "100644"
     },
     "tools/verify/verify_harmony_track_retention.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_harmony_track_retention.py",
       "sha256": "43170a1c36c8d6973e627b0bbeb7d0203f9fe47a3d53e13305c8d9ddeb8a88be",
-      "published_sha256": "43170a1c36c8d6973e627b0bbeb7d0203f9fe47a3d53e13305c8d9ddeb8a88be"
+      "published_sha256": "43170a1c36c8d6973e627b0bbeb7d0203f9fe47a3d53e13305c8d9ddeb8a88be",
+      "source_mode": "100644"
     },
     "tools/verify/verify_integrated_retention_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_integrated_retention_port.py",
       "sha256": "0195f79cfd79667c45826628a0e9cc3289a5f77e4d5dba216fdf50b0b1275341",
-      "published_sha256": "0195f79cfd79667c45826628a0e9cc3289a5f77e4d5dba216fdf50b0b1275341"
+      "published_sha256": "0195f79cfd79667c45826628a0e9cc3289a5f77e4d5dba216fdf50b0b1275341",
+      "source_mode": "100644"
     },
     "tools/verify/verify_kits.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_kits.py",
       "sha256": "810aba2fbe6eaae3fd24caec3965ddd8e58bb7949089741f19c6a0a5adba1dda",
-      "published_sha256": "810aba2fbe6eaae3fd24caec3965ddd8e58bb7949089741f19c6a0a5adba1dda"
+      "published_sha256": "810aba2fbe6eaae3fd24caec3965ddd8e58bb7949089741f19c6a0a5adba1dda",
+      "source_mode": "100644"
     },
     "tools/verify/verify_loadmeter.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_loadmeter.py",
       "sha256": "cbcb410fb7233e57568f0c3109918397aba25507f9d3a07e7d14d1ada0c90fbe",
-      "published_sha256": "cbcb410fb7233e57568f0c3109918397aba25507f9d3a07e7d14d1ada0c90fbe"
+      "published_sha256": "cbcb410fb7233e57568f0c3109918397aba25507f9d3a07e7d14d1ada0c90fbe",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_audio_scenes_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_audio_scenes_port.py",
       "sha256": "c2bfa436e264aa438ee67ff346158a4c41350870e0a36f1cabd0553f05e44541",
-      "published_sha256": "c2bfa436e264aa438ee67ff346158a4c41350870e0a36f1cabd0553f05e44541"
+      "published_sha256": "c2bfa436e264aa438ee67ff346158a4c41350870e0a36f1cabd0553f05e44541",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_boot.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_boot.py",
       "sha256": "1a5c4ffa134aed805fd13d35755e37dc817ae44eeee19cbda46e8f9e2ba71048",
-      "published_sha256": "1a5c4ffa134aed805fd13d35755e37dc817ae44eeee19cbda46e8f9e2ba71048"
+      "published_sha256": "1a5c4ffa134aed805fd13d35755e37dc817ae44eeee19cbda46e8f9e2ba71048",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_concert_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_concert_port.py",
       "sha256": "4860d85ee05ffd4b1c7fffbca7f6a848aebaecec70b29fd80b28193f7dd08e19",
-      "published_sha256": "4860d85ee05ffd4b1c7fffbca7f6a848aebaecec70b29fd80b28193f7dd08e19"
+      "published_sha256": "4860d85ee05ffd4b1c7fffbca7f6a848aebaecec70b29fd80b28193f7dd08e19",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_follow.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_follow.py",
       "sha256": "8466618074bb75ecb9f6781620600e483a7d677f828a29cb058e38d3c47b93eb",
-      "published_sha256": "8466618074bb75ecb9f6781620600e483a7d677f828a29cb058e38d3c47b93eb"
+      "published_sha256": "8466618074bb75ecb9f6781620600e483a7d677f828a29cb058e38d3c47b93eb",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_follow_mute.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_follow_mute.py",
       "sha256": "5a487142b73d29eebad4a46bd52057f04ebbac4ebbb0f70fc98270db14cbd4f2",
-      "published_sha256": "5a487142b73d29eebad4a46bd52057f04ebbac4ebbb0f70fc98270db14cbd4f2"
+      "published_sha256": "5a487142b73d29eebad4a46bd52057f04ebbac4ebbb0f70fc98270db14cbd4f2",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_follow_register.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_follow_register.py",
       "sha256": "b9bbb7467f39d1207fdc16510705879467c6f5df90edd4f7507bd6e173707893",
-      "published_sha256": "b9bbb7467f39d1207fdc16510705879467c6f5df90edd4f7507bd6e173707893"
+      "published_sha256": "b9bbb7467f39d1207fdc16510705879467c6f5df90edd4f7507bd6e173707893",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_follow_register_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_follow_register_port.py",
       "sha256": "74453784a220b6314a6d1d8ff4fe8f56d7741213faf02423b53412f6c149ece7",
-      "published_sha256": "74453784a220b6314a6d1d8ff4fe8f56d7741213faf02423b53412f6c149ece7"
+      "published_sha256": "74453784a220b6314a6d1d8ff4fe8f56d7741213faf02423b53412f6c149ece7",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_follow_response.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_follow_response.py",
       "sha256": "d2fb1d0aa3b53564c023d9c0930961d31a450e33f5369bf83310b22be516fce4",
-      "published_sha256": "d2fb1d0aa3b53564c023d9c0930961d31a450e33f5369bf83310b22be516fce4"
+      "published_sha256": "d2fb1d0aa3b53564c023d9c0930961d31a450e33f5369bf83310b22be516fce4",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_follow_response_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_follow_response_port.py",
       "sha256": "49ef781e74eb42aed03dd1ba53ddf0f1a72c84d70aca407b5ee7277c418c586c",
-      "published_sha256": "49ef781e74eb42aed03dd1ba53ddf0f1a72c84d70aca407b5ee7277c418c586c"
+      "published_sha256": "49ef781e74eb42aed03dd1ba53ddf0f1a72c84d70aca407b5ee7277c418c586c",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_follow_stress.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_follow_stress.py",
       "sha256": "ebc0a0df0305cd5ee15113922856174c42ec8daf460ffd1def3791f276ef7ebb",
-      "published_sha256": "ebc0a0df0305cd5ee15113922856174c42ec8daf460ffd1def3791f276ef7ebb"
+      "published_sha256": "ebc0a0df0305cd5ee15113922856174c42ec8daf460ffd1def3791f276ef7ebb",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_harmony.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_harmony.py",
       "sha256": "510be9ecd16ec88870f1cc8d87609539725a0d2dde47094b7f105eae8d308933",
-      "published_sha256": "510be9ecd16ec88870f1cc8d87609539725a0d2dde47094b7f105eae8d308933"
+      "published_sha256": "510be9ecd16ec88870f1cc8d87609539725a0d2dde47094b7f105eae8d308933",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_harmony_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_harmony_port.py",
       "sha256": "5d5af5eda1a806a311eae984fbd2b713f77d7100f83b3009d89c109d88e684dc",
-      "published_sha256": "5d5af5eda1a806a311eae984fbd2b713f77d7100f83b3009d89c109d88e684dc"
+      "published_sha256": "5d5af5eda1a806a311eae984fbd2b713f77d7100f83b3009d89c109d88e684dc",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_harmony_stress.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_harmony_stress.py",
       "sha256": "0b1b33a329fa744c2906b060e0e46ed1d397602ebcabd57956c886ef769be686",
-      "published_sha256": "0b1b33a329fa744c2906b060e0e46ed1d397602ebcabd57956c886ef769be686"
+      "published_sha256": "0b1b33a329fa744c2906b060e0e46ed1d397602ebcabd57956c886ef769be686",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_loopback.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_loopback.py",
       "sha256": "8df8eca8563b908413a1038a44d38b8dd6ecbe77481d809385e47023ead0c703",
-      "published_sha256": "8df8eca8563b908413a1038a44d38b8dd6ecbe77481d809385e47023ead0c703"
+      "published_sha256": "8df8eca8563b908413a1038a44d38b8dd6ecbe77481d809385e47023ead0c703",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_loopback_producers.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_loopback_producers.py",
       "sha256": "8cfce5e5ee221891315beae71e7c0dfc0f199792317be5789856e3f37f3dc1fb",
-      "published_sha256": "8cfce5e5ee221891315beae71e7c0dfc0f199792317be5789856e3f37f3dc1fb"
+      "published_sha256": "8cfce5e5ee221891315beae71e7c0dfc0f199792317be5789856e3f37f3dc1fb",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_loopback_producers_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_loopback_producers_port.py",
       "sha256": "155eb81b2b17ce1bea175c049eef49db6f04c76ec72750dd27ffdffc4067655a",
-      "published_sha256": "155eb81b2b17ce1bea175c049eef49db6f04c76ec72750dd27ffdffc4067655a"
+      "published_sha256": "155eb81b2b17ce1bea175c049eef49db6f04c76ec72750dd27ffdffc4067655a",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_loopback_scenes.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_loopback_scenes.py",
       "sha256": "2c099d4067b5c7bed083c82859461a5f9d0dae07ef59ac182419144f62ae64da",
-      "published_sha256": "2c099d4067b5c7bed083c82859461a5f9d0dae07ef59ac182419144f62ae64da"
+      "published_sha256": "2c099d4067b5c7bed083c82859461a5f9d0dae07ef59ac182419144f62ae64da",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_loopback_settings.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_loopback_settings.py",
       "sha256": "1414d11e91e92f8c1171d5478c3801d1caec28e091774ba59949fb9656677d80",
-      "published_sha256": "1414d11e91e92f8c1171d5478c3801d1caec28e091774ba59949fb9656677d80"
+      "published_sha256": "1414d11e91e92f8c1171d5478c3801d1caec28e091774ba59949fb9656677d80",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_loopback_stress.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_loopback_stress.py",
       "sha256": "a8804cc1461d9eb1981fefc13c90cc378b53847f0b1394e748ed646982126ab9",
-      "published_sha256": "a8804cc1461d9eb1981fefc13c90cc378b53847f0b1394e748ed646982126ab9"
+      "published_sha256": "a8804cc1461d9eb1981fefc13c90cc378b53847f0b1394e748ed646982126ab9",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_loopback_ui_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_loopback_ui_port.py",
       "sha256": "b5f637b88ad8cb9e7f4ab7587084fedd8fd557d6977ee99bbe821321da3648bc",
-      "published_sha256": "b5f637b88ad8cb9e7f4ab7587084fedd8fd557d6977ee99bbe821321da3648bc"
+      "published_sha256": "b5f637b88ad8cb9e7f4ab7587084fedd8fd557d6977ee99bbe821321da3648bc",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_part.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_part.py",
       "sha256": "ce16adf8faab4468b3d4e3ea349a2bdaf6a1b1ff3500416450aa8f628cd821c1",
-      "published_sha256": "ce16adf8faab4468b3d4e3ea349a2bdaf6a1b1ff3500416450aa8f628cd821c1"
+      "published_sha256": "ce16adf8faab4468b3d4e3ea349a2bdaf6a1b1ff3500416450aa8f628cd821c1",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_part_copy.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_part_copy.py",
       "sha256": "dfb1802d914361f49cff4b6b9a31fd46e616cf98963323079724550de1156b8c",
-      "published_sha256": "dfb1802d914361f49cff4b6b9a31fd46e616cf98963323079724550de1156b8c"
+      "published_sha256": "dfb1802d914361f49cff4b6b9a31fd46e616cf98963323079724550de1156b8c",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_part_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_part_port.py",
       "sha256": "1c293a5ddefcfe5a45cf3a1e28033f6d0edfdc6cf47c0f45c36273f5c61ffa72",
-      "published_sha256": "1c293a5ddefcfe5a45cf3a1e28033f6d0edfdc6cf47c0f45c36273f5c61ffa72"
+      "published_sha256": "1c293a5ddefcfe5a45cf3a1e28033f6d0edfdc6cf47c0f45c36273f5c61ffa72",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_part_settings.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_part_settings.py",
       "sha256": "2519dac6a64eb2d25489d08df2919986d3c2a0cbea5906723ce3f345f134fded",
-      "published_sha256": "2519dac6a64eb2d25489d08df2919986d3c2a0cbea5906723ce3f345f134fded"
+      "published_sha256": "2519dac6a64eb2d25489d08df2919986d3c2a0cbea5906723ce3f345f134fded",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_scales.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_scales.py",
       "sha256": "ab05849f87711df61615e8d4c6ce58e073f96c1b5e8c74e7b04230b1e7697fbc",
-      "published_sha256": "ab05849f87711df61615e8d4c6ce58e073f96c1b5e8c74e7b04230b1e7697fbc"
+      "published_sha256": "ab05849f87711df61615e8d4c6ce58e073f96c1b5e8c74e7b04230b1e7697fbc",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_setup_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_setup_port.py",
       "sha256": "7f78d3e536348ccabe5e308ed45a5ae2e87a79d5fcbf43709fa4aab722b14b11",
-      "published_sha256": "7f78d3e536348ccabe5e308ed45a5ae2e87a79d5fcbf43709fa4aab722b14b11"
+      "published_sha256": "7f78d3e536348ccabe5e308ed45a5ae2e87a79d5fcbf43709fa4aab722b14b11",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_sram.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_sram.py",
       "sha256": "dda40b06a21d918e25ecc3f21966e867f8ed1792bf035b7ade85b5c1651a683b",
-      "published_sha256": "dda40b06a21d918e25ecc3f21966e867f8ed1792bf035b7ade85b5c1651a683b"
+      "published_sha256": "dda40b06a21d918e25ecc3f21966e867f8ed1792bf035b7ade85b5c1651a683b",
+      "source_mode": "100644"
     },
     "tools/verify/verify_midi_sram_port.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_midi_sram_port.py",
       "sha256": "6b1d7d6f2bc0428c476c0e4c71f585e8715c08e58a503a2ce71f61364ec4a44f",
-      "published_sha256": "6b1d7d6f2bc0428c476c0e4c71f585e8715c08e58a503a2ce71f61364ec4a44f"
+      "published_sha256": "6b1d7d6f2bc0428c476c0e4c71f585e8715c08e58a503a2ce71f61364ec4a44f",
+      "source_mode": "100644"
     },
     "tools/verify/verify_pio_write.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_pio_write.py",
       "sha256": "fb6b9a2e8981dbc3d7b7b3ac7e9fd634668e8f7da0b4715fe9160ec01b806062",
-      "published_sha256": "fb6b9a2e8981dbc3d7b7b3ac7e9fd634668e8f7da0b4715fe9160ec01b806062"
+      "published_sha256": "fb6b9a2e8981dbc3d7b7b3ac7e9fd634668e8f7da0b4715fe9160ec01b806062",
+      "source_mode": "100644"
     },
     "tools/verify/verify_plocksp2.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_plocksp2.py",
       "sha256": "0a5a49c755064081daec47bfc0be2789804b78447858d6ad47d07193d3267365",
-      "published_sha256": "0a5a49c755064081daec47bfc0be2789804b78447858d6ad47d07193d3267365"
+      "published_sha256": "0a5a49c755064081daec47bfc0be2789804b78447858d6ad47d07193d3267365",
+      "source_mode": "100644"
     },
     "tools/verify/verify_plocksp2_retention.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_plocksp2_retention.py",
       "sha256": "fcb450bb9361bd0457ce75d467313b64fbafae989fe1dc14b2d9386f4122d222",
-      "published_sha256": "fcb450bb9361bd0457ce75d467313b64fbafae989fe1dc14b2d9386f4122d222"
+      "published_sha256": "fcb450bb9361bd0457ce75d467313b64fbafae989fe1dc14b2d9386f4122d222",
+      "source_mode": "100644"
     },
     "tools/verify/verify_quantizer_midi_drawer.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_quantizer_midi_drawer.py",
       "sha256": "9a3b72e48e4e76a23992a4cf5e3e3b04273e596012a78d4eb7dd176e8e5ec8c0",
-      "published_sha256": "9a3b72e48e4e76a23992a4cf5e3e3b04273e596012a78d4eb7dd176e8e5ec8c0"
+      "published_sha256": "9a3b72e48e4e76a23992a4cf5e3e3b04273e596012a78d4eb7dd176e8e5ec8c0",
+      "source_mode": "100644"
     },
     "tools/verify/verify_scenesp2.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_scenesp2.py",
       "sha256": "4e3cff2d9a1f38e3e782cc5d6ecf71e16804efeae192d1a091145a8f1f4890fe",
-      "published_sha256": "4e3cff2d9a1f38e3e782cc5d6ecf71e16804efeae192d1a091145a8f1f4890fe"
+      "published_sha256": "4e3cff2d9a1f38e3e782cc5d6ecf71e16804efeae192d1a091145a8f1f4890fe",
+      "source_mode": "100755"
     },
     "tools/verify/verify_store_copy.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_store_copy.py",
       "sha256": "2300e56a6b3c11080312b5f47fba0391851d48dc1aacdd6dae5563e4cd7d7bf0",
-      "published_sha256": "2300e56a6b3c11080312b5f47fba0391851d48dc1aacdd6dae5563e4cd7d7bf0"
+      "published_sha256": "2300e56a6b3c11080312b5f47fba0391851d48dc1aacdd6dae5563e4cd7d7bf0",
+      "source_mode": "100644"
     },
     "modules/tempo-sync/README.md": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/tempo-sync/README.md",
       "sha256": "f911ef435ae1a95bd7d00252de9403aa819707b7ef4ea958904dc8aa2a5f7d2c",
       "published_sha256": "f911ef435ae1a95bd7d00252de9403aa819707b7ef4ea958904dc8aa2a5f7d2c",
-      "reason": "Unique hook symbols required by combined MIDI bus; original generic cave symbol resolved to wrong unit."
+      "reason": "Unique hook symbols required by combined MIDI bus; original generic cave symbol resolved to wrong unit.",
+      "source_mode": "100644"
     },
     "modules/tempo-sync/manifest.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/tempo-sync/manifest.py",
       "sha256": "428425ccc7189bf1156f6b2c1960a62fa6f477f3c2a897db19254136d44ca163",
       "published_sha256": "428425ccc7189bf1156f6b2c1960a62fa6f477f3c2a897db19254136d44ca163",
-      "reason": "Unique hook symbols required by combined MIDI bus; original generic cave symbol resolved to wrong unit."
+      "reason": "Unique hook symbols required by combined MIDI bus; original generic cave symbol resolved to wrong unit.",
+      "source_mode": "100644"
     },
     "modules/tempo-sync/tempo_cave.s": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "modules/tempo-sync/tempo_cave.s",
       "sha256": "c8d750a0dc3d21a131b12f02255749de4f48d495ee73f567538e537ec4c8438d",
       "published_sha256": "c8d750a0dc3d21a131b12f02255749de4f48d495ee73f567538e537ec4c8438d",
-      "reason": "Unique hook symbols required by combined MIDI bus; original generic cave symbol resolved to wrong unit."
+      "reason": "Unique hook symbols required by combined MIDI bus; original generic cave symbol resolved to wrong unit.",
+      "source_mode": "100644"
     },
     "tools/verify/verify_tempo_publish.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/verify_tempo_publish.py",
       "sha256": "6f8c8984698478051501f79a931b4294fa0c3db02ba8788bfdf895aff105a6b9",
       "published_sha256": "6f8c8984698478051501f79a931b4294fa0c3db02ba8788bfdf895aff105a6b9",
-      "reason": "Unique hook symbols required by combined MIDI bus; original generic cave symbol resolved to wrong unit."
+      "reason": "Unique hook symbols required by combined MIDI bus; original generic cave symbol resolved to wrong unit.",
+      "source_mode": "100644"
     }
   }
 }

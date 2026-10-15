@@ -1,10 +1,12 @@
-# Harmony track SRAM experiment
+# Harmony MIDI bus
 
-Local implementation on `codex/experiment/harmony-track-sram`, based on the
-OCTABAM85 integration plus upstream `2d1cbcf471cf8b63e2279b3c372a6ebb47456a99`
-(latest remote revision verified on 15 October 2026). This branch contains
-private integration history; extract focused changes onto a clean upstream
-branch before publishing a PR. The OCTABAM85 source tag and release are unchanged.
+The complete MIDI integration is on `codex/integrate/midi` in
+[radiohagen/octabam](https://github.com/radiohagen/octabam), extracted onto
+upstream `2d1cbcf471cf8b63e2279b3c372a6ebb47456a99`. The original completed
+source is `03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d` from the preserved local
+`codex/experiment/harmony-track-sram` branch. Its mixed private history is
+not part of this public integration. Original OCTABAM85 tags remain unchanged.
+This acceptance branch is not a proposed aggregate upstream PR.
 
 Selects upstream octabam-bus plus MIDI Scales, Follow, Harmony and Loopback,
 with their Part/STORE, copy-protection and compatibility support. Excludes
@@ -38,7 +40,7 @@ free-space contract. MIDI SRAM protects them against native bulk writes and
 strips them from native DRAM, clipboards and bank files; Harmony's lifecycle
 hooks perform the musical copy/clear operation and checkpoint the result.
 
-## Completed software validation
+## Historical completed-source validation
 
 The final firmware is BUILD 79, `OCTABAM_PGO=0`, SHA-256:
 
@@ -53,7 +55,9 @@ entry point, which already dispatches to the track regression.
 
 All 24 dedicated suites passed. They cover the general run's 13
 project-dependent skips; those skips are preserved and mapped to their
-successful project tests in `out/track-completion-evidence/result.json`.
+successful project tests in the [published source receipt](https://github.com/radiohagen/octabam/blob/codex/integrate/midi/docs/guide/MIDI_SOURCE_VALIDATION.json).
+The [migration receipt](https://github.com/radiohagen/octatrack-modules/blob/main/integration/migration-validation.json)
+separately records checks rerun in the radiohagen workspaces.
 
 | Coverage | Result |
 |---|---|
