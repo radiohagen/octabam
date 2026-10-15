@@ -847,6 +847,10 @@ def main():
         kw = next((v for k, v in files.items() if k.lower().endswith("/kits/kits.work")), b"")
         check(f"base: kits.work on the card ({len(kw)} B), CRC-32 holds",
               len(kw) == IMG_LEN and struct.unpack(">I", kw[12:16])[0] == zlib.crc32(kw[64:]))
+        dirty_headers = [k for k in range(256)
+                         if im[O_LIB + k * REC + 8:O_LIB + k * REC + 16] != bytes(8)]
+        check(f"base: all migrated/empty Kit record flags and reserved bytes are zero ({dirty_headers})",
+              not dirty_headers)
         ok = all(kit(im, BANK * 4 + p) == slot(b, p) for p in range(4))
         check("base: Kits 9-12 are bank 3's working Parts", ok)
         names = [im[O_LIB + (BANK * 4 + p) * REC:O_LIB + (BANK * 4 + p) * REC + 7].split(b"\0")[0] for p in range(4)]
