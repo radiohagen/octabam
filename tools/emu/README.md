@@ -148,6 +148,10 @@ out/emu/ot_emu --image out/mainos_bus.bin --card out/card.img --set OCTABAM --pr
   by 8; and inside a long interrupt (a `jsr` vector) no peripheral runs until
   the handler's `rti`, so HI08 flags such as HTDE freeze.
 - **MIDI IN.**
+  Numbered events enter UART0 at their scheduled frame even while an injected
+  `--step`/`--call-at` call is waiting or executing. The log records scheduled
+  and actual input frames; firmware processing can occur later. Events sharing
+  a frame retain file order. This does not change `pre` input or live polling.
   - `--midi FILE` takes one event per line: `<frames after the transport
     start> <hex bytes>`, or `pre <hex bytes>` (before the transport start,
     with the transport stopped).
@@ -167,7 +171,8 @@ out/emu/ot_emu --image out/mainos_bus.bin --card out/card.img --set OCTABAM --pr
     of a call).
   - `--dsp-peek core:X|Y|P:addr,len` (upper-case space letter).
   - `--mem-dump addr,len=file`.
-  - `--midi-out FILE` (UART0's transmit bytes).
+  - `--midi-out FILE` (UART0's transmit bytes). Also works with `--interactive`
+    and `--dsp-rt`; send `quit` and wait for process exit to finish the file.
 - **Addresses.** A track's DSP instance record is `0x80000110 + 64·t` (32
   halfwords; see `docs/firmware/MIDI.md`). Its page-2 lane is
   `0x80000810 + 72·t`.
@@ -764,3 +769,30 @@ count.
 - **Aliases.** The OS image's uncached alias at `0x48000000` is folded onto
   `0x40000000` (the DRAM loader depacks through it). The `0x46000000`
   region's alias at `0x4e000000` is separate here.
+
+### Repeated injected calls and stack ownership
+
+The concert stress run on 8 October 2026 exposed a harness defect, not a
+firmware crash: `Rtos::callAsMain` left C ABI arguments on main's stack.
+Four-argument keyboard events leaked 16 bytes each; sustained eight-track
+churn eventually ran into firmware state and halted at an invalid PC.
+The RTOS regression reproduces the leak on its first call (SP falls by 16).
+The caller now restores its original stack pointer after a successful return.
+`ot_rtos_test` checks return values and an unchanged stack across 2,048 calls;
+full UART flood scenarios must also be rerun with the rebuilt port. Failed
+calls retain their crash state for diagnosis.
+
+## Emulator reports a loader checksum as a boot spin
+
+- **Symptom:** with DSP enabled, boot stops at the octabam loader's `hashloop`
+  with `unrecognised spin`; the no-DSP loader identity check passes.
+- **Cause (measured, SIZE candidate):** the four half-million-instruction PC
+  samples all land in the finite read-only checksum loop for a 194,136-byte
+  runtime. Its D0 countdown decreases and A0 read cursor advances, but no RAM
+  writes occur, so the old stall detector mistakes progress for a poll.
+- **Integration:** current upstream already treats a walking address register as
+  progress. Keep that implementation and the global instruction budget.
+  `ot_boot_progress_test` checks two finite read loops with exact results, a
+  genuine stationary spin and budget exhaustion. The older exact-hash
+  exception is redundant and is not carried into this integration.
+- **Boundary:** this is an emulator diagnosis, not a hardware boot defect.

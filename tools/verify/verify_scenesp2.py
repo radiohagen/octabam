@@ -8,14 +8,14 @@ scene copy and paste carry the cells.
 Stages the project's card, boots the remix's image in `ot_emu`, and:
 
   frame   pokes cells into every bank's part-0 window (bytes 30, 31 of the
-          stock scene block; scene 0: T1 FX2 MODE = 1 and TIME = 100;
-          scene 1: TIME = 20), selects scenes 0/1,
+          stock scene block; scene 0: T1 FX2 select = 1 and continuous = 100;
+          scene 1: continuous = 20), selects scenes 0/1,
           clears both scene-disable bytes, sets the fader and the stock
           weight table, runs 120 frames with the transport on, and reads
-          T1's voice record (0x80000110, both pings): at fader 64 MODE must
-          snap to the A side (1) and TIME lerp to 60; at fader 0 the B side
-          alone: MODE the knob (measured by a run with no cells),
-          TIME 20. The three runs are three boots side by side (each is one
+          T1's voice record (0x80000110, both pings): at fader 64 select must
+          snap to the A side (1) and continuous lerp to 60; at fader 0 the B side
+          alone: select the knob (measured by a run with no cells),
+          continuous 20. The three runs are three boots side by side (each is one
           LOAD PROJECT): a cell poked once the
           transport has started never reaches the live lane, with or
           without a transport restart (measured 28 Sep 2026), so each
@@ -134,6 +134,21 @@ def main():
     for f in pdir.iterdir():
         if f.is_file() and f.suffix.lower() == ".work":
             shutil.copy2(f, copy / f.name)
+    # A blank/MIDI-only project has no active audio voice: TRK_BANK remains
+    # 0xff and the frame hook correctly skips it. Give this copied fixture
+    # a THRU voice and first-step trig, without depending on sample files.
+    sys.path.insert(0, str(ROOT / "tools/hw"))
+    import ot_project
+    ot_project.thru_track(copy, 1, guard=False)
+    # Both fixture profiles have a select at slot 0 and a continuous knob
+    # at slot 5. Use the selected module: the bus remix reuses FILTER's id
+    # for SPECTRUM, so assuming a stock id has its stock descriptor is wrong.
+    profile = next((key for key in ("REVERB SERVER", "FILTER")
+                    if key in remix.modules), None)
+    if profile is None:
+        sys.exit("verify_scenesp2: fixture needs REVERB SERVER or FILTER")
+    ot_project.set_fx(copy, "fx2", 1, profile,
+                      page2=[0, 0, 0, 0, 0, 64], guard=False)
     card = OUT / "card.img"
     r = subprocess.run([str(PY), str(ROOT / "tools/emu/ot_emu/stage_card.py"), str(copy), a.set_name, a.name,
                         "--tree", str(OUT / "tree"), "--out", str(card)], cwd=ROOT, capture_output=True, text=True)
@@ -150,7 +165,7 @@ def main():
 
     # ---- the frame pass ---------------------------------------------------
     # the cells (key = track<<4 | fx1<<3 | slot2): scene 0 / T1 / FX2 slot 5
-    # (TIME) = 100 and slot 0 (MODE) = 1, scene 1 / T1 / slot 5 = 20 -- in
+    # (continuous) = 100 and slot 0 (select) = 1, scene 1 / T1 / slot 5 = 20 -- in
     # part 0 of every bank (the playing bank is the saved one, not bank 0)
     cells = {(0, 0): (0x05, 100), (1, 0): (0x05, 20), (0, 3): (0x00, 1)}
 
@@ -217,8 +232,8 @@ def main():
                                       "--step", f"-:dump:{dumps}"]
 
     # the knob alone: the same run with no cells, so what fader 0
-    # (the B side, which holds no MODE lock) must read is measured from the
-    # project: T1's MODE is 1 in the stress fixture's part 0 and 0 in
+    # (the B side, which holds no select lock) must read is measured from the
+    # project: T1's select is 1 in the stress fixture's part 0 and 0 in
     # OCTABAM89_setgate's (a literal 0 failed `make accept`, 26 Sep 2026)
     # ONE load, four scenarios forked from it (ot_emu --scenario, 29 Sep
     # 2026): the three frame runs and the editor pass each start from the
@@ -243,13 +258,13 @@ def main():
     recs = {tag: r for tag, (_, r) in results.items()}
     knob = recs["knob"]
     knob_mode = knob[0][48]
-    check(f"knob alone: both pings read T1 MODE {knob_mode}", knob[1][48] == knob_mode)
+    check(f"knob alone: both pings read T1 select {knob_mode}", knob[1][48] == knob_mode)
     for xf, want_mode, want_time, why in ((64, 1, 60, "the A side, a select snaps"),
                                           (0, knob_mode, 20, "the knob, B alone")):
         for ping, r in enumerate(recs[f"fader {xf}"]):
-            check(f"fader {xf}: ping {ping} T1 MODE (hw 24 hi) = {r[48]} (want {want_mode}: {why})",
+            check(f"fader {xf}: ping {ping} T1 select (hw 24 hi) = {r[48]} (want {want_mode}: {why})",
                   r[48] == want_mode)
-            check(f"fader {xf}: ping {ping} T1 TIME (hw 26 lo) = {r[53]} (want {want_time})", r[53] == want_time)
+            check(f"fader {xf}: ping {ping} T1 continuous (hw 26 lo) = {r[53]} (want {want_time})", r[53] == want_time)
 
     # ---- the editor's checks ------------------------------------------------
     check(f"editor: all {len(SEEDS)} calls returned", editor_text.count("returned, d0") == len(SEEDS))

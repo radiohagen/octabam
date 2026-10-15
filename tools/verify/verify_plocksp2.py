@@ -41,7 +41,7 @@ SKIPs without a project, without the port, or for a remix without PLOCKS
 P2. What it cannot see: the dial draw (the LCD is not decoded), the
 hardware, a slide trig (page 2 does not slide).
 """
-import argparse, os, pathlib, shutil, subprocess, sys
+import argparse, json, os, pathlib, shutil, struct, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1])); import toolpath  # noqa: E402,F401
@@ -113,6 +113,8 @@ def main():
     ap.add_argument("--set-name", default="OCTABAM")
     ap.add_argument("--name", default="PLOCKSP2")
     ap.add_argument("--out", default="")
+    ap.add_argument("--candidate", type=pathlib.Path,
+                    help="frozen directory with candidate.bin and candidate-all-symbols.json")
     a = ap.parse_args()
     global OUT
     if a.out:
@@ -130,16 +132,20 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
 
     # ---- the image and its runtime's symbols --------------------------------
-    env = dict(os.environ, REMIX=a.remix, XBUS="1", SPEC="1"); env.setdefault("BUILD", "0")
-    r = subprocess.run([sys.executable, str(ROOT / "tools/build/build_bus.py")], env=env,
-                       capture_output=True, text=True, cwd=ROOT)
-    if r.returncode:
-        sys.exit(f"verify_plocksp2: building {a.remix} failed:\n{(r.stdout + r.stderr)[-1500:]}")
     image = OUT / "mainos.bin"
-    shutil.copy2(ROOT / "out/mainos_bus.bin", image)
-    nm = subprocess.run(["m68k-elf-nm", str(ROOT / "out/platform/runtime/runtime.elf")],
-                        capture_output=True, text=True).stdout
-    sym = {f[2]: int(f[0], 16) for f in (l.split() for l in nm.splitlines()) if len(f) == 3}
+    if a.candidate:
+        shutil.copy2(a.candidate / "candidate.bin", image)
+        sym = json.loads((a.candidate / "candidate-all-symbols.json").read_text())
+    else:
+        env = dict(os.environ, REMIX=a.remix, XBUS="1", SPEC="1"); env.setdefault("BUILD", "0")
+        r = subprocess.run([sys.executable, str(ROOT / "tools/build/build_bus.py")], env=env,
+                           capture_output=True, text=True, cwd=ROOT)
+        if r.returncode:
+            sys.exit(f"verify_plocksp2: building {a.remix} failed:\n{(r.stdout + r.stderr)[-1500:]}")
+        shutil.copy2(ROOT / "out/mainos_bus.bin", image)
+        nm = subprocess.run(["m68k-elf-nm", str(ROOT / "out/platform/runtime/runtime.elf")],
+                            capture_output=True, text=True).stdout
+        sym = {f[2]: int(f[0], 16) for f in (l.split() for l in nm.splitlines()) if len(f) == 3}
     STORE, INIT = sym["STORE"], sym["plk_init"]
     img = image.read_bytes()
 
@@ -148,6 +154,8 @@ def main():
         return int.from_bytes(img[o:o + 4], "big") if 0 <= o < len(img) - 4 else 0
 
     def page2_ok(fx_id):
+        if fx_id == 0:
+            return False
         p = rd32(DESC2 + 4 * fx_id)
         return p and rd32(p + 0x9a + 4 * 6) >= 2
 
@@ -159,6 +167,34 @@ def main():
     for f in pdir.iterdir():
         if f.is_file() and f.suffix.lower() == ".work":
             shutil.copy2(f, copy / f.name)
+    # Synthetic P2LK v1 files in the exact pre-compression project format.
+    # Tail of pattern 16 stays out of the panel scenarios (patterns 1/2).
+    legacy_table = bytearray(b"\xff" * (16 * 8 * TRACK_B))
+    legacy_table[-1024:] = bytes(i & 127 for i in range(1024))
+    for b in range(16):
+        (copy / f"p2lk{b + 1:02d}.work").write_bytes(
+            struct.pack(">4sIII", b"P2LK", 1, b, len(legacy_table)) + legacy_table)
+    # Install the fallback in the copied bank files, including saved Parts.
+    # Poking only RAM/live IDs after load leaves the UI's SRAM Part as NONE;
+    # it then records no lock even though the descriptor probe looks valid.
+    sys.path.insert(0, str(ROOT / "tools/hw"))
+    import ot_project
+    fallback = next((i for i in REVERBS if page2_ok(i)), None)
+    if fallback is None:
+        sys.exit("verify_plocksp2: no FX2 page-2 slot 0 available for the fixture")
+    for bankfile in sorted(copy.glob("bank*.work")):
+        def usable_fx(data):
+            # record() first taps trig 1 to create it; start empty in our copy.
+            for track in range(8):
+                data[ot_project.trac_off(0, track) + 7] &= 0xfe
+            for part_index in range(ot_project.NPARTS_ALL):
+                part_start = ot_project.PART_BASE + part_index * ot_project.PART_STRIDE
+                for track in range(8):
+                    at = part_start + ot_project.FX2_OFF + track
+                    if not page2_ok(data[at]):
+                        data[at] = fallback
+        ot_project._bank_write(copy, int(bankfile.stem[4:]), usable_fx, guard=False)
+
     card = OUT / "card.img"
     r = subprocess.run([str(PY), str(ROOT / "tools/emu/ot_emu/stage_card.py"), str(copy), a.set_name, a.name,
                         "--tree", str(OUT / "tree"), "--out", str(card)], cwd=ROOT, capture_output=True, text=True)
@@ -177,9 +213,13 @@ def main():
     pr.mkdir(exist_ok=True)
     run(base + ["--sequencer", "--internal-clock", "--frames", "1",
                 "--step", f"-:dump:{DBPTR:#x},4={pr / 'db.bin'};{UI_TRACK:#x},1={pr / 'trk.bin'};"
-                          f"{UI_PART:#x},1={pr / 'part.bin'}"], OUT / "probe.txt")
+                          f"{UI_PART:#x},1={pr / 'part.bin'};"
+                          f"{STORE:#x},{16 * len(legacy_table)}={pr / 'legacy.bin'}"], OUT / "probe.txt")
     db = int.from_bytes((pr / "db.bin").read_bytes(), "big")
     trk, part = (pr / "trk.bin").read_bytes()[0], (pr / "part.bin").read_bytes()[0]
+    loaded = (pr / "legacy.bin").read_bytes()
+    check("load: old P2LK v1 project files restore every byte of all 16 banks",
+          loaded == bytes(legacy_table) * 16)
     bank = (db - BLOB) // BANK_STRIDE
     pwin = db + part * PART_STRIDE
     run(base + ["--sequencer", "--internal-clock", "--frames", "1",
@@ -222,8 +262,11 @@ def main():
     def undo(s):
         pclear(s); s.hold("func", "play")
 
+    def tap_clear(s):
+        s.tap("t1")
+
     scen = [panel("record", copy_paste), panel("clear", clear5), panel("pattern", pattern),
-            panel("pclear", pclear), panel("undo", undo)]
+            panel("pclear", pclear), panel("undo", undo), panel("tap_clear", tap_clear)]
 
     # playback: T1 step 1 FX2 page-2 slot 0 = 99 everywhere, trigs on steps 1 and 2
     lock = [f"{STORE + ((b * 16 + p) * 8 + 0) * TRACK_B + 6:#x}=99" for b in range(16) for p in range(16)]
@@ -264,6 +307,8 @@ def main():
     rec = steps("record", 0)
     v = rec[0][6]
     check(f"record: step 1 FX2 page-2 slot 0 locked ({v}, the Part's {knob})", v not in (0xff, knob))
+    check("bare trig tap after editing still clears the step's page-2 locks",
+          steps("tap_clear", 0)[0] == b"\xff" * REC)
     check(f"record: no other page-2 byte of step 1 ({rec[0].hex()})",
           all(b == 0xff for i, b in enumerate(rec[0]) if i != 6))
     stock = (OUT / "record_stock.bin").read_bytes()
@@ -297,6 +342,9 @@ def main():
         d = files.get(k, b"")
         got = d[16 + (trk * 64) * REC + 6] if len(d) == 16 + 16 * 8 * TRACK_B else None
         check(f"save: {nn}.{ext} holds the lock ({got})", got == v)
+        check(f"save: {nn}.{ext} keeps the v1 header and older pattern-16 locks",
+              d[:16] == struct.pack(">4sIII", b"P2LK", 1, bank, len(legacy_table)) and
+              d[-1024:] == legacy_table[-1024:])
     if saved.is_file():
         reload_dump = OUT / "reload.bin"
         s = Script(); s.tap("no", 400)
@@ -309,8 +357,21 @@ def main():
 
     # ---- power cycles -----------------------------------------------------------
     cs1s, cs1u = OUT / "cs1_saved.bin", OUT / "cs1_unsaved.bin"
+    legacy_v = None
     if cs1s.is_file():
         d = bytearray(cs1s.read_bytes())
+        layout=registry.bound(remix)['PLOCKS P2'].build_values.get('RETENTION','UPSTREAM')
+        magic={'UPSTREAM':b'P2NV','CONTIGUOUS':b'P2R1','MIDI POOL':b'P2S1'}[layout]
+        check(f"save: the port publishes the selected {magic.decode()} retained format",
+              d[NV - CS1:NV - CS1 + 4] == magic)
+        # Upgrade from a legacy snapshot with the same saved lock and tail.
+        legacy_v = (v + 29) & 127  # distinct from the saved file: fallback cannot pass
+        table = bytearray(legacy_table); table[trk * TRACK_B + 6] = legacy_v
+        entries = [(i << 7) | value for i, value in enumerate(table) if value != 255]
+        old = struct.pack(">4sIII", b"P2NV", bank, len(entries), sum(entries) & 0xffffffff)
+        old += b"".join(e.to_bytes(3, "big") for e in entries)
+        d[NV - CS1:NV - CS1 + len(old)] = old
+        (OUT / "cs1_legacy.bin").write_bytes(d)
         d[NV - CS1:NV - CS1 + 4] = bytes(4)            # no CS1 copy: the file
         (OUT / "cs1_nocopy.bin").write_bytes(d)
     s = Script(); s.tap("no", 400)
@@ -324,7 +385,8 @@ def main():
              "--project", a.name, "--load-ms", "90000", "--live-script", OUT / "power.script",
              "--mem-dump", f"{block(0, trk) + 6:#x},1={dump}"], OUT / f"power_{tag}.txt")
         return tag, dump.read_bytes()[0] if dump.is_file() else None
-    jobs = [("saved", saved, cs1s), ("unsaved", unsaved, cs1u), ("nocopy", saved, OUT / "cs1_nocopy.bin")]
+    jobs = [("saved", saved, cs1s), ("unsaved", unsaved, cs1u), ("nocopy", saved, OUT / "cs1_nocopy.bin"),
+            ("legacy", saved, OUT / "cs1_legacy.bin")]
     with ThreadPoolExecutor(3) as ex:
         got = dict(ex.map(lambda j: power(*j), jobs))
     check(f"power cycle, saved: the lock is in STORE ({got['saved']})", got["saved"] == v)
@@ -358,6 +420,7 @@ def main():
         after = emu_card.extract_image((OUT / "refused.img").read_bytes())
         k = next((k for k in after if k.lower().endswith(f"/{nn}.work")), None)
         check(f"refused: {nn}.work is as it was after a SAVE PROJECT (it used to be overwritten)", after.get(k) == bytes(bad))
+    check("power cycle, upgrade: legacy P2NV snapshot restored", got["legacy"] == legacy_v and legacy_v is not None)
     print(f"verify_plocksp2: {'FAIL' if fails else 'ok'} ({fails} failure(s))")
     return 1 if fails else 0
 

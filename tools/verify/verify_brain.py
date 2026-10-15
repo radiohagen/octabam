@@ -43,7 +43,7 @@ lane at the end:
 What it cannot see: the unit's card I/O timing, a power-up with no LOAD
 PROJECT post (the bank-load hook), the new-part initialiser.
 """
-import argparse, os, pathlib, shutil, struct, subprocess, sys
+import argparse, os, pathlib, re, shutil, struct, subprocess, sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1])); import toolpath  # noqa: E402,F401
 from remix import brainfile, registry, brain  # noqa: E402
@@ -63,6 +63,17 @@ COUNTERS = ("loads", "state", "records", "applied", "values", "skip_id", "skip_l
             "skip_mode", "skip_crc", "skip_dup", "skip_value", "skip_slot")
 FX2_EDITOR = 0x4003a9dc
 STATES = {0: "fresh", 1: "card.work", 2: "recovered", 3: "damaged"}
+
+
+def configure_midi_log_project(project):
+    """The log's PC-on-channel-1 assertion requires reception on channel 1."""
+    path = project / "project.work"
+    raw = path.read_bytes()
+    for key, value in (("MIDI_PROGRAM_CHANGE_RECEIVE", 1), ("MIDI_PROGRAM_CHANGE_RECEIVE_CH", 0)):
+        raw, count = re.subn(rb"(?m)^" + key.encode() + rb"=[^\r\n]*",
+                             f"{key}={value}".encode(), raw)
+        assert count == 1, (path, key, count)
+    path.write_bytes(raw)
 
 
 def script(page):
@@ -88,7 +99,7 @@ def symbol(name):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("remix", nargs="?", default="octabam-bus")
+    ap.add_argument("remix", nargs="?", default=os.environ.get("REMIX", "octabam-bus"))
     ap.add_argument("--project", default=os.environ.get("OT_PROJECT", ""))
     ap.add_argument("--set-name", default="BRAINSET")       # not BRAIN: that is the store's directory
     ap.add_argument("--name", default="BRAINPRJ")
@@ -135,6 +146,14 @@ def main():
     for f in pdir.iterdir():
         if f.is_file() and f.suffix.lower() == ".work":
             shutil.copy2(f, copy / f.name)
+
+    # Templates use Character on T1; the chooser starts at Spectrum on T2.
+    # Seed those preconditions
+    # in every Part of every bank in the disposable copy, independent of
+    # the caller's FX1 selection (host_rig only assigns FX2).
+    import ot_project
+    ot_project.set_fx(copy, "fx1", 1, "CHARACTER", guard=False)
+    ot_project.set_fx(copy, "fx1", 2, "SPECTRUM", guard=False)
 
     delay, character = mods["DELAY"], mods["CHARACTER"]
     want = {"DELAY": {"TIME": 52, "FB": 5, "X": 1, "TAPE": 0}, "CHARACTER": {"DRV": 9, "MIX": 77}}
@@ -1051,6 +1070,7 @@ def main():
           pcts[0] >= 0 and pcts[1] == -1 and pcts[2] == -1 and struct.unpack(">I", peak)[0] > 0)
 
     # ---- debug log: the MIDI thread's messages to /BRAIN/debug.txt ----------
+    configure_midi_log_project(copy)
     log_at = symbol("brain_post_log")
     lcard, lafter, llog, lmidi = OUT / "log.img", OUT / "log_after.img", OUT / "log.txt", OUT / "log.midi"
     lmidi.write_text("40 B0 07 14\n60 C0 02\n80 B1 28 40\n")

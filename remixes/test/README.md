@@ -18,17 +18,30 @@ Each carries one module, or one combination, for that module's gates: `make chec
 | [`erase-empty-trigless-locks`](erase-empty-trigless-locks/README.md) | stock effects with ERASE_EMPTY_TRIGLESS_LOCKS: an emptied trigless lock disappears. | `make check` |
 | [`euclid`](euclid/README.md) | Euclid rhythmic modulation: 12 dB LP/BP/HP or AMP, both FX slots. | local render: the module's render gates |
 | [`gateverb`](gateverb/README.md) | GATE VERB alone: the fixture of its render gate. | local render: `verify_gateverb`; not flashed |
+| [`harmony-degrees`](harmony-degrees/README.md) | MIDI Harmony degree/register roots with all seven scale modes. | `make check`: verify_harmony_degree_integration: linked degree component checks; hardware untested |
+| [`harmony-plocks`](harmony-plocks/README.md) | Harmony and PLOCKS P2 shared-hook integration with SCENES P2. | `make check`: verify_harmony_plocks: linked bridge and persistence checks; not flashed |
 | [`kits`](kits/README.md) | KITS (255 Kits per project) on the stock effects. | port-gated: verify_kits under the port |
 | [`kyoti-fixes`](kyoti-fixes/README.md) | stock effects with QUANTIZE_LIVE_REC_TOGGLE, ERASE_EMPTY_TRIGLESS_LOCKS and BATCH_BUGFIXES together. | `make check` |
 | [`kyoti-mute-jump`](kyoti-mute-jump/README.md) | stock effects with MUTE_MODES and DIRECT_JUMP_KYOTI together. | `make check` |
 | [`kyoti-mute-sidechain`](kyoti-mute-sidechain/README.md) | stock effects with MUTE_MODES and SIDECHAIN_COMPRESSOR together: a muted KEY track keeps feeding the compressor (SC_KEY). | `make check` |
 | [`lofi-amf-fix`](lofi-amf-fix/README.md) | Reference minimal build: the LO-FI AMF mpysu->mpyuu fix, alone. | `make check` |
 | [`lofi2`](lofi2/README.md) | LOFI2 beside the stock effects (all but PLATE REV and SPRING REV, whose words it takes). | `make check` |
+| [`midi-ensemble`](midi-ensemble/README.md) | Scales, Follow and Harmony with KITS, MIDI SCENES and upstream P2 retention and track-local Harmony. | `make check`: verify_integrated_retention_port and verify_midi_concert_port: emulator evidence; hardware pending |
+| [`midi-follow`](midi-follow/README.md) | Per-track RFOL source selection on MIDI NOTE SETUP; Part-owned bass following. | port-gated: verify_midi_follow: stock/patched MIDI capture; not flashed |
+| [`midi-harmony`](midi-harmony/README.md) | Per-track HARM on MIDI NOTE SETUP; scale notes and chords before the stock arp. | port-gated: verify_midi_harmony: emulator verification; not flashed |
+| [`midi-harmony-follow`](midi-harmony-follow/README.md) | MIDI Harmony, Scales and Follow together with all stock effects. | port-gated: verify_midi_harmony_port: emulator verification; not flashed |
+| [`midi-loopback`](midi-loopback/README.md) | Stock effects plus the Part-scoped per-track MIDI loopback prototype. | port-gated: Per-track routing and note/control lifecycle gates; no hardware |
+| [`midi-loopback-follow`](midi-loopback-follow/README.md) | MIDI Loopback routing with Follow, Harmony and Scales; native Part settings. | port-gated: Per-track routing and note/control lifecycle gates; no hardware |
+| [`midi-loopback-usb`](midi-loopback-usb/README.md) | Stock effects with the loopback prototype and USB-MIDI for compatibility gates. | port-gated: USB enumeration/RX/TX and loopback filter controls under RTOS; no hardware |
+| [`midi-part-state`](midi-part-state/README.md) | Shared native MIDI Part access and copy/clear boundary, without consumer modules. | port-gated: verify_midi_part_copy: linked native publication and copy checks; not flashed |
+| [`midi-scales`](midi-scales/README.md) | All twelve keys and seven modes in the native ARP SETUP KEY control. | port-gated: verify_midi_scales: emulator verification; not flashed |
 | [`midi-scenes`](midi-scenes/README.md) | Reference minimal build: the MIDI SCENES ColdFire patch, alone. | port-gated: `verify_scenes` against MIDISC2.1 under the port; not flashed |
+| [`midi-sram`](midi-sram/README.md) | Shared native MIDI Part access and copy/clear boundary, without consumer modules. | port-gated: verify_midi_sram: linked retained pool and native copy checks; not flashed |
 | [`miniverb`](miniverb/README.md) | Minimal allocator-owned FDN reverb. | local render: `make verify-miniverb` |
 | [`mods`](mods/README.md) | Every ColdFire mod in one image on the stock effects: MIDI SCENES, KITS, the recorder fixes, the KYOTI direct jump and reload, USB MIDI + AUDIO. | port-gated |
 | [`mute-modes`](mute-modes/README.md) | stock effects with MUTE_MODES: PERSONALIZE > MUTE MODE (OT, OTFX, OTFX-T, DT-T). | `make check` |
 | [`octatrick`](octatrick/README.md) | SYNTH MACHINE + SCALE QUANTIZER + DIRECT JUMP + TUNER + USB MIDI + USB AUDIO (20 channels out, 4 in onto A-D) on the stock effects less SPATIALIZER. | on hardware: Tim's MKI, test build 3.0 b40 (this selection at BUILD 40), 29 Sep 2026: USB AUDIO IN brings the Mac's audio onto the inputs in a one-minute check (long runs not yet tested). The same four modules with the 26 Sep USB AUDIO (out only) ran on the same MKI through the 2.9 test builds; the tuner works on test build 3.0 b40 (UP + TEMPO); the last two 2.9 fixes are not yet confirmed on hardware |
+| [`pio-write-fix`](pio-write-fix/README.md) | The stock PIO first-sector fix, independently of STEM REC. | `make check`: installed-hook execution and stock negative control; hardware untested |
 | [`plocks-p2`](plocks-p2/README.md) | Page-2 parameter locks (PLOCKS P2) and page-2 scene locks (SCENES P2), stock effects. | port-gated: verify_plocksp2 under the port |
 | [`quantize-live-rec-toggle`](quantize-live-rec-toggle/README.md) | stock effects with QUANTIZE_LIVE_REC_TOGGLE: QUANTIZE LIVE REC from [REC] + [PLAY]. | `make check` |
 | [`rec-threshold`](rec-threshold/README.md) | stock effects with the threshold-armed recorder TRIG THR, its LEV and an IN meter: the image for a unit. | on hardware: Chupitnik's MKII, 11-12 Oct 2026, THR1 to THR5 from the card: armed with TRACK 1 + REC AB, silence never records, the input starts the take, a second press cancels, LEV and IN on RECORDING SETUP 2, TRIG moved off THR while armed drops the arm; THR5 is this code |

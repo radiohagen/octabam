@@ -1,3 +1,10 @@
+# radiohagen account and MIDI scope
+
+Read docs/guide/RADIOHAGEN_WORKFLOW.md and docs/guide/MIDI_UPSTREAM_PLAN.md.
+Use repository-local `git gh` for authenticated radiohagen API actions. Preserve
+global mattiaswolff credentials and all original repositories. No synth additions,
+ARP templates, POST FADER or unrelated features in this contribution series.
+
 # Working in this repository
 
 octabam is a remixer for the Octatrack's OS: it composes modules, each

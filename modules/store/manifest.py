@@ -11,7 +11,7 @@ handlers in CLIENTS below; a client that is not in the remix is left out of
 the tables.
 """
 
-from remix.schema import Category, Detour, Kind, Linked, Module, Proof
+from remix.schema import Category, Detour, Gate, Kind, Linked, Module, Proof
 
 H = bytes.fromhex
 
@@ -23,6 +23,11 @@ EVENTS = (
     "bankcopy", "tocs1", "fromcs1", "partsaved", "partclear",
 )
 
+# Optional phases have a checked result (negative stops the operation), or
+# run after native NEW PROJECT. Omit their code/tables when no client uses them.
+CHECKED_EVENTS = ("bankw_guard", "bankcopy_guard", "bankcopy_done")
+EXTRA_EVENTS = (*CHECKED_EVENTS, "newproj_post")
+
 # (module key, symbol prefix, events handled). Table order is run order.
 CLIENTS = (
     ("PLOCKS P2", "plk", ("loadall_pre", "loadmask_pre", "newproj", "bankw_pre",
@@ -33,6 +38,8 @@ CLIENTS = (
     ("MIDI SCENES", "scn", ("loadall_pre", "loadall_post", "loadmask_pre", "loadmask_post", "newproj", "bankw_post",
                             "pstore_pre", "pstore_post", "preload_post", "tocs1",
                             "fromcs1", "partclear")),
+    ("MIDI HARMONY", "ch", ("loadall_post", "loadmask_post", "newproj", "newproj_post",
+                           "bankw_guard", "bankcopy_guard", "bankcopy_done", "tocs1", "fromcs1")),
 )
 
 
@@ -45,10 +52,16 @@ def store_inc(modules):
            "name_tab:", "        .long   nm_plk, nm_kits, nm_scn",
            'nm_plk: .asciz "P2LK%02d.WORK"', 'nm_kits: .asciz "KITS.WORK"', 'nm_scn: .asciz "SCENES.WORK"',
            ".balign 2", "ans_tab:"]
-    for key, _prefix, _events in sorted(CLIENTS, key=lambda c: CLIENT_IDS[c[0]]):
+    for key in sorted(CLIENT_IDS, key=CLIENT_IDS.get):
         pre = {k: p for k, p, _e in CLIENTS}[key]
         out.append(f"        .long   {pre}_st_answer" if key in modules else "        .long   0")
-    for ev in EVENTS:
+    selected_events = {ev for key, _prefix, handled in CLIENTS if key in modules for ev in handled}
+    extra = [ev for ev in EXTRA_EVENTS if ev in selected_events]
+    defines = [f".set STORE_{ev.upper()},1" for ev in extra]
+    if selected_events.intersection(CHECKED_EVENTS):
+        defines.append(".set STORE_CHECKED,1")
+    out[0:0] = defines
+    for ev in (*EVENTS, *extra):
         out.append(f"ev_{ev}:")
         for key, prefix, handled in CLIENTS:
             if key in modules and ev in handled:
@@ -65,6 +78,7 @@ MODULE = Module(
     proof=Proof.PORT, proof_note="",
     doc="Platform: the stock save, load, copy, CS1 and Part sites KITS and PLOCKS P2 share.",
     linked=(Linked("store", "modules/store/store.s", dram=True, include=store_inc),),
+    gates=(Gate("tools/verify/verify_store_copy.py", stage="image", venv=True),),
     detours=(
         Detour(0x40090504, H("4feffeb848d77cfc"), "store", "store_loadall",
                "a load of every bank", pad_to=8),

@@ -130,6 +130,12 @@ trig. Nothing carries page 2, and every byte of the pattern data is used.
 
 ## KITS
 
+The page-2 editor marks a held trig as edited and clears native pending tap
+masks before committing a lock. Otherwise releasing that trig can treat the
+gesture as a bare tap and delete the lock just entered. `verify_plocksp2.py`
+checks the held-step edit followed by release and subsequent bare-tap clearing.
+This editor correction leaves the retained layout and capacity unchanged.
+
 KITS (in bottleservice beside this module since 6 Oct 2026) hooks the
 file routines' own entries (`0x40090504`, `0x400905d4`, `0x400909d8`,
 `0x400917c8`, `0x4008ee74`, `0x4008f180`) where this module hooks their

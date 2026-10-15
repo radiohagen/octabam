@@ -2678,6 +2678,9 @@ int main(int _argc, char** _argv)
 						ok ? "returned" : rtos.why().c_str(), d0);
 				}
 				pokeBytes(pokeBeforePlay, "before play");
+				// Starting transport can emit the first step before returning.
+				// Capture the UART boundary before that call, not after its notes.
+				const auto midiTx0 = rtos.serialTx0().size();	// MIDI OUT bytes before the transport start
 				if(!rtos.startTransportLive())
 					std::printf("transport  : FAILED -- %s\n", rtos.why().c_str());
 				if(pokeTrig)
@@ -2691,7 +2694,25 @@ int main(int _argc, char** _argv)
 				// start returned, which is what the cold tool calls frame 0:
 				// the two reports compare directly.
 				const auto frame0 = rtos.frameCount() + 1;
-				const auto midiTx0 = rtos.serialTx0().size();	// MIDI OUT bytes before the transport start
+				// A synthetic call can advance hundreds of frames before returning.
+				// Feed UART input on frame acknowledgements, independently of the
+				// host action loop, so calls cannot postpone a later note-off.
+				std::vector<MidiEvent> timedMidi;
+				for(const auto& ev : midiEvents)
+					if(!ev.pre) timedMidi.push_back(ev);
+				std::stable_sort(timedMidi.begin(), timedMidi.end(), [](const MidiEvent& a, const MidiEvent& b) { return a.frame < b.frame; });
+				size_t nextMidi = 0;
+				if(!timedMidi.empty())
+					rtos.setFrameInput([&](uint64_t frame)
+					{
+						while(nextMidi < timedMidi.size() && frame >= frame0 + timedMidi[nextMidi].frame)
+						{
+							const auto& ev = timedMidi[nextMidi++];
+							rtos.midiIn(ev.bytes);
+							std::printf("midi input : scheduled frame %llu, delivered frame %llu, %zu byte(s)\n",
+								static_cast<unsigned long long>(ev.frame), static_cast<unsigned long long>(frame - frame0), ev.bytes.size());
+						}
+					});
 				const auto ticks0 = rtos.ticks();
 				const auto ackTail = rtos.acks().size();
 				if(pcRing)
@@ -2748,8 +2769,8 @@ int main(int _argc, char** _argv)
 						else
 							std::printf("call-at    : main never spun -- %s\n", rtos.why().c_str());
 					}
-					else
-						rtos.midiIn(act.bytes);
+					// MIDI actions are wait checkpoints only: the frame callback
+					// above already queued their bytes, even during a long call.
 				}
 				const auto instr0 = m.instructions();
 				if(profile)
@@ -2757,6 +2778,7 @@ int main(int _argc, char** _argv)
 				const auto wall0 = std::chrono::steady_clock::now();
 				const auto rs2 = rtos.runUntil(livePath.empty() ? budgetMs : 1e15, [&] { return rtos.frameCount() >= target || live.quit; },
 					ot::Rtos::Changes::OnEvent);	// O15e: the ack hook wakes; the live poll wakes too
+				rtos.setFrameInput({});	// callback captures this phase
 				const auto wall = std::chrono::duration<double>(std::chrono::steady_clock::now() - wall0).count();
 				const auto ran = rtos.frameCount() > frame0 ? static_cast<double>(rtos.frameCount() - frame0) : 0.0;
 				std::printf("cpu        : %llu ColdFire instructions over the frames (%.0f per frame of %g samples); %.2f s wall = %.1f M instr/s, %.1fx real time\n",
@@ -2888,7 +2910,17 @@ int main(int _argc, char** _argv)
 				std::printf("main level : sys command %u posted with %d -> gain table[0] = %#x%s (bit 0 of 0x8000004a = %u)\n",
 					ot::g_setMainLevelCase, mainLevel, g, g ? "" : " -- NOT FILLED", m.read8(0x8000004a) & 1);
 			}
-			return serveInteractive(m, rtos, dspPair.get(), card.get(), [&] { if(!lcd.empty() && lcdDirty) lcdFlush(); });
+			const auto result = serveInteractive(m, rtos, dspPair.get(), card.get(), [&] { if(!lcd.empty() && lcdDirty) lcdFlush(); });
+			// Interactive sessions return before the batch's output writers.
+			// Honour the existing capture flag here too (including JIT DSP runs).
+			if(!midiOut.empty())
+			{
+				const auto& tx = rtos.serialTx0();
+				std::ofstream f(midiOut, std::ios::binary);
+				f.write(reinterpret_cast<const char*>(tx.data()), static_cast<std::streamsize>(tx.size()));
+				if(!f) return 1;
+			}
+			return result;
 		}
 
 		// The bench: hold the machine here, every other phase done, until

@@ -1,0 +1,22 @@
+{
+ "params": {},
+ "retired": {
+  "params": [],
+  "settings": []
+ },
+ "settings": {
+  "1": {
+   "labels": [
+    "LEGACY",
+    "SHARED",
+    "MIDI TRACK"
+   ],
+   "name": "RETENTION",
+   "type": "option"
+  }
+ },
+ "store": {
+  "id": "mattias.midi-harmony",
+  "major": 1
+ }
+}

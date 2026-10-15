@@ -125,6 +125,24 @@ def _overlap(a_start, a_len, b_start, b_len) -> bool:
     return a_start < b_start + b_len and b_start < a_start + a_len
 
 
+def _sram_overlaps(ranges) -> list[tuple[int, int]]:
+    """Intersect precise sparse claims without comparing every disjoint pair.
+
+    Return pairs in the original declaration order, preserving diagnostics.
+    Nonpositive spans retain the old predicate's behavior as well.
+    """
+    if any(length <= 0 for _, length in ranges):
+        return [(i, j) for i, (a, n) in enumerate(ranges)
+                for j, (b, m) in enumerate(ranges[:i]) if _overlap(a, n, b, m)]
+    active = []
+    pairs = []
+    for start, end, i in sorted((a, a + n, i) for i, (a, n) in enumerate(ranges)):
+        active = [(stop, j) for stop, j in active if stop > start]
+        pairs.extend((max(i, j), min(i, j)) for _, j in active)
+        active.append((end, i))
+    return sorted(pairs)
+
+
 def check(selected) -> list[str]:
     """Return a list of collisions among these modules. Empty means clean."""
     problems: list[str] = []
@@ -215,11 +233,12 @@ def check(selected) -> list[str]:
     sram: list[tuple[int, int, str, str]] = []
     for m in selected:
         for base, length, what in (m.claims.sram if m.claims else ()):
-            for b2, l2, owner, w2 in sram:
-                if _overlap(b2, l2, base, length):
-                    clash("on-chip SRAM", f"{owner}'s {w2}", f"{m.name}'s {what}",
-                          f"0x{max(b2, base):08x}..")
             sram.append((base, length, m.name, what))
+    for i, j in _sram_overlaps([(base, length) for base, length, _, _ in sram]):
+        base, _, name, what = sram[i]
+        b2, _, owner, w2 = sram[j]
+        clash("on-chip SRAM", f"{owner}'s {w2}", f"{name}'s {what}",
+              f"0x{max(b2, base):08x}..")
 
     # ---- ColdFire caves and hook sites ------------------------------------
     caves: list[tuple[int, int, str, str]] = []

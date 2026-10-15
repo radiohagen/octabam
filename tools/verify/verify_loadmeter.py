@@ -98,7 +98,7 @@ def syms():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("remix", nargs="?", default="octabam-bus")
+    ap.add_argument("remix", nargs="?", default=os.environ.get("REMIX", "octabam-bus"))
     ap.add_argument("--project", default=os.environ.get("OT_PROJECT", ""))
     ap.add_argument("--set-name", default="BRAINSET")
     ap.add_argument("--name", default="BRAINPRJ")
@@ -209,81 +209,87 @@ def main():
           bool(open_host) and len(open_host) == len(closed_host)
           and all(abs(x - y) <= 0.01 * max(x, 1) for x, y in zip(open_host, closed_host)))
 
-    # ---- calibration: an injected burn raises busy by N/2 counts ----------------
-    # A DO loop of N one-cycle nops costs N core cycles plus the DO's own
-    # setup (a constant, gone in the difference between burns); timer 0 counts
-    # CLK/2, so N cycles are N/2 counts. The port's timer moves in 1,024-count
-    # steps (dsp56kEmu timers.cpp: m_timerupdateInterval = 2,048 instructions),
-    # so the figure compared is each core's mean busy over the run (lm_dsum),
-    # which the frame length (not a multiple of 2,048) dithers.
-    busy = {}
-    for n in BURNS:
-        img_n, lmd_n = (image, lmd) if n == 0 else build(a.remix, n, f"b{n}")
-        extra = ("--dsp-watch", "1:X:37f28") if n == BURNS[1] else ()
-        v, _x, text_n = run(f"burn{n}", img_n, lmd_n, open_load, a.frames_ms, extra)
-        if extra:
-            range_logs.append(text_n)
-        busy[n] = (v[15] / max(v[17], 1), v[16] / max(v[17], 1))
-    for core in (0, 1):
-        for n in BURNS[1:]:
-            rise = busy[n][core] - busy[0][core]
-            want = n / 2
-            check(f"calibrate: core {core} mean busy rises by {rise:.0f} counts for a {n}-cycle burn (expected {want:.0f}; "
-                  f"error {100 * (rise - want) / want:+.1f}%, within {TOL:.0%})", abs(rise - want) <= TOL * want)
+    try:
+        # ---- calibration: an injected burn raises busy by N/2 counts ----------------
+        # A DO loop of N one-cycle nops costs N core cycles plus the DO's own
+        # setup (a constant, gone in the difference between burns); timer 0 counts
+        # CLK/2, so N cycles are N/2 counts. The port's timer moves in 1,024-count
+        # steps (dsp56kEmu timers.cpp: m_timerupdateInterval = 2,048 instructions),
+        # so the figure compared is each core's mean busy over the run (lm_dsum),
+        # which the frame length (not a multiple of 2,048) dithers.
+        busy = {}
+        for n in BURNS:
+            img_n, lmd_n = (image, lmd) if n == 0 else build(a.remix, n, f"b{n}")
+            extra = ("--dsp-watch", "1:X:37f28") if n == BURNS[1] else ()
+            v, _x, text_n = run(f"burn{n}", img_n, lmd_n, open_load, a.frames_ms, extra)
+            if extra:
+                range_logs.append(text_n)
+            busy[n] = (v[15] / max(v[17], 1), v[16] / max(v[17], 1))
+        for core in (0, 1):
+            for n in BURNS[1:]:
+                rise = busy[n][core] - busy[0][core]
+                want = n / 2
+                check(f"calibrate: core {core} mean busy rises by {rise:.0f} counts for a {n}-cycle burn (expected {want:.0f}; "
+                      f"error {100 * (rise - want) / want:+.1f}%, within {TOL:.0%})", abs(rise - want) <= TOL * want)
 
-    # ---- range: nothing stock writes the claimed words but B's boot zero --------
-    for core, log in enumerate(range_logs):
-        writers = []
-        on = False
-        for ln in log.splitlines():
-            if ln.startswith("dsp watch"):
-                on = True
-                continue
-            if on:
-                if not ln.startswith(" "):
-                    break
-                writers.append(ln.strip())
-        stray = [w for w in writers if "pc 0x0004" not in w.lower() and "pc=0x4" not in w.lower()
-                 and not any(f"{x:x}" in w.lower() for x in (0x49, 0x4a))]
-        check(f"range: core {core}'s writers of X:$37F28: {len(writers)}, none but payload B's boot zero loop "
-              f"(P:$49/$4a)  {stray[:3]}", not stray)
+        # ---- range: nothing stock writes the claimed words but B's boot zero --------
+        for core, log in enumerate(range_logs):
+            writers = []
+            on = False
+            for ln in log.splitlines():
+                if ln.startswith("dsp watch"):
+                    on = True
+                    continue
+                if on:
+                    if not ln.startswith(" "):
+                        break
+                    writers.append(ln.strip())
+            stray = [w for w in writers if "pc 0x0004" not in w.lower() and "pc=0x4" not in w.lower()
+                     and not any(f"{x:x}" in w.lower() for x in (0x49, 0x4a))]
+            check(f"range: core {core}'s writers of X:$37F28: {len(writers)}, none but payload B's boot zero loop "
+                  f"(P:$49/$4a)  {stray[:3]}", not stray)
 
-    # ---- usb: no published byte reaches USB AUDIO OUT's ring --------------------
-    sym = {}
-    nm = shutil.which("m68k-elf-nm") or shutil.which("m68k-linux-gnu-nm")
-    rings = []
-    for tag, nopub, noot in (("usb_on", False, False), ("usb_off", True, False), ("usb_noot", False, True)):
-        img_u, _l = (image, lmd) if not (nopub or noot) else build(a.remix, 0, tag, nopub=nopub, noot=noot)
-        for line in subprocess.run([nm, str(ELF)], capture_output=True, text=True).stdout.splitlines():
-            parts = line.split()
-            if len(parts) == 3:
-                sym[parts[2]] = int(parts[0], 16)
-        if "aud_ring" not in sym:
-            check("usb: the remix carries USB AUDIO OUT (aud_ring)", False)
-            break
-        card = OUT / f"{tag}.img"
-        subprocess.run([str(PY), str(ROOT / "tools/emu/ot_emu/stage_card.py"), str(copy), a.set_name, a.name,
-                        "--tree", str(OUT / f"tree_{tag}"), "--out", str(card)], cwd=ROOT, check=True,
-                       capture_output=True)
-        ring = OUT / f"{tag}_ring.bin"
-        log = OUT / f"{tag}.txt"
-        with open(log, "w") as fh:
-            r = subprocess.run(list(map(str, [EMU, "--image", img_u, "--card", card, "--set", a.set_name,
-                                              "--project", a.name, "--sequencer", "--internal-clock",
-                                              "--frames", "3000", "--load-ms", "90000", "--dsp",
-                                              "--poke", f"{sym['aud_force']:#x}=1",
-                                              "--mem-dump", f"{sym['aud_ring']:#x},8192={ring}"])),
-                               cwd=ROOT, stdout=fh, stderr=subprocess.STDOUT)
-        if r.returncode:
-            sys.exit(f"verify_loadmeter: the {tag} run failed -- {log}")
-        rings.append(ring.read_bytes())
-    if len(rings) == 3:
-        diff = sum(1 for x, y in zip(rings[0], rings[1]) if x != y)
-        lows = sum(1 for i in range(3, len(rings[0]), 4) if rings[0][i])
-        check(f"usb: USB AUDIO OUT's ring byte-identical with the publish on and off ({diff} bytes differ; "
-              f"{lows} nonzero low bytes with it on)", diff == 0 and lows == 0)
-        diff = sum(1 for x, y in zip(rings[0], rings[2]) if x != y)
-        check(f"usb: the ring is byte-identical with OTOP's stamps on and off ({diff} bytes differ)", diff == 0)
+        # ---- usb: no published byte reaches USB AUDIO OUT's ring --------------------
+        sym = {}
+        nm = shutil.which("m68k-elf-nm") or shutil.which("m68k-linux-gnu-nm")
+        rings = []
+        for tag, nopub, noot in (("usb_on", False, False), ("usb_off", True, False), ("usb_noot", False, True)):
+            img_u, _l = (image, lmd) if not (nopub or noot) else build(a.remix, 0, tag, nopub=nopub, noot=noot)
+            for line in subprocess.run([nm, str(ELF)], capture_output=True, text=True).stdout.splitlines():
+                parts = line.split()
+                if len(parts) == 3:
+                    sym[parts[2]] = int(parts[0], 16)
+            if "aud_ring" not in sym:
+                check("usb: the remix carries USB AUDIO OUT (aud_ring)", False)
+                break
+            card = OUT / f"{tag}.img"
+            subprocess.run([str(PY), str(ROOT / "tools/emu/ot_emu/stage_card.py"), str(copy), a.set_name, a.name,
+                            "--tree", str(OUT / f"tree_{tag}"), "--out", str(card)], cwd=ROOT, check=True,
+                           capture_output=True)
+            ring = OUT / f"{tag}_ring.bin"
+            log = OUT / f"{tag}.txt"
+            with open(log, "w") as fh:
+                r = subprocess.run(list(map(str, [EMU, "--image", img_u, "--card", card, "--set", a.set_name,
+                                                  "--project", a.name, "--sequencer", "--internal-clock",
+                                                  "--frames", "3000", "--load-ms", "90000", "--dsp",
+                                                  "--poke", f"{sym['aud_force']:#x}=1",
+                                                  "--mem-dump", f"{sym['aud_ring']:#x},8192={ring}"])),
+                                   cwd=ROOT, stdout=fh, stderr=subprocess.STDOUT)
+            if r.returncode:
+                sys.exit(f"verify_loadmeter: the {tag} run failed -- {log}")
+            rings.append(ring.read_bytes())
+        if len(rings) == 3:
+            diff = sum(1 for x, y in zip(rings[0], rings[1]) if x != y)
+            lows = sum(1 for i in range(3, len(rings[0]), 4) if rings[0][i])
+            check(f"usb: USB AUDIO OUT's ring byte-identical with the publish on and off ({diff} bytes differ; "
+                  f"{lows} nonzero low bytes with it on)", diff == 0 and lows == 0)
+            diff = sum(1 for x, y in zip(rings[0], rings[2]) if x != y)
+            check(f"usb: the ring is byte-identical with OTOP's stamps on and off ({diff} bytes differ)", diff == 0)
+    finally:
+        # Calibration builds replace both the image and linked symbols. Later
+        # image gates must receive the selected production configuration.
+        restored, _ = build(a.remix, 0, "restored")
+        assert restored.read_bytes() == image.read_bytes(), "Load Meter did not restore the selected image"
     if FAILS:
         print(f"verify_loadmeter: FAILED ({len(FAILS)} failure(s)) -- {OUT}")
         return 1

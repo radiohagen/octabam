@@ -314,6 +314,9 @@ namespace ot
 		uint8_t internalClock();
 		// MIDI IN: bytes onto UART0's receive queue, as the DIN input delivers them.
 		void midiIn(const std::vector<uint8_t>& _bytes) { m_uart60.receive(_bytes); }
+		// External frame-timed input continues inside injected calls/main waits.
+		// The callback may queue peripheral bytes, but must not run the CPU.
+		void setFrameInput(std::function<void(uint64_t)> _fn) { m_frameInput = std::move(_fn); }
 		// The panel link (UART1, 0xfc064000): bytes as the panel controller
 		// sends them. Framing read out of the firmware's parser 0x4009228c
 		// (17 Sep 2026): a header byte 0xTn then a payload -- T=2 key row n,
@@ -768,6 +771,7 @@ namespace ot
 		bool m_dspEdgeLatched = false;	// the DSP wrote its bank id while the frame clock was off (it waits at P:0x97 for the host to take it)
 		double m_nextFrame = g_framePeriod;
 		uint64_t m_frameCount = 0;
+		std::function<void(uint64_t)> m_frameInput;
 		size_t m_seeded = 0;
 		std::string m_why;
 		Quirks m_quirks;

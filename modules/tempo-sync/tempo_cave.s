@@ -29,8 +29,8 @@
 |     note byte: 0x400d64c2[track], 0xff when released -> 0.
 
         .text
-        .global cave, replay
-cave:
+        .global tempo_note_publish, tempo_note_replay
+tempo_note_publish:
         move.b  0xdbc(%a0),%d2          | displaced: FX2 id
         ext.w   %d2                     | displaced
         move.w  %d2,0x38(%a2)           | displaced: -> record +0x38 (x:$208+$1c)
@@ -52,7 +52,7 @@ skip:   rts
 | CAVE REPLAY (a diagnostic): the displaced instructions and nothing else,
 | so the hook can be told apart from the store. The three instructions hold
 | no pc-relative operand.
-replay:
+tempo_note_replay:
         move.b  0xdbc(%a0),%d2
         ext.w   %d2
         move.w  %d2,0x38(%a2)

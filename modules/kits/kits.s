@@ -3107,6 +3107,8 @@ lib_empty:
         movel   #NKITS-1,%d1
 4:      clrl    %a0@
         clrl    %a0@(4)
+        clrl    %a0@(8)                | unused flags and reserved header bytes
+        clrl    %a0@(12)               | migration must not preserve allocator data
         .if     MSCKIT
         movel   %a0,%sp@-
         movel   %d1,%sp@-

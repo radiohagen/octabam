@@ -122,6 +122,74 @@ int main(int _argc, char** _argv)
 		static_cast<unsigned long long>(m.unmappedCount()),
 		static_cast<unsigned long long>(m.autoMappedPages()));
 
+	// External input must continue while the host is inside a synthetic C call.
+	// This handwritten loop has no firmware bytes and occupies main across
+	// multiple audio frame interrupts. Merely polling between calls fails here.
+	{
+		const bool parked = rtos.runToMainSpin() == ot::Rtos::Stop::Gate;
+		check("main parks for frame-input regression", parked, rtos.why());
+		if(parked)
+		{
+			constexpr uint32_t code = 0x47002000;
+			m.poke32(code, 0x203c001e); // move.l #2000000,d0
+			m.poke32(code + 4, 0x84805380); // immediate tail; subq.l #1,d0
+			m.poke32(code + 8, 0x66fc4e75); // bne.s loop; rts
+			std::vector<uint64_t> seen;
+			const auto first = rtos.frameCount() + 1;
+			rtos.setFrameInput([&](uint64_t frame) { seen.push_back(frame); });
+			rtos.setFrame(true);
+			uint32_t result = 1;
+			const bool returned = rtos.callAsMain(code, {}, result, 200000000);
+			check("long synthetic call returned", returned && result == 0, rtos.why());
+			bool ordered = seen.size() >= 2;
+			for(size_t i = 0; i < seen.size(); ++i) ordered &= seen[i] == first + i;
+			check("frame input fires during a call, once per frame in order", ordered,
+				std::to_string(seen.size()) + " frames");
+			rtos.setFrameInput({});
+			const auto count = seen.size();
+			const auto lastFrame = rtos.frameCount();
+			rtos.runUntil(10.0, [] { return false; }, ot::Rtos::Changes::OnEvent);
+			check("clearing frame input ends callback lifetime", seen.size() == count && rtos.frameCount() > lastFrame);
+			rtos.setFrame(false);
+		}
+	}
+
+	// Repeated injected C calls must perform the caller's argument cleanup.
+	// Without it a four-argument MIDI stress event leaked 16 bytes; hundreds
+	// of events walked main's stack into firmware state and crashed the port.
+	{
+		const bool parked = rtos.runToMainSpin() == ot::Rtos::Stop::Gate;
+		check("main parks for repeated C calls", parked, rtos.why());
+		if(parked)
+		{
+			// Synthetic C ABI: move.l 4(sp),d0; add.l 8(sp),d0; rts.
+			// No firmware bytes are embedded in this fixture.
+			constexpr uint32_t code = 0x47001000;
+			m.poke32(code, 0x202f0004);
+			m.poke32(code + 4, 0xd0af0008);
+			m.poke32(code + 8, 0x4e754e71);
+			const auto initialSp = m.getA7();
+			bool stable = true;
+			for(uint32_t i = 0; i < 2048 && stable; ++i)
+			{
+				uint32_t result = 0;
+				stable = rtos.callAsMain(code, {i, 7, 11, 13}, result)
+					&& result == i + 7 && m.getA7() == initialSp;
+			}
+			check("2048 four-argument calls return correct values without stack growth", stable,
+				"initial SP " + std::to_string(initialSp) + ", final SP " + std::to_string(m.getA7()));
+			// Negative control: a callee consumes an argument itself before
+			// jumping to the correct return PC. Cleanup must not hide it.
+			m.poke32(code + 16, 0x205f588f); // move.l (sp)+,a0; addq.l #4,sp
+			m.poke32(code + 20, 0x4ed04e71); // jmp (a0); nop
+			uint32_t result = 0;
+			check("callee stack imbalance is rejected without concealing the failure",
+				!rtos.callAsMain(code + 16, {1, 2}, result)
+					&& rtos.why().find("C ABI stack mismatch") != std::string::npos
+					&& m.getA7() == initialSp - 4, rtos.why());
+		}
+	}
+
 	std::printf("%s\n", g_failures ? "RTOS GATE FAILED" : "rtos gate passed.");
 	return g_failures ? 1 : 0;
 }

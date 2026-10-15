@@ -189,3 +189,8 @@ target_compile_definitions(ot_tapeecho_cpu_test PRIVATE TE_HOST=1)
 # -fwrapv makes the oracle wrap the way the target does.
 target_compile_options(ot_tapeecho_cpu_test PRIVATE -fwrapv)
 target_link_libraries(ot_tapeecho_cpu_test PRIVATE ot_machine)
+
+# Read-only loader work must not be mistaken for a boot stall.
+add_executable(ot_boot_progress_test test_boot_progress.cpp)
+target_link_libraries(ot_boot_progress_test PRIVATE ot_machine)
+add_test(NAME boot-progress COMMAND ot_boot_progress_test)

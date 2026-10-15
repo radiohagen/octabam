@@ -1,0 +1,612 @@
+{
+  "utc": "2026-10-15T09:07:13.111674+00:00",
+  "branch": "codex/experiment/harmony-track-sram",
+  "upstream": "2d1cbcf471cf8b63e2279b3c372a6ebb47456a99",
+  "remix": "harmony-track-bus",
+  "build": 79,
+  "pgo": false,
+  "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856",
+  "hardware_tested": false,
+  "general_check": {
+    "exit_code": 0,
+    "command": "BUILD=79 OCTABAM_PGO=0 make check REMIX=harmony-track-bus",
+    "worktree": "out/track-completion-check",
+    "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856",
+    "log": "check-final.log",
+    "image_gates": 47,
+    "note": "Includes one duplicate track-retention execution; final registration uses the existing packed-storage dispatch.",
+    "project_skip_coverage": [
+      {
+        "skipped_in_general_run": "[SKIP] verify_kits: no project (OT_PROJECT=<dir> or --project)",
+        "covered_by": "kits-full"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_scenes: no project (--project, OT_PROJECT or ~/.octabam_project)",
+        "covered_by": "midi-scenes"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_reserve_writes: no project (OT_PROJECT=<dir> or ~/.octabam_project)",
+        "covered_by": "reserve-writes"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_modedefaults: no project (OT_PROJECT=<dir> or --project)",
+        "covered_by": "mode-defaults"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_scenesp2: no project (OT_PROJECT=<dir> or --project)",
+        "covered_by": "scenes-p2"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_plocksp2: no project (OT_PROJECT=<dir> or --project)",
+        "covered_by": "plocks-editor"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_set: no project (OT_PROJECT=<dir> or --project)",
+        "covered_by": "set"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_tempobus: no staged card (run verify_set with OT_PROJECT first)",
+        "covered_by": "tempo-bus"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_fx2lock: no project (OT_PROJECT=<dir>, --project or ~/.octabam_project)",
+        "covered_by": "fx2-lock"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_brain: no project (OT_PROJECT=<dir>, --project or ~/.octabam_project)",
+        "covered_by": "brain"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] verify_loadmeter: no project (OT_PROJECT=<dir>, --project or ~/.octabam_project)",
+        "covered_by": "load-meter"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] port project test: supply --project DIR or OT_PROJECT (source is only read)",
+        "covered_by": "midi-follow"
+      },
+      {
+        "skipped_in_general_run": "[SKIP] concert UART suite: supply --project DIR or OT_PROJECT",
+        "covered_by": "midi-concert"
+      }
+    ]
+  },
+  "qualified_suites": [
+    {
+      "name": "degree-lifecycle",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_harmony_degree_port.py",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "harmony-final/degree-lifecycle.log",
+      "duration_seconds": 1223.18,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "degree-lifecycle.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "degree-scenes",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_harmony_degree_scenes_port.py",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "harmony-final/degree-scenes.log",
+      "duration_seconds": 246.197,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "degree-scenes.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "size-scenes",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_harmony_size_scenes_port.py",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "harmony-final/size-scenes.log",
+      "duration_seconds": 189.747,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "size-scenes.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "native-parts",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_midi_part_port.py",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "harmony-final/native-parts.log",
+      "duration_seconds": 14.061,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "native-parts.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "combined-retention",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_harmony_track_port.py",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "harmony-final/combined-retention.log",
+      "duration_seconds": 78.652,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "combined-retention.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "plocks-editor",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-projects/.venv/bin/python",
+        "tools/verify/verify_plocksp2.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "projects-final/plocks-editor.log",
+      "duration_seconds": 174.172,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "plocks-editor.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "kits-recall",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-projects/.venv/bin/python",
+        "tools/verify/verify_harmony_degree_kits_port.py",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base",
+        "--scenes",
+        "--size-four"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "projects-final/kits-recall.log",
+      "duration_seconds": 423.206,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "kits-recall.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "kits-full",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-projects/.venv/bin/python",
+        "tools/verify/verify_kits.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/kits-v2/native/project",
+        "--strand-project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/kits-v2/rejected-bank",
+        "--octakit-project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/kits-v2/octakit-v3-synthetic"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "projects-final/kits-full.log",
+      "duration_seconds": 322.811,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "kits-full.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "set",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-projects/.venv/bin/python",
+        "tools/verify/verify_set.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/hosted"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "projects-final/set.log",
+      "duration_seconds": 49.305,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "set.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "tempo-bus",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-projects/.venv/bin/python",
+        "tools/verify/verify_tempobus.py",
+        "harmony-track-bus"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "projects-final/tempo-bus.log",
+      "duration_seconds": 19.058,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "tempo-bus.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "fx2-lock",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-projects/.venv/bin/python",
+        "tools/verify/verify_fx2lock.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/hosted"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "projects-final/fx2-lock.log",
+      "duration_seconds": 49.526,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "fx2-lock.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "brain",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-projects/.venv/bin/python",
+        "tools/verify/verify_brain.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/hosted"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "projects-final/brain.log",
+      "duration_seconds": 1134.431,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "brain.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "load-meter",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-projects/.venv/bin/python",
+        "tools/verify/verify_loadmeter.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/hosted"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "projects-final/load-meter.log",
+      "duration_seconds": 1290.11,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "load-meter.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "reserve-writes",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-remainder/.venv/bin/python",
+        "tools/verify/verify_reserve_writes.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "project-remainder/reserve-writes.log",
+      "duration_seconds": 11.151,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "reserve-writes.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "midi-concert",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_midi_concert_port.py",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "midi-final/midi-concert.log",
+      "duration_seconds": 209.537,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "midi-concert.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "loopback-ui",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_midi_loopback_ui_port.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "midi-final/loopback-ui.log",
+      "duration_seconds": 221.336,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "loopback-ui.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "loopback-producers",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_midi_loopback_producers_port.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "midi-final/loopback-producers.log",
+      "duration_seconds": 96.329,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "loopback-producers.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "loopback-notes",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_midi_loopback.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "loopback-capture-fixed/loopback-notes.log",
+      "duration_seconds": 147.634,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "loopback-notes.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856",
+      "emulator_sha256": "5b4188f4d9b71b4ba3998c55d3740ced6839857e89d087d8d72008c1c210aa5f"
+    },
+    {
+      "name": "loopback-routing",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_midi_loopback.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base",
+        "--routing"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "midi-final/loopback-routing.log",
+      "duration_seconds": 37.896,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "loopback-routing.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "loopback-controls",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_midi_loopback.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base",
+        "--controls"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "loopback-controls-final/loopback-controls.log",
+      "duration_seconds": 172.718,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "loopback-controls.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856",
+      "emulator_sha256": "5b4188f4d9b71b4ba3998c55d3740ced6839857e89d087d8d72008c1c210aa5f"
+    },
+    {
+      "name": "midi-scenes",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-remainder/.venv/bin/python",
+        "tools/verify/verify_scenes.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/midi-scenes",
+        "--persist",
+        "--jobs",
+        "2"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "project-remainder/midi-scenes.log",
+      "duration_seconds": 334.535,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "midi-scenes.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "scenes-p2",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-remainder/.venv/bin/python",
+        "tools/verify/verify_scenesp2.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "project-remainder/scenes-p2.log",
+      "duration_seconds": 43.268,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "scenes-p2.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "midi-follow",
+      "command": [
+        "$SOURCE_WORKTREE/out/track-completion-remainder/.venv/bin/python",
+        "tools/verify/verify_midi_follow.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "log": "project-remainder/midi-follow.log",
+      "duration_seconds": 755.866,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "midi-follow.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "mode-defaults",
+      "status": "passed",
+      "exit_code": 0,
+      "log": "mode-defaults-final.log",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    }
+  ],
+  "superseded_failures": [
+    {
+      "name": "loopback-notes",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_midi_loopback.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base"
+      ],
+      "status": "failed",
+      "exit_code": 1,
+      "log": "midi-final/loopback-notes.log",
+      "duration_seconds": 127.753,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "loopback-notes.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "loopback-controls",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_midi_loopback.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base",
+        "--controls"
+      ],
+      "status": "failed",
+      "exit_code": 1,
+      "log": "midi-final/loopback-controls.log",
+      "duration_seconds": 62.366,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "loopback-controls.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    {
+      "name": "loopback-controls",
+      "command": [
+        "$SOURCE_WORKTREE/.venv/bin/python",
+        "tools/verify/verify_midi_loopback.py",
+        "harmony-track-bus",
+        "--project",
+        "$SOURCE_WORKTREE/out/track-completion-fixtures/base",
+        "--controls"
+      ],
+      "status": "failed",
+      "exit_code": 1,
+      "log": "loopback-capture-fixed/loopback-controls.log",
+      "duration_seconds": 134.91,
+      "skips": [],
+      "not_applicable": [],
+      "stdout": "loopback-controls.stdout",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856",
+      "emulator_sha256": "5b4188f4d9b71b4ba3998c55d3740ced6839857e89d087d8d72008c1c210aa5f"
+    }
+  ],
+  "corrections": {
+    "loopback-notes": "Emulator sampled UART boundary after the first step. All eight complete captures remained byte-identical.",
+    "loopback-controls": "Same boundary issue, then unequal setup calls shifted the finite LFO capture. One destination call per mode preserves exact comparisons."
+  },
+  "workers": {
+    "main": {
+      "source_head": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
+      "emulator_sha256": "5b4188f4d9b71b4ba3998c55d3740ced6839857e89d087d8d72008c1c210aa5f",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    "check": {
+      "source_head": "15eca742b2cbbea8226e53fa59c29c15db7105c6",
+      "emulator_sha256": "d7520e956b70d3af5455ec168a638a8908d1f82596c944f2243fedbc2acb352c",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    "projects": {
+      "source_head": "15eca742b2cbbea8226e53fa59c29c15db7105c6",
+      "emulator_sha256": "d7520e956b70d3af5455ec168a638a8908d1f82596c944f2243fedbc2acb352c",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    },
+    "remainder": {
+      "source_head": "251fbc2fc1ae45b276e0a99868e37e73e7ef423b",
+      "emulator_sha256": "5b4188f4d9b71b4ba3998c55d3740ced6839857e89d087d8d72008c1c210aa5f",
+      "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+    }
+  },
+  "upstream_integrity": {
+    "upstream": "2d1cbcf471cf8b63e2279b3c372a6ebb47456a99",
+    "plocks_only_runtime_change": "native edited flag and pending trig-tap masks",
+    "plocks_retained_start": "0x100f8600",
+    "plocks_retained_end": "0x100fbdf0",
+    "plocks_retained_locks": 4768,
+    "midi_scenes_runtime_identical": true,
+    "kits_only_runtime_change": "existing two-line reserved record-header initialization from OCTABAM85, commit 44a7c6b9",
+    "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+  },
+  "combined_retention": {
+    "p2_locks": 4768,
+    "p2_encoded_bytes": 14320,
+    "harmony_step_tuples": 8192,
+    "midi_scenes_bytes": 16384,
+    "retained_restarts": 2,
+    "native_checkpoint": true,
+    "native_new_project_and_retained_restart": true,
+    "p2_matches_upstream_capacity": true,
+    "harmony_capacity_reduced": false,
+    "track_clear_restart": true,
+    "hardware_tested": false,
+    "image_sha256": "98e809740dcb5411c6498cc1e1a7a48e052f1c44652b5c269b7ed13f154e6856"
+  },
+  "capture_boundary_control": "capture-boundary-control.json",
+  "project_tail_handoff": "project-tail-handoff.json",
+  "evidence_kind": "prior completed source run; not rerun by publication"
+}
