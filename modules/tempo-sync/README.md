@@ -47,3 +47,14 @@ caves; the build now refuses both variables.
 Background: [`docs/firmware/DSP.md`](../../docs/firmware/DSP.md) section 6c,
 [`docs/firmware/PARAM_PAGES.md`](../../docs/firmware/PARAM_PAGES.md) section 7,
 [`docs/firmware/MIDI.md`](../../docs/firmware/MIDI.md).
+
+The installed-hook gate executes the writer on all eight tracks and checks
+FX2 IDs, held-note publication, release, surrounding bytes and register
+preservation. It also checks the OFF and REPLAY diagnostic selections.
+This is emulator coverage, not a new hardware result.
+
+Upstream commit `b2a35a5` fixed same-named local symbols shadowing the
+TEMPO SYNC target by resolving symbols within their owning linked unit.
+This gate checks the installed firmware behavior alongside that linker's
+unit tests. It adds regression coverage; it is not a prerequisite for
+MIDI Scales or the later MIDI modules and does not change the firmware.
