@@ -938,7 +938,8 @@
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",
       "path": "tools/verify/prepare_mattias_fixture.py",
       "sha256": "dad8460ddb39330c7b162a50f807baaee889dd51787f239cc69d787c59c17cd0",
-      "published_sha256": "dad8460ddb39330c7b162a50f807baaee889dd51787f239cc69d787c59c17cd0"
+      "published_sha256": "70ffb2dcbb0381681d41e34cee9c2b4d293afa57c0f0985b4990afc865d3c35a",
+      "migration_note": "Updated documentation pointer to the new workflow; executable code unchanged."
     },
     "tools/verify/tests/test_sram_ledger.py": {
       "commit": "03f7e81aee53d1d0b0c16ef1694bb10a35dcb63d",

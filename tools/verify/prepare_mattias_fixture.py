@@ -2,7 +2,7 @@
 """Prepare owned integration fixtures; never edit the source project.
 
 Usage: .venv/bin/python3 tools/verify/prepare_mattias_fixture.py SOURCE OUTPUT
-OUTPUT must not exist. See docs/guide/FORK_WORKFLOW.md for the release gates.
+OUTPUT must not exist. See docs/guide/RADIOHAGEN_WORKFLOW.md for the release gates.
 """
 import argparse
 import hashlib
