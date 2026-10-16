@@ -179,6 +179,8 @@ moment it costs real work, and add its line here.
 - [Same-named labels across units resolve by nm table order](docs/contributing/TRAPS.md#trap-nm-order) — per-unit tables; a ref naming a symbol its unit does not define is refused.
 - [A completion IRQ in the first-sector write window polls DRQ on the stale count](docs/contributing/TRAPS.md#trap-first-sector-irq) — the guard keeps the sector and its bookkeeping inside the existing mask; `verify_ata_write` gates it.
 
+- [Injected C calls leave arguments on main's stack](docs/contributing/TRAPS.md#trap-injected-call-stack) — validate the callee boundary, then reclaim caller-owned arguments.
+
 ## How claims are written here
 
 The project has been burned by stale confident numbers more than once — a
