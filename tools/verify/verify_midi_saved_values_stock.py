@@ -41,6 +41,10 @@ def main():
     args = ap.parse_args()
     selected = (3,12,13,15) if args.scope=='follow' else (5,16,17,18,19) if args.scope=='harmony-only' else tuple(FIELDS)
     fields = {k:v for k,v in FIELDS.items() if k in selected}
+    if args.scope == 'harmony-only':
+        # The standalone feature uses native Major/Minor; extended KEY modes
+        # belong to the separately tested MIDI Scales integration.
+        fields[17] = ('KEY', 24, 24)
     out = ROOT / 'out' / ('midi-' + args.scope + '-stock')
     out.mkdir(parents=True, exist_ok=True)
     # Shared verification may rebuild out/ for other remixes. Refuse a wrong
