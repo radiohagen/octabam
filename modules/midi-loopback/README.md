@@ -15,8 +15,9 @@ DIN/USB output. Use it to sequence audio-track controls without a loopback cable
 | INT | Internal receiver only. |
 | BOTH | One internal copy plus DIN/USB output. |
 
-Edits apply immediately. Press A, YES or NO to close. A track/page key closes
-the window first; press it again to change selection. CHAN shows **I** for INT
+Edits apply immediately. Press A, YES or NO to close. A track key closes
+the window and selects that track. A page key closes the window first; press it
+again to change page. CHAN shows **I** for INT
 or **B** for BOTH. CHAN OFF disables sequencer output.
 
 For example, MIDI T1 on channel 1 with INT and CC 34 can control audio T1's

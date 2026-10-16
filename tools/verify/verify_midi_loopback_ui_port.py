@@ -67,7 +67,7 @@ def main():
         closed=run(name,edit+key(4500,k)+'4900 quit\n')
         assert closed==state,name
         assert (w/(name+'-window.bin')).read_bytes()==bytes(4),name
-        assert (w/(name+'-track.bin')).read_bytes()==b'\0',name
+        assert (w/(name+'-track.bin')).read_bytes()==bytes([1 if name=='track' else 0]),name
     # Isolate transport from native received-note mappings that can select tracks.
     run('transport',edit+'4200 enc 0 -4\n'+key(4400,0x28)+key(6800,0x27)+'7300 quit\n',extra=('--internal-clock',))
     assert int.from_bytes((w/'transport-window.bin').read_bytes(),'big')!=0

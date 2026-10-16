@@ -21,8 +21,9 @@ Turn **A: DEST** in the window:
 | INT | Internal delivery; bypass the shared DIN/USB sender. |
 | BOTH | One internal copy plus existing DIN/USB output. |
 
-Edits apply immediately. A press, YES or NO closes the window. Track/page
-keys close it first; a second press changes selection. B–F are inactive;
+Edits apply immediately. A press, YES or NO closes the window. A track key
+closes it and selects the requested track in one press. A page key closes it
+first; a second press changes page. B–F are inactive;
 transport and chromatic keys pass through. CHAN shows an **I** suffix for INT
 or **B** for BOTH (for example `2I`); EXT keeps the normal channel display.
 CHAN OFF still disables sequencer output.
