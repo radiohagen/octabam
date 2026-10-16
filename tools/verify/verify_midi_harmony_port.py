@@ -449,11 +449,23 @@ def persistence(source,voic=1,omit=0):
     return {work.name:'pass'}
 
 
+def initial_follower_root(sym):
+    # This fixture loads C (48) under the follower's C# minor KEY. Degree
+    # conversion chooses B (47), with ties downward. Before the first source
+    # trig, Follow uses that local degree, not its later FIXED-octave root.
+    return 47 if "hd_banks" in sym else 48
+
+
 def auto_voicing(source):
     results={};sym=harmony.symbols();has_follow='bf_source_get' in sym
     for arp in (False,True):
         work=fixture(source,'auto-sequence-'+('arp' if arp else 'chords'),{0:2,1:1},
                      arp=arp,first_note=60,auto=(0,))
+        if has_follow and not arp:
+            local=run(work,'local-root-control',['--sequencer','--internal-clock','--frames','7000'])
+            balanced(local)
+            local_roots=[e[2] for e in local if e[:2]==('on',2)]
+            assert local_roots and local_roots[0]==initial_follower_root(sym),local_roots
         extra=['--sequencer','--internal-clock','--frames','7000']
         if has_follow:extra+=['--step','-:poke:0x100b14cc=1','--step',f'-:call:{sym["bf_encoder"]:#x},3,4']
         events=run(work,'play',extra);balanced(events)
@@ -462,7 +474,7 @@ def auto_voicing(source):
         if not arp:assert lead==[60,64,67,60,65,69,59,62,67],lead
         else:assert {60,64,67,65,69,59,62}<=set(lead),lead
         if has_follow:
-            if not arp:assert bass==[48,36,36,41,43,43],bass
+            if not arp:assert bass==[initial_follower_root(sym),36,36,41,43,43],bass
             else:assert {36,41,43}<=set(bass),bass
         results[work.name]=dict(leader=lead,follower=bass)
         print(f'  [ok] {work.name}: C -> inverted F -> inverted G; follower uses harmonic root',flush=True)
@@ -593,7 +605,7 @@ def spread_output(source):
                 arp_want=want[:3]+(want[count:2*count]*2)[:5]+(want[2*count:]*2)[:5]
                 assert lead==arp_want,(name,lead,arp_want)
             if has_follow:
-                if not arp:assert bass==[48,36,36,41,43,43],bass
+                if not arp:assert bass==[initial_follower_root(sym),36,36,41,43,43],bass
                 else:assert {36,41,43}<=set(bass),bass
             results[name]=dict(leader=lead,follower=bass)
             print(f'  [ok] {name}: spaced chords, unchanged follower roots and balanced note-offs',flush=True)
@@ -621,7 +633,7 @@ def manual_inversions(source):
             if not arp:assert lead==expected,(lead,expected)
             else:assert set(lead)<=set(expected) and lead[:3]==expected[:3] and {77,83}<=set(lead),lead
             if has_follow:
-                if not arp:assert bass==[48,36,36,41,43,43],bass
+                if not arp:assert bass==[initial_follower_root(sym),36,36,41,43,43],bass
                 else:assert {36,41,43}<=set(bass),bass
             results[work.name]=dict(leader=lead,follower=bass)
             print(f'  [ok] {work.name}: manual inversion before arp, original follower root, balanced notes',flush=True)
@@ -633,7 +645,7 @@ def manual_inversions(source):
     assert lead==[69,72,71,74],lead # empty first chord must not leak note zero
     if has_follow:
         bass=[e[2] for e in events if e[:2]==('on',2)]
-        assert bass==[48,43,43,41,43,43],bass
+        assert bass==[initial_follower_root(sym),43,43,41,43,43],bass
     results[work.name]=lead
     print('  [ok] omit-empty-sequence: silent root-only chord, follower root retained, next chord recovers',flush=True)
     work=fixture(source,'manual-page',{0:3})
