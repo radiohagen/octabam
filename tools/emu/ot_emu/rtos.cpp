@@ -1389,7 +1389,8 @@ namespace ot
 		}
 		// retaddr at [sp], then the args in the order given -- the convention
 		// the firmware's own call sites use (`pea a1; pea a0; jsr addr`).
-		const auto sp = m_machine.getA7() - 4 * static_cast<uint32_t>(1 + _args.size());
+		const auto callerSp = m_machine.getA7();
+		const auto sp = callerSp - 4 * static_cast<uint32_t>(1 + _args.size());
 		m_machine.poke32(sp, g_mainSpin);
 		for(size_t i = 0; i < _args.size(); ++i)
 			m_machine.poke32(sp + 4 * static_cast<uint32_t>(i + 1), _args[i]);
@@ -1411,7 +1412,19 @@ namespace ot
 		const auto st = runLoop(s);
 		if(st == Stop::Gate)
 		{
+			if(m_machine.getA7() != sp + 4)
+			{
+				char msg[160];
+				std::snprintf(msg, sizeof msg, "callAsMain(%#x): C ABI stack mismatch: %#x, expected %#x",
+					_addr, m_machine.getA7(), sp + 4);
+				m_why = msg;
+				return false; // Preserve the failure; do not hide a callee leak.
+			}
 			_d0 = m_machine.getD0();
+			// RTS consumes the return address, not the C ABI arguments. We
+			// are the caller: reclaim them before borrowing main again.
+			// Otherwise every four-argument event leaks 16 bytes of its stack.
+			m_machine.setA7(callerSp);
 			return true;
 		}
 		if(st != Stop::Time)
