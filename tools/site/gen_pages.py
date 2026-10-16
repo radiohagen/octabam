@@ -94,6 +94,7 @@ def _label(m) -> str:
         "character-txtr": "Character TXTR",
         "direct-jump-kyoti": "Direct jump (Kyoti)",
         "lofi-amf-fix": "Lo-Fi AMF fix",
+        "midi-sram": "MIDI SRAM",
         "plocks-p2": "Page 2 parameter locks",
         "rec-trig-mute": "Recorder trig mute",
         "rlen-plen": "RLEN PLEN",
