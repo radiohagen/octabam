@@ -70,10 +70,12 @@ nav:
   - Kits and Scenes:
       - Kits: reference/modules/kits.md
       - MIDI Part State: reference/modules/midi-part-state.md
+      - MIDI SRAM: reference/modules/midi-sram.md
       - MIDI Scenes: reference/modules/midi-scenes.md
       - Page 2 Scene Locks: reference/modules/scenes-p2.md
   - MIDI and USB:
       - MIDI Loopback: reference/modules/midi-loopback.md
+      - MIDI Harmony: reference/modules/midi-harmony.md
       - USB: reference/modules/usb.md
       - CC Map: reference/modules/cc-map.md
       - CC Feedback: reference/modules/cc-feedback.md

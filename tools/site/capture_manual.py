@@ -211,6 +211,30 @@ def capture_midi_loopback(p,r):
     shot(p,'midi-loopback','channel-both','MIDI NOTE SETUP: CHAN 1B indicates both destinations.',r)
 
 
+def capture_midi_harmony(p, r):
+    press(p,'midi');press(p,'t1');p.chord('func','pg_amp')
+    press_encoder(p,5);enc(p,5,4)
+    close(p);p.chord('func','pg_playback')
+    assert p.peek(0x100a4ece+0x4e2,1)==b'\x01'
+    enc(p,5,4);enc(p,5,4)
+    assert p.peek(0x100a4ece+0x4e2+5,1)==b'\x02', 'HARM must be CHORD'
+    p.run(400)  # Allow the panel UART to finish drawing the changed screen.
+    shot(p,'midi-harmony','setup','MIDI NOTE SETUP: HARM CHORD enables degree roots and generated chords.',r)
+    press_encoder(p,5)
+    p.run(400)  # Allow the panel UART to finish drawing the changed screen.
+    shot(p,'midi-harmony','voicing','HARMONY: HARM, VOIC, SPRD, ROOT and SIZE controls.',r)
+    close(p);close(p);press(p,'pg_playback')
+    p.run(400)  # Allow the panel UART to finish drawing the changed screen.
+    shot(p,'midi-harmony','degrees','MIDI NOTE: DEG and CHRD replace root and chord-tone editing while HARM is active.',r)
+    # Keep FUNC held while navigating: releasing it accepts the mode menu.
+    p.key('func',True);p.run(60)
+    press(p,'down',3)
+    p.key('func',False);p.run(300)
+    assert p.long(0x460d16f0)==6, ('CHORD PLAY mode must be selected',p.long(0x460d16f0))
+    p.run(400)  # Allow the panel UART to finish drawing the changed screen.
+    shot(p,'midi-harmony','chord-play','CHORD PLAY: lower trig keys play roots; upper keys select chord variations.',r)
+
+
 def prepare(remix,project,assignments):
     label='manual-features' if remix.startswith('../') else remix
     work=OUT/label;work.mkdir(parents=True,exist_ok=True)
@@ -251,6 +275,14 @@ def prepare(remix,project,assignments):
                     data[base+0x2d3+otp.SLOT_KIND['flex']]=0
             otp._bank_write(fixture,int(bank.stem[4:]),mut,guard=False)
         audio=['--audio',str(marker)+':FMSYNTH.WAV']
+    if remix=='midi-harmony':
+        # A sounding CHORD PLAY example needs an output channel. Seed only
+        # the disposable project; the feature controls are driven by panel.
+        for bank in fixture.glob('bank*.work'):
+            def midi_channel(data):
+                for part in range(otp.NPARTS_ALL):
+                    data[otp.PART_BASE+part*otp.PART_STRIDE+9+0x4e2]=1
+            otp._bank_write(fixture,int(bank.stem[4:]),midi_channel,guard=False)
     # A saved bank is needed for the reload gesture demonstration.
     for bank in fixture.glob('bank*.work'):
         shutil.copy2(bank,bank.with_suffix('.strd'))
@@ -261,13 +293,14 @@ def prepare(remix,project,assignments):
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('groups',nargs='+',choices=['core','features','inserts','bus','extras','machines','probes','midi-loopback'])
+    ap.add_argument('groups',nargs='+',choices=['core','features','inserts','bus','extras','machines','probes','midi-loopback','midi-harmony'])
     cfg=Path.home()/'.octabam_project'
     ap.add_argument('--project',default=os.environ.get('OT_PROJECT') or (cfg.read_text().strip() if cfg.is_file() else ''))
     a=ap.parse_args();OUT.mkdir(parents=True,exist_ok=True)
     for group in a.groups:
         assignments=[]
         if group=='core': jobs=[('octabam-core',capture_core,[])]
+        elif group=='midi-harmony':jobs=[('midi-harmony',capture_midi_harmony,[])]
         elif group=='midi-loopback':jobs=[('midi-loopback',capture_midi_loopback,[])]
         elif group=='features':
             # A scratch selection: THR and REC_TRIG_MUTE share a hook and cannot coexist.

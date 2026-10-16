@@ -650,5 +650,35 @@
       "source": "emulator panel UART",
       "firmware_sha256": "a9eb6cf4169608bce8bd68636bf26ede98fdebf1c97d4d1078202e128a475f47"
     }
+  },
+  "midi-harmony": {
+    "setup": {
+      "image": "midi-harmony/setup.png",
+      "caption": "MIDI NOTE SETUP: HARM CHORD enables degree roots and generated chords.",
+      "remix": "midi-harmony",
+      "source": "emulator panel UART",
+      "firmware_sha256": "51450b36470a7aeeb083078c65bdc2af4902d05a6571637003002bd06c9376f2"
+    },
+    "voicing": {
+      "image": "midi-harmony/voicing.png",
+      "caption": "HARMONY: HARM, VOIC, SPRD, ROOT and SIZE controls.",
+      "remix": "midi-harmony",
+      "source": "emulator panel UART",
+      "firmware_sha256": "51450b36470a7aeeb083078c65bdc2af4902d05a6571637003002bd06c9376f2"
+    },
+    "degrees": {
+      "image": "midi-harmony/degrees.png",
+      "caption": "MIDI NOTE: DEG and CHRD replace root and chord-tone editing while HARM is active.",
+      "remix": "midi-harmony",
+      "source": "emulator panel UART",
+      "firmware_sha256": "51450b36470a7aeeb083078c65bdc2af4902d05a6571637003002bd06c9376f2"
+    },
+    "chord-play": {
+      "image": "midi-harmony/chord-play.png",
+      "caption": "CHORD PLAY: lower trig keys play roots; upper keys select chord variations.",
+      "remix": "midi-harmony",
+      "source": "emulator panel UART",
+      "firmware_sha256": "51450b36470a7aeeb083078c65bdc2af4902d05a6571637003002bd06c9376f2"
+    }
   }
 }
