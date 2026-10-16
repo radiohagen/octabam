@@ -20,6 +20,7 @@ Each carries one module, or one combination, for that module's gates: `make chec
 | [`euclid`](euclid/README.md) | Euclid rhythmic modulation: 12 dB LP/BP/HP or AMP, both FX slots. | local render: the module's render gates |
 | [`euclid-fill`](euclid-fill/README.md) | stock effects with EUCLID FILL: TRACK+PAGE Euclidean trig-fill page. | `make check` |
 | [`gateverb`](gateverb/README.md) | GATE VERB alone: the fixture of its render gate. | local render: `verify_gateverb`; not flashed |
+| [`harmony-shared`](harmony-shared/README.md) | Per-track HARM on MIDI NOTE SETUP; scale notes and chords before the stock arp. | port-gated |
 | [`harmony-track`](harmony-track/README.md) | Per-track HARM on MIDI NOTE SETUP; scale notes and chords before the stock arp. | port-gated |
 | [`kits`](kits/README.md) | KITS (255 Kits per project) on the stock effects. | port-gated: verify_kits under the port |
 | [`kyoti-fixes`](kyoti-fixes/README.md) | stock effects with QUANTIZE_LIVE_REC_TOGGLE, ERASE_EMPTY_TRIGLESS_LOCKS and BATCH_BUGFIXES together. | `make check` |
