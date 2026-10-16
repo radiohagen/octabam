@@ -11,19 +11,15 @@ import toolpath
 from unicorn import Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN, UC_HOOK_CODE, UC_HOOK_MEM_WRITE
 from unicorn.m68k_const import *
 
-
-
-
 def dram_map_size(layout):
     """Cover stock RAM and the selected runtime, staging and retained state."""
     end = max(0x41000000, layout['top'], layout['stage_end'], layout['ceiling'])
     return (end - 0x40000000 + 4095) & ~4095
 
 
-
 def symbols():
     raw = subprocess.check_output(['m68k-elf-nm', str(ROOT/'out/platform/runtime/runtime.elf')], text=True)
-    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [Tt] ((?:mp|lb)_\w+)$',raw,re.M)}
+    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [Tt] ((?:mp|lb|bf)_\w+)$',raw,re.M)}
 
 class Machine:
     def __init__(self, symbol_loader=symbols, artifact_root=None):
@@ -55,6 +51,25 @@ class Machine:
         bank=int.from_bytes(self.uc.mem_read(0x46c82456,4),'big')
         part=self.uc.mem_read(0x100b14cf,1)[0]
         return bank+0x8ed80+part*0x18b2+0x4e2+track*36+field
+    def follow_write(self,field,data,track=0):
+        """Seed native Part bytes, including deliberately corrupt routing data."""
+        slots={'source':3,'mode':12,'fixed':13,'offset':15,'response':12}
+        for t,v in enumerate(data,track):
+            a=self.part_address(t,slots[field])
+            if field=='mode':v=(self.uc.mem_read(a,1)[0]&2)|(v&1)
+            if field=='response':v=(self.uc.mem_read(a,1)[0]&1)|((v&1)<<1)
+            if field=='offset':v=(v+2)&255
+            self.uc.mem_write(a,bytes((v,)))
+    def follow_read(self,field,count=8,track=0):
+        slots={'source':3,'mode':12,'fixed':13,'offset':15,'response':12}
+        values=[]
+        for t in range(track,track+count):
+            v=self.uc.mem_read(self.part_address(t,slots[field]),1)[0]
+            if field=='mode':v&=1
+            if field=='response':v=(v>>1)&1
+            if field=='offset':v=(v-2)&255
+            values.append(v)
+        return bytes(values)
     def stop(self,u,p,n,x):
         if p in self.stops:self.arrival=p;u.emu_stop()
     def call(self,name,d0=0,d1=0,a0=None,stop=None,regs=None):

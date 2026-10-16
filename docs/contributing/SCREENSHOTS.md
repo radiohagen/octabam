@@ -124,3 +124,6 @@ Name the groups, project and remix in the PR body.
 
 The `midi-loopback` group uses a sample-free fixture starting on audio track 1,
 with MIDI channel 1 and routing EXT. Pass that local fixture with `--project`.
+
+`midi-follow` captures RFOL source selection and the FIXED/TRIG and SOURCE/LIVE
+register settings on its standalone remix.

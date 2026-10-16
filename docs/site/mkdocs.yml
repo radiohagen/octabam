@@ -73,6 +73,7 @@ nav:
       - MIDI Scenes: reference/modules/midi-scenes.md
       - Page 2 Scene Locks: reference/modules/scenes-p2.md
   - MIDI and USB:
+      - MIDI Follow: reference/modules/midi-follow.md
       - MIDI Loopback: reference/modules/midi-loopback.md
       - USB: reference/modules/usb.md
       - CC Map: reference/modules/cc-map.md

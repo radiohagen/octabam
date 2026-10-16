@@ -195,6 +195,34 @@ def press_encoder(p, n):
     p.proc.command('key 0x27 0', 'ok');p.run(80)
 
 
+def capture_midi_follow(p, r):
+    press(p,'midi');press(p,'t2');p.chord('func','pg_playback')
+    enc(p,3,4)
+    assert p.peek(0x100a4ece+0x4e2+36+3,1)==b'\x01', 'T2 RFOL must select T1'
+    p.run(400)  # Allow the panel UART to finish drawing the changed screen.
+    shot(p,'midi-follow','source','MIDI T2 NOTE SETUP: RFOL selects MIDI T1.',r)
+    press_encoder(p,3)
+    for _ in range(12):
+        octave=p.peek(0x100a4ece+0x4e2+36+13,1)[0]
+        if octave==3:break
+        enc(p,2,4 if octave<3 else -4)
+    assert p.peek(0x100a4ece+0x4e2+36+13,1)==b'\x03'
+    p.run(400)  # Allow the panel UART to finish drawing the changed screen.
+    shot(p,'midi-follow','fixed','FOLLOW: FIXED octave 3 and TRIG response.',r)
+    enc(p,1,4)
+    for _ in range(5):
+        octave=p.peek(0x100a4ece+0x4e2+36+15,1)[0]
+        if octave==3:break
+        enc(p,2,4 if octave<3 else -4)
+    assert p.peek(0x100a4ece+0x4e2+36+15,1)==b'\x03'
+    enc(p,3,4)
+    assert p.peek(0x100a4ece+0x4e2+36+12,1)[0]&3==3, 'SOURCE and LIVE must be enabled'
+    p.run(400)  # Allow the panel UART to finish drawing the changed screen.
+    shot(p,'midi-follow','source-live','FOLLOW: SOURCE octave +1 and LIVE response.',r)
+    close(p)
+
+
+
 def capture_midi_loopback(p,r):
     # Sample-free fixture starts in audio mode, with MIDI channel 1, DEST EXT.
     press(p,'midi');press(p,'t1');p.chord('func','pg_playback')
@@ -261,13 +289,14 @@ def prepare(remix,project,assignments):
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('groups',nargs='+',choices=['core','features','inserts','bus','extras','machines','probes','midi-loopback'])
+    ap.add_argument('groups',nargs='+',choices=['core','features','inserts','bus','extras','machines','probes','midi-loopback','midi-follow'])
     cfg=Path.home()/'.octabam_project'
     ap.add_argument('--project',default=os.environ.get('OT_PROJECT') or (cfg.read_text().strip() if cfg.is_file() else ''))
     a=ap.parse_args();OUT.mkdir(parents=True,exist_ok=True)
     for group in a.groups:
         assignments=[]
         if group=='core': jobs=[('octabam-core',capture_core,[])]
+        elif group=='midi-follow':jobs=[('midi-follow',capture_midi_follow,[])]
         elif group=='midi-loopback':jobs=[('midi-loopback',capture_midi_loopback,[])]
         elif group=='features':
             # A scratch selection: THR and REC_TRIG_MUTE share a hook and cannot coexist.

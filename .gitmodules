@@ -38,4 +38,4 @@
 [submodule "modules/midi-loopback/upstream"]
 	path = modules/midi-loopback/upstream
 	url = https://github.com/radiohagen/octatrack-modules.git
-	branch = codex/pr/midi-loopback
+	branch = codex/pr/midi-follow
