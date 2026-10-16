@@ -48,8 +48,4 @@ Background: [`docs/firmware/DSP.md`](../../docs/firmware/DSP.md) section 6c,
 [`docs/firmware/PARAM_PAGES.md`](../../docs/firmware/PARAM_PAGES.md) section 7,
 [`docs/firmware/MIDI.md`](../../docs/firmware/MIDI.md).
 
-The exported entry points use the `tempo_note_` prefix. A generic `cave`
-export collided with RLEN PLEN's local symbol in the combined runtime; the
-hook then called the wrong routine and every DSP-facing FX2 ID stayed zero.
-The installed-hook gate executes the writer on all eight tracks and checks
-FX2 IDs, held-note publication and register preservation.
+[Hook implementation and verification](DEVELOPMENT.md).
