@@ -942,3 +942,18 @@ is NOT measured — the guard is not hardware-proven. Rule: an
 interrupt-mask restore that precedes the data it protects is a window;
 before blaming names or parsers, ask what the IRQ handler reads while the
 producer is mid-update.
+
+<a name="trap-injected-call-stack"></a>
+
+### Injected C calls must reclaim caller-owned stack arguments
+
+The emulator's `callAsMain` pushes a return address and arguments. RTS
+consumes the return address, leaving the arguments for the caller. Without
+cleanup, each four-argument injected call leaked 16 bytes from main's
+stack; repeated test events could corrupt unrelated firmware state.
+
+Require the returned stack pointer to match the expected callee boundary,
+then restore the caller's original pointer. Never conceal a callee's stack
+imbalance by restoring it unconditionally. `tools/emu/ot_emu/test_rtos.cpp`
+checks 2,048 four-argument calls, return values and a deliberately unbalanced
+callee. This corrects the testing instrument; it changes no firmware bytes.
