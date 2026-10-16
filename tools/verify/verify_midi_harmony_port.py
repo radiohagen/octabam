@@ -314,7 +314,7 @@ def recording(source):
         script.write_text('100 key 0x31 down\n200 key 0x31 up\n600 key 0x29 down\n700 key 0x28 down\n800 key 0x28 up\n900 key 0x29 up\n1600 key 1 down\n1900 key 1 up\n2600 key 2 down\n2900 key 2 up\n3600 key 5 down\n3900 key 5 up\n4400 key 0x29 down\n4500 key 0x29 up\n14500 key 0x27 down\n14600 key 0x27 up\n15500 quit\n')
         extra=['--step','-:poke:0x80000015=1','--step','-:poke:0x460d16f3=1',
                '--step','-:poke:0x100b14cc=0','--internal-clock','--live-script',script,
-               '--mem-dump',f'0x400e21e0,0x9b340={work}/bank-ram.bin;0x100a4ece,6322={work}/part.bin;0x46c76df1,1={work}/key.bin']
+               '--mem-dump',f'0x400e21e0,0x9b340={work}/bank-ram.bin;0x100a4ece,6322={work}/part.bin;0x46c76df1,1={work}/key.bin;{harmony.symbols()["hd_banks"]:#x},131={work}/degrees.bin']
         events=run(work,'record',extra);balanced(events)
         pitches=[e[2] for e in events if e[:2]==('on',1)]
         expected=[]
@@ -339,7 +339,12 @@ def recording(source):
         bank=(work/'bank-ram.bin').read_bytes()
         lanes=[bank[0x4900+step*32:0x4920+step*32] for step in range(64)]
         recorded=[lane for lane in lanes if lane[0]<128]
-        assert [lane[0] for lane in recorded]==[49,50,53],recorded
+        # C# ties down to C in C major. Degree mode stores canonical
+        # native mirrors, not the unsnapped physical key number.
+        assert [lane[0] for lane in recorded]==[48,50,53],recorded
+        degrees=(work/'degrees.bin').read_bytes()
+        steps=[i for i,lane in enumerate(lanes) if lane[0]<128]
+        assert [degrees[i] for i in steps]==[35,36,38],(steps,degrees)
         assert all(lane[3:6]==b'\xff'*3 for lane in recorded),recorded
         state=(work/'part.bin').read_bytes()
         assert state[0x4e2+5]==min(kind,2)
