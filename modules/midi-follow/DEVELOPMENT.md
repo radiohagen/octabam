@@ -229,6 +229,7 @@ This exercises linked ColdFire code, not physical outgoing-MIDI timing.
 Run `make check REMIX=midi-follow` for the standalone module. The manifest
 runs linked routing, register, response and graph stress checks. With a prepared
 project copy, `verify_midi_follow_response_port.py --project DIR` checks LIVE
-response through emulated panel events and MIDI output. Combined Harmony
-settings/persistence coverage lives in `verify_midi_harmony_port.py --settings-only`,
-and NOTE SETUP confirmation in `verify_midi_setup_port.py`.
+response through emulated panel events and MIDI output. `verify_midi_follow.py midi-follow --project DIR` covers routing, panel controls
+and mutes; `verify_midi_follow_register_port.py --project DIR` covers register
+selection. NOTE SETUP confirmation is covered by `verify_midi_part_settings.py`.
+The separate Harmony integration has its own combination tests.
