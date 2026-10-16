@@ -8,7 +8,8 @@ installed edit/clear bodies, SRAM protection and retention are executed.
 import json
 from unicorn import UC_HOOK_CODE, UC_HOOK_MEM_WRITE
 from unicorn.m68k_const import *
-from verify_harmony_plocks import Combined, BANK, STRIDE
+from verify_harmony_plocks import Combined, BANK, STRIDE, PATTERN
+from verify_harmony_degree_files import Files
 from verify_harmony_degree_packed import oracle, mirror
 from verify_midi_sram import BASE, OFFSETS, SIZE
 from midi_machine import ROOT, InterruptMaskTrace
@@ -43,8 +44,50 @@ def header(data,lane=0):
     return (n>>4).to_bytes(16,'big')
 
 
+class StandaloneRetention(Files):
+    """The same native Harmony fixture without a PLOCKS bridge prerequisite."""
+    def __init__(self):
+        super().__init__()
+        import subprocess
+        raw=subprocess.check_output(['m68k-elf-nm',str(ROOT/'out/platform/runtime/runtime.elf')],text=True)
+        self.sym.update({f[2]:int(f[0],16) for line in raw.splitlines() if len(f:=line.split())==3})
+        self.call('ch_lock_init')
+
+    def seed(self):
+        u, s = self.uc, self.sym
+        u.mem_write(BANK, b'\xff'*STRIDE)
+        for p in range(16):
+            u.mem_write(BANK+p*PATTERN+0x8e57, b'\0')
+        for part in range(8):
+            base = BANK+(0x8ed80+part*0x18b2 if part<4 else 0x9504a+(part-4)*0x18b2)
+            for t in range(8):
+                u.mem_write(base+0x3e2+t*32, b'\x30')
+                for field, value in ((3,0),(5,2),(16,0),(17,1),(18,0),(19,35)):
+                    u.mem_write(base+0x4e2+t*36+field, bytes((value,)))
+        self.call('hd_bank_loaded', 0)
+        roots = bytearray()
+        qualities = bytearray()
+        for lane in range(128):
+            ds = [(lane+step)%84 for step in range(64)]
+            notes = [max(0, min(127, 12*(d//7-1)+(0,2,4,5,7,9,11)[d%7])) for d in ds]
+            roots.extend(bytes(ds+notes+[2,0,255]))
+            qualities.extend(bytes((lane+step)%8 for step in range(64)))
+            for step, note in enumerate(notes):
+                u.mem_write(BANK+(lane//8)*PATTERN+0x4900+(lane%8)*0x8b0+step*32, bytes((note,)))
+        u.mem_write(s['hd_banks'], bytes(roots))
+        u.mem_write(s['ch_lock_table'], bytes(qualities))
+        return bytes(roots), bytes(qualities), None, None
+
+    def c(self,name,*args):
+        result=super().c(name,*args)
+        assert self.uc.reg_read(UC_M68K_REG_A7)==self.stack+4,name
+        return result
+
+
 def main():
-    m=Combined();u=m.uc;s=m.sym
+    m=StandaloneRetention()
+    if 'hpl_ch_memcpy' in m.sym:m=Combined()
+    u=m.uc;s=m.sym
     if not retained.track_layout(m):
         print("[N/A] Harmony MIDI TRACK retention is not selected")
         return
