@@ -3,7 +3,7 @@ from remix.schema import Proof, Remix
 
 REMIX = Remix(
     name="midi-harmony-follow", family="mods", proof=Proof.PORT,
-    proof_note="verify_midi_harmony_port: emulator verification; not flashed",
+    proof_note='',
     doc="MIDI Harmony, Scales and Follow together with all stock effects.",
     modules=("STORE", "MIDI HARMONY", "MIDI SCALES", "MIDI PART STATE", "MIDI FOLLOW", "FILTER", "EQUALIZER", "DJ EQ", "PHASER", "FLANGER",
              "CHORUS", "SPATIALIZER", "COMB FILTER", "COMPRESSOR", "LO-FI",

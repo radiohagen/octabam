@@ -12,10 +12,10 @@ def boundaries(_modules):
 
 MODULE = Module(
     name='midi-loopback-scenes', key='MIDI LOOPBACK SCENES', kind=Kind.CF_PATCH,
-    category=Category.MIDI_USB, author='Mattias Wolff',
+    category=Category.MIDI_USB, author='radiohagen',
     author_url='https://github.com/radiohagen/octatrack-modules',
     doc='Compose MIDI Loopback destinations with MIDI Scenes CC output and USB MIDI.',
-    proof=Proof.CHECK, proof_note='Combined producer and project routing gates; hardware untested',
+    proof=Proof.CHECK, proof_note='',
     requires=('MIDI LOOPBACK', 'MIDI SCENES', 'USB MIDI'),
     linked=(Linked('loopbackscenes', 'modules/midi-loopback-scenes/bridge.s', dram=True, include=boundaries),),
     detours=(Detour(0x40010bc8, bytes.fromhex('4fefffec48d7043c'),

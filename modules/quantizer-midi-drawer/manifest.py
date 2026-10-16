@@ -3,9 +3,9 @@ from remix.schema import Category, Detour, Gate, Kind, Linked, Module, Proof
 
 MODULE = Module(
     name='quantizer-midi-drawer', key='QUANTIZER MIDI DRAWER', kind=Kind.CF_PATCH,
-    category=Category.FIXES, author='Mattias Wolff',
+    category=Category.FIXES, author='radiohagen',
     author_url='https://github.com/radiohagen/octatrack-modules',
-    proof=Proof.CHECK, proof_note='compatibility candidate; hardware untested',
+    proof=Proof.CHECK, proof_note='',
     doc='Keep the native MIDI chromatic octave stack argument beside Scale Quantizer.',
     requires=('SCALE QUANTIZER',),
     linked=(Linked('qzmididrawer', 'modules/quantizer-midi-drawer/drawer.s', dram=True),),

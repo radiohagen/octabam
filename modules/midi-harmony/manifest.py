@@ -31,9 +31,9 @@ def retention_variant(values):
 
 MODULE = Module(
     name='midi-harmony', key='MIDI HARMONY', kind=Kind.CF_PATCH,
-    category=Category.MIDI_USB, author='Mattias Wolff',
+    category=Category.MIDI_USB, author='radiohagen',
     author_url='https://github.com/radiohagen/octatrack-modules', proof=Proof.PORT,
-    proof_note='verify_midi_harmony and verify_harmony_store: linked MIDI and persistence checks; hardware untested',
+    proof_note='',
     doc='Scale-degree roots, generated chords and CHORD PLAY using native ARP KEY; optional MIDI Follow.',
     requires=('MIDI PART STATE','STORE'),
     linked=(Linked('chordpart', 'modules/midi-harmony/chord-part.s', dram=True),

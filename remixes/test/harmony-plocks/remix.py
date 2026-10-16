@@ -3,7 +3,7 @@ from remix.schema import Pin, Proof, Remix
 
 REMIX = Remix(
     name='harmony-plocks', family='mods', proof=Proof.CHECK,
-    proof_note='verify_harmony_plocks: linked bridge and persistence checks; not flashed',
+    proof_note='',
     doc='Harmony and PLOCKS P2 shared-hook integration with SCENES P2.',
     modules=('MIDI PART STATE', 'MIDI HARMONY', 'MIDI SCALES',
              'STORE', 'SCENES P2', 'PLOCKS P2', 'HARMONY PLOCKS',

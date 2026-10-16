@@ -14,9 +14,9 @@ LOOPS = (
 )
 MODULE = Module(
     name='midi-sram', key='MIDI SRAM', kind=Kind.CF_PATCH,
-    category=Category.PARTS, author='Mattias Wolff',
+    category=Category.PARTS, author='radiohagen',
     author_url='https://github.com/radiohagen/octatrack-modules', proof=Proof.CHECK,
-    proof_note='verify_midi_sram: bounded retained I/O and native copy protection; hardware untested',
+    proof_note='',
     doc='Protected retained byte pool in native MIDI step padding.',
     requires=('MIDI PART STATE',),
     linked=(Linked('midisram', 'modules/midi-sram/pool.s', dram=True),),

@@ -2,7 +2,7 @@
 from remix.schema import Pin, Proof, Remix
 REMIX = Remix(
     name='midi-ensemble', family='mods', proof=Proof.CHECK,
-    proof_note='verify_integrated_retention_port and verify_midi_concert_port: emulator evidence; hardware pending',
+    proof_note='',
     doc='Scales, Follow and Harmony with KITS, MIDI SCENES and upstream P2 retention and track-local Harmony.',
     modules=('STORE', 'KITS', 'MIDI SCENES', 'MIDI SRAM', 'MIDI PART STATE',
              'MIDI FOLLOW', 'MIDI SCALES', 'MIDI HARMONY', 'HARMONY PLOCKS',

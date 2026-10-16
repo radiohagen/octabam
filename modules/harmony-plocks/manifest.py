@@ -15,9 +15,9 @@ for d in SHARED:
 
 MODULE = Module(
     name='harmony-plocks', key='HARMONY PLOCKS', kind=Kind.CF_PATCH,
-    category=Category.PARTS, author='Mattias Wolff',
+    category=Category.PARTS, author='radiohagen',
     author_url='https://github.com/radiohagen/octatrack-modules', proof=Proof.CHECK,
-    proof_note='verify_harmony_plocks: combined copy, editing and STORE checks; hardware untested',
+    proof_note='',
     doc='Shared editing and pattern/track copy hooks for Harmony and PLOCKS P2.',
     requires=('MIDI HARMONY', 'PLOCKS P2'),
     linked=(Linked('harmonyp2', 'modules/harmony-plocks/bridge.s', dram=True),),

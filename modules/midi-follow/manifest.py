@@ -7,8 +7,8 @@ def harmony_inc(modules):
 
 MODULE = Module(
     name="midi-follow", key="MIDI FOLLOW", kind=Kind.CF_PATCH,
-    category=Category.MIDI_USB, author="Mattias Wolff", author_url="https://github.com/radiohagen/octatrack-modules",
-    proof=Proof.PORT, proof_note="verify_midi_follow: stock/patched MIDI capture; not flashed",
+    category=Category.MIDI_USB, author='radiohagen', author_url="https://github.com/radiohagen/octatrack-modules",
+    proof=Proof.PORT, proof_note='',
     doc="RFOL selects a source; press D for fixed or source-relative octave, then follower TRAN/P-locks.",
     requires=('MIDI PART STATE',),
     linked=(Linked("bassfollow", "modules/midi-follow/midi_follow.s", dram=True, include=harmony_inc),

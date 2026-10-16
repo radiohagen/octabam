@@ -3,9 +3,9 @@ from remix.schema import Category, Detour, Gate, Kind, Linked, Module, Proof
 
 MODULE = Module(
     name="pio-write-fix", key="PIO WRITE FIX", kind=Kind.CF_PATCH,
-    category=Category.FIXES, author="yvesrosius; standalone packaging: mattiaswolff",
+    category=Category.FIXES, author="yvesrosius; standalone packaging: radiohagen",
     author_url="https://github.com/yvesrosius",
-    proof=Proof.CHECK, proof_note="Original STEM REC fix; standalone emulator qualification, no hardware claim",
+    proof=Proof.CHECK, proof_note='',
     doc="Advance the PIO card writer's pointer and count before sending its first sector; prevents an interrupt from duplicating a sector or stalling.",
     requires=("MEMORY",),
     conflicts=(("STEM REC", "already owns this same PIO first-sector fix"),),

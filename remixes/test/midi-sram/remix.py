@@ -3,7 +3,7 @@ from remix.schema import Proof, Remix
 
 REMIX = Remix(
     name='midi-sram', family='mods', proof=Proof.PORT,
-    proof_note='verify_midi_sram: linked retained pool and native copy checks; not flashed',
+    proof_note='',
     doc='Shared native MIDI Part access and copy/clear boundary, without consumer modules.',
     modules=('MIDI SRAM', 'MIDI PART STATE', 'FILTER', 'EQUALIZER', 'DJ EQ', 'PHASER', 'FLANGER',
              'CHORUS', 'SPATIALIZER', 'COMB FILTER', 'COMPRESSOR', 'LO-FI',

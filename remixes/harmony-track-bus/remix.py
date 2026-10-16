@@ -9,5 +9,5 @@ REMIX = replace(base, name='harmony-track-bus',
         'MIDI FOLLOW', 'MIDI HARMONY', 'HARMONY PLOCKS', 'MIDI LOOPBACK',
         'MIDI LOOPBACK SCENES', 'PIO WRITE FIX', 'QUANTIZER MIDI DRAWER'),
     settings={**base.settings, ('mattias.midi-harmony', 'RETENTION'): Pin('MIDI TRACK')},
-    proof=Proof.CHECK, proof_note='Experimental track-local retention; hardware untested.',
+    proof=Proof.CHECK, proof_note='',
     doc='Bus with Scales, Follow, Harmony and Loopback; Harmony retained per MIDI step; upstream PLOCKS.')
