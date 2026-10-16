@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Track-local Harmony with upstream PLOCKS retention through full firmware.
+"""Track-local Harmony retention through full firmware.
+
+When selected, also checks that upstream PLOCKS and Scenes remain intact.
 
 Seed independently encoded battery SRAM, resume without LOAD PROJECT,
 checkpoint with the real native bank-copy path, and resume that result.
@@ -31,12 +33,15 @@ def main():
     assert 'hd_track_read_c' in sym and 'plk_nv_encode' not in sym and 'plk_pool_encode' not in sym
     port.run(w,'base',['--sequencer','--internal-clock','--frames','1','--mem-dump',f'0x10000000,0x100000={w}/base-cs1.bin'],image=image)
     seed=bytearray((w/'base-cs1.bin').read_bytes())
+    has_p2 = 'STORE' in sym
+    has_scenes = 'scn_lib' in sym
     # Upstream PLOCKS retains 4,768 locks in its original 14,320 bytes.
     count=4768;records=[(i*19,i%128) for i in range(count)]
     expected_p2=bytearray(b'\xff'*98304)
     for i,v in records:expected_p2[i]=v
     encoded=raw(records,bank=0);assert len(encoded)==14320
-    seed[0xf8600:0xfbdf0]=encoded
+    if has_p2:
+        seed[0xf8600:0xfbdf0]=encoded
     # Every MIDI step has a root and an explicit chord quality, including
     # canonical NOTE clipping at both ends. Four 10-bit tokens are five bytes.
     payload=bytearray();degrees=bytearray();qualities=bytearray()
@@ -55,25 +60,38 @@ def main():
     # Fill all 4096 bytes in each of four Scene tables; no sparse shortcut.
     scenes=bytes((i*11+(i//4096)*17)%84 for i in range(16384))
     checksum=sum(struct.unpack('>4096I',scenes))&0xffffffff
-    seed[0xfbdf0:0xfbe00]=struct.pack('>4I',0x53435331,0,checksum,0)
-    seed[0xfbe00:0xffe00]=scenes
+    if has_scenes:
+        seed[0xfbdf0:0xfbe00]=struct.pack('>4I',0x53435331,0,checksum,0)
+        seed[0xfbe00:0xffe00]=scenes
+    def dump_spec(name, reset=False):
+        fields = [(sym['ch_lock_table'],131072 if reset else 8192,'quality'),
+                  (sym['hd_banks'],16768,'roots'),(0x10000000,0x100000,'cs1')]
+        if has_p2:
+            fields.append((sym['STORE'],1572864 if reset else 98304,'p2'))
+        if has_scenes:
+            fields.append((sym['scn_lib'],262144 if reset else 16384,'scenes'))
+        return ';'.join(f'{address:#x},{length}={w}/{name}-{label}.bin' for address,length,label in fields)
     (w/'dense-cs1.bin').write_bytes(seed)
     for name,source,checkpoint in (('resume',w/'dense-cs1.bin',True),('again',w/'resume-cs1.bin',False)):
         extra=['--cs1-in',source,'--no-post','--sequencer','--internal-clock','--frames','1']
         if checkpoint:extra+=['--step','-:call:0x4000faf0,0']
-        extra+=['--mem-dump',f'{sym["STORE"]:#x},98304={w}/{name}-p2.bin;{sym["ch_lock_table"]:#x},8192={w}/{name}-quality.bin;{sym["hd_banks"]:#x},16768={w}/{name}-roots.bin;{sym["scn_lib"]:#x},16384={w}/{name}-scenes.bin;0x10000000,0x100000={w}/{name}-cs1.bin']
+        extra+=['--mem-dump',dump_spec(name)]
         port.run(w,name,extra,image=image,card=w/'base-card.img')
         assert 'DID NOT RETURN' not in (w/f'{name}.log').read_text(),name
-        assert (w/f'{name}-p2.bin').read_bytes()==expected_p2,(name,'P2 mismatch')
+        if has_p2:
+            assert (w/f'{name}-p2.bin').read_bytes()==expected_p2,(name,'P2 mismatch')
         assert (w/f'{name}-quality.bin').read_bytes()==qualities,(name,'quality mismatch')
         roots=(w/f'{name}-roots.bin').read_bytes()
         actual_degrees=b''.join(roots[lane*131:lane*131+64] for lane in range(128))
         assert actual_degrees==degrees,(name,'degree mismatch')
-        assert (w/f'{name}-scenes.bin').read_bytes()==scenes,(name,'Scenes mismatch')
+        if has_scenes:
+            assert (w/f'{name}-scenes.bin').read_bytes()==scenes,(name,'Scenes mismatch')
         after=(w/f'{name}-cs1.bin').read_bytes()
-        assert after[0xf8600:0xfbdf0]==encoded
+        if has_p2:
+            assert after[0xf8600:0xfbdf0]==encoded
         assert after[0x1aa6c] & 0xfc == 0xac
-        assert after[0xfbdf0:0xfbdf4]==b'SCS1'
+        if has_scenes:
+            assert after[0xfbdf0:0xfbdf4]==b'SCS1'
     # Clear a middle track using the complete native operation, then restart.
     lane=59
     for name,source,clear in (('clear-track',w/'again-cs1.bin',True),
@@ -81,7 +99,7 @@ def main():
         extra=['--cs1-in',source,'--no-post','--sequencer','--internal-clock','--frames','1']
         if clear:extra+=['--step',f'-:call:0x40039b00,{lane//8},{lane%8},1',
                           '--step',f'-:call:{sym["hd_nv_poll_c"]:#x}']
-        extra+=['--mem-dump',f'{sym["STORE"]:#x},98304={w}/{name}-p2.bin;{sym["ch_lock_table"]:#x},8192={w}/{name}-quality.bin;{sym["hd_banks"]:#x},16768={w}/{name}-roots.bin;{sym["scn_lib"]:#x},16384={w}/{name}-scenes.bin;0x10000000,0x100000={w}/{name}-cs1.bin']
+        extra+=['--mem-dump',dump_spec(name)]
         port.run(w,name,extra,image=image,card=w/'base-card.img')
         assert 'DID NOT RETURN' not in (w/f'{name}.log').read_text(),name
         expected_q=bytearray(qualities);expected_q[lane*64:(lane+1)*64]=b'\xff'*64
@@ -89,23 +107,28 @@ def main():
         assert (w/f'{name}-quality.bin').read_bytes()==expected_q,name
         roots=(w/f'{name}-roots.bin').read_bytes()
         assert b''.join(roots[i*131:i*131+64] for i in range(128))==expected_d,name
-        assert (w/f'{name}-p2.bin').read_bytes()==expected_p2,name
-        assert (w/f'{name}-scenes.bin').read_bytes()==scenes,name
-    print('[ok] full native MIDI track clear survives restart; other tracks, PLOCKS and Scenes intact',flush=True)
+        if has_p2:
+            assert (w/f'{name}-p2.bin').read_bytes()==expected_p2,name
+        if has_scenes:
+            assert (w/f'{name}-scenes.bin').read_bytes()==scenes,name
+    print('[ok] full native MIDI track clear survives restart; other tracks and selected companion modules intact',flush=True)
     # NEW PROJECT executes STORE's callbacks and the native OS body. A
     # retained restart of that result must never resurrect the dense state.
     for name,source,reset in (('new-project',w/'again-cs1.bin',True),
                               ('new-project-resume',w/'new-project-cs1.bin',False)):
         extra=['--cs1-in',source,'--no-post','--sequencer','--internal-clock','--frames','1']
         if reset:extra+=['--step',f'-:call:{sym["store_newproj"]:#x}']
-        extra+=['--mem-dump',f'{sym["STORE"]:#x},1572864={w}/{name}-p2.bin;{sym["ch_lock_table"]:#x},131072={w}/{name}-quality.bin;{sym["scn_lib"]:#x},262144={w}/{name}-scenes.bin;0x10000000,0x100000={w}/{name}-cs1.bin']
+        extra+=['--mem-dump',dump_spec(name, reset=True)]
         port.run(w,name,extra,image=image,card=w/'base-card.img')
         assert 'DID NOT RETURN' not in (w/f'{name}.log').read_text(),name
-        for store,length in (('p2',1572864),('quality',131072),('scenes',262144)):
+        stores = [('quality',131072)]
+        if has_p2: stores.append(('p2',1572864))
+        if has_scenes: stores.append(('scenes',262144))
+        for store,length in stores:
             assert (w/f'{name}-{store}.bin').read_bytes()==b'\xff'*length,(name,store,'old state survived reset')
-    result={'p2_locks':count,'p2_encoded_bytes':len(encoded),'harmony_step_tuples':8192,
-            'midi_scenes_bytes':16384,'retained_restarts':2,'native_checkpoint':True,'native_new_project_and_retained_restart':True,
-            'p2_matches_upstream_capacity':True,'harmony_capacity_reduced':False,'track_clear_restart':True,'hardware_tested':False,
+    result={'p2_selected':has_p2,'p2_locks':count if has_p2 else None,'p2_encoded_bytes':len(encoded) if has_p2 else None,'harmony_step_tuples':8192,
+            'midi_scenes_bytes':16384 if has_scenes else None,'retained_restarts':2,'native_checkpoint':True,'native_new_project_and_retained_restart':True,
+            'p2_matches_upstream_capacity':True if has_p2 else None,'harmony_capacity_reduced':False,'track_clear_restart':True,'hardware_tested':False,
             'image_sha256':hashlib.sha256(image.read_bytes()).hexdigest()}
     (port.OUT/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result),flush=True)
 
