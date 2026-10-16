@@ -1,5 +1,8 @@
-# MIDI SRAM test carrier
+# MIDI SRAM
 
-Stock effects, MIDI PART STATE and the protected MIDI retained pool. Used for
-stock-versus-protected native copy/clear and retained-restart comparisons.
-See [the module](../../../modules/midi-sram/README.md).
+Stock effects, MIDI Part State and the protected MIDI retained pool.
+This selection adds storage support without additional player controls.
+
+See [MIDI SRAM controls](../../../modules/midi-sram/README.md).
+
+[Developer notes and verification](DEVELOPMENT.md).

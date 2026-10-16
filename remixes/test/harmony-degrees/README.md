@@ -1,4 +1,9 @@
 # Harmony with seven scale modes
 
-Test selection for MIDI HARMONY and MIDI SCALES with native effects.
-Run `make check REMIX=harmony-degrees`. Hardware untested.
+MIDI Harmony and MIDI Scales with STORE, MIDI Part State and native effects.
+Uses Harmony LEGACY retention. Follow, Loopback, PLOCKS, KITS and MIDI Scenes
+are not selected.
+
+See [Harmony with seven scale modes controls](../../../modules/midi-harmony/README.md).
+
+[Developer notes and verification](DEVELOPMENT.md).

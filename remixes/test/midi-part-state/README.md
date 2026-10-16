@@ -1,6 +1,8 @@
-# MIDI Part state test remix
+# MIDI Part State
 
-Stock effects plus the shared native Part access and publication boundary.
-This isolates the support module from Follow, Harmony, DEG and KITS. Run
-`make check REMIX=midi-part-state`. Full project/Kit lifecycle and hardware
-acceptance remain separate integration tests.
+Stock effects with the shared native Part storage and publication support.
+No additional player controls, Follow, Harmony or KITS are selected.
+
+See [MIDI Part State controls](../../../modules/midi-part-state/README.md).
+
+[Developer notes and verification](DEVELOPMENT.md).

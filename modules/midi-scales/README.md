@@ -1,43 +1,27 @@
 # MIDI Scales
 
-Extends the existing **KEY** control at the bottom right of MIDI ARP SETUP
-(FUNC + AMP), without moving controls or replacing the graph.
+Adds Dorian, Phrygian, Lydian, Mixolydian and Locrian to the native MIDI
+scale selector, alongside Major and natural Minor, in all 12 keys.
 
-## Controls
+## Use
 
-F selects OFF or any of the 12 keys in Major, Dorian, Phrygian, Lydian,
-Mixolydian, natural Minor or Locrian. Encoder order groups modes by key.
-The stock values 1–24 still mean exactly the original Major/Minor pairs;
-25–84 append the other five modes. OFF remains zero. The existing Part
-byte, working mirror, dirty flags, save/reload and Part copy store the choice.
-It is therefore a **Part setting**, not a new per-pattern project field.
+- Open MIDI **ARP SETUP** with **FUNC + AMP**.
+- Press **F: KEY** to enable or bypass scale correction; turn F to choose a key
+  and mode. Choices are grouped by key.
+- KEY corrects sequencer/arp pitches. Added modes choose the nearest scale note,
+  with ties going downward. It does not generate chords or affect audio tracks.
 
-## Composition
+For example, C Dorian uses C, D, E-flat, F, G, A and B-flat.
+KEY OFF bypasses correction. Original Major/Minor choices keep their native behavior.
 
-Select `MIDI SCALES` in the remix. This module works independently. It extends stock sequencer/arp output
-quantization; it does not generate chords. Existing Major/Minor playback
-keeps stock quantization. Added modes use nearest scale notes, ties downward.
-MIDI Harmony uses the same native choice for live keys and chord generation.
-With MIDI Follow, the source's effective KEY is shown and F is read-only.
+## Storage and stock firmware
 
-No audio tracks or Scale Quantizer settings are involved. Older firmware does
-not understand values 25–84: set KEY to OFF or an original Major/Minor value
-before using an edited Part on stock firmware.
+KEY is saved per MIDI track in the native Part, including Part copy and reload.
+No separate settings file is needed.
 
-## Verification
+Stock 1.40C loads extended KEY values as **B Minor**. Saving that bank on stock
+replaces its extended mode with B Minor; simply loading does not rewrite all
+other bank files. Keep a separate project copy, or choose OFF, Major or Minor
+and save before returning to stock.
 
-Run `make check REMIX=midi-scales`; the linked-code gate executes
-all 84 combinations over all 128 MIDI notes and checks the formatter bounds.
-Full MIDI/UI/project integration is shared with MIDI Harmony's reusable gate.
-Hardware testing remains pending.
-
-The extended KEY selector uses the stock movement accumulator at four raw
-counts per choice, capped to one choice per report. This keeps nearby scale
-choices selectable without changing their saved IDs. Physical feel is untested.
-
-## First playing workflow
-
-Set a track's output channel and program a few notes. Open MIDI ARP SETUP
-with FUNC + AMP, then use F (KEY) to choose C Dorian. The sequencer's scale
-correction uses C, D, Eb, F, G, A and Bb. KEY OFF removes scale correction.
-Adding Harmony makes the same KEY control the degree roots and chord recipes.
+[Implementation, provenance and verification](DEVELOPMENT.md).

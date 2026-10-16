@@ -39,7 +39,7 @@ Pattern roots are 131-byte records: 64 degrees, 64 native edit snapshots,
 representation, outgoing scale and last context. One runtime bank is 16,768 bytes. Packed storage reconstructs the canonical
 NOTE snapshots and omits context: CHRD plus roots is 10,368 bytes, or 10,400
 with its header. Files use HDP3/version 3; retention uses HDN3/version 3.
-Empty files use HDP0. See the [storage invariant](README.md#compact-hdp3--hdn3-storage).
+Empty files use HDP0. See the [storage invariant](DEVELOPMENT.md#compact-hdp3--hdn3-storage).
 Companions contain no Part defaults and ignore Part assignments/defaults in
 their native fingerprint. Loads detach reusable physical-slot provenance.
 Strict validation, failed-write protection and atomic publication remain.

@@ -1,4 +1,8 @@
-# midi-harmony
+# MIDI Harmony
 
-Local development/test remix with stock effects. See the modules' README
-files for controls and the shared verification protocol. Hardware untested.
+MIDI Harmony, STORE and MIDI Part State with stock effects. Uses the native
+Major/Minor KEY choices; extended Scales and Follow are not selected.
+
+See [MIDI Harmony controls](../../../modules/midi-harmony/README.md).
+
+[Developer notes and verification](DEVELOPMENT.md).

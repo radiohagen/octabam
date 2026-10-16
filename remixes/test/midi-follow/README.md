@@ -1,10 +1,10 @@
-# Bass Follow test remix
+# MIDI Follow
 
-Stock effects plus [MIDI FOLLOW](../../../modules/midi-follow/README.md).
-MIDI NOTE SETUP knob D adds **RFOL: OFF / T1–T8**, independently per track.
-Followers play bass roots at MIDI notes 36–47; sources may play chords or arps.
-All tracks default OFF. Settings are RAM-only; no Scale Quantizer dependency.
-Experimental, emulator testing only; no hardware claim.
+MIDI Follow and Part State with stock audio effects. Followers keep their own
+rhythm and transposition while taking roots from another MIDI track. Settings
+belong to the native Part; RFOL defaults OFF. Harmony and Scales are optional
+and are not selected here.
 
-Build/check: `make check REMIX=midi-follow`. The module README describes the
-optional virtual-project/panel tests and the prototype's limitations.
+See [MIDI Follow controls](../../../modules/midi-follow/README.md).
+
+[Developer notes and verification](DEVELOPMENT.md).
