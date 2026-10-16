@@ -37,8 +37,9 @@ Press **F** on NOTE SETUP to open **HARMONY**:
 | D | ROOT | KEEP / OMIT / -1 OCT / -2 OCT |
 | E | SIZE | NAT / 2 / 3 / 4 |
 
-F is inactive. YES, NO or F closes the window; track/page keys close it
-before changing selection on a second press. Edits apply immediately. YES
+F is inactive. YES, NO or F closes the window; track keys close it
+and select that track in one press. Page keys close it first, then change page
+on a second press. Edits apply immediately. YES
 on NOTE SETUP preserves RFOL and HARM while confirming stock staged fields.
 Fresh Parts use HARM OFF, DEG `1:3`, CHRD TRI and ROOT/CLOSE/KEEP voicing and SIZE NAT.
 
