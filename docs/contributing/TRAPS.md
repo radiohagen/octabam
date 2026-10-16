@@ -885,6 +885,24 @@ Makefile's `HOST_ARCH` and `check_shards.host_arch()` ask the kernel
 `uname -m`). `file out/emu/ot_emu` is the check; `make check-asm` prints
 the binaries' architecture.
 
+<a name="trap-sparse-sram"></a>
+
+### Sparse SRAM claims make an all-pairs collision scan stall the remixer
+
+MIDI SRAM declares 8,192 separate two-byte windows. Comparing each window
+with every earlier one makes one selection check perform over 33 million
+comparisons. On the review machine, checking the Harmony track selection
+rose from the usual milliseconds to 2.31 seconds, repeated during redraws.
+
+Sort starts, discard windows that end before the next start, and compare
+only remaining candidates. Preserve same-owner conflicts, half-open bounds
+and declaration-order diagnostics. The same selection then took 3.54 ms.
+`tools/verify/tests/test_ledger_sram.py` compares every result with the old
+scan over 1,000 seeded selections, nested/duplicate/adjacent windows and a
+sparse 8,192-window pool containing an intentional one-byte collision. Its
+work-count check avoids a machine-specific timing threshold. Refhash
+checks that this validation change leaves images and build reports intact.
+
 <a name="trap-report-api"></a>
 
 ### The report is API, and it prints paths

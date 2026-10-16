@@ -162,6 +162,8 @@ moment it costs real work, and add its line here.
 
 **ColdFire / DRAM side**
 
+- [Sparse SRAM claims stall an all-pairs collision scan](docs/contributing/TRAPS.md#trap-sparse-sram) — discard disjoint windows while preserving every collision and its reporting order.
+
 - [A branch can enter the middle of a displaced span](docs/contributing/TRAPS.md#trap-detour-interior) — whole instructions are insufficient: keep shared branch targets; the MIDI CHROMATIC gate exercises both paths.
 
 - [A write-watch on cached addresses is blind to the uncached-alias clear](docs/contributing/TRAPS.md#trap-watch-alias) — `machine.h` folds the alias.
