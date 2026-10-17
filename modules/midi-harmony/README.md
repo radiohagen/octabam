@@ -105,8 +105,8 @@ NOTE fields are storage mirrors and can play different pitches on stock.
 Stock also resets voicing/spread/root choices and clamps extended KEY modes
 to B Minor; saving persists those changes for the bank written.
 
-Requires **MIDI Part State**, **STORE** and **MIDI SRAM**. PLOCKS P2 requires the **Harmony
-PLOCKS bridge** and compatible retention settings. KITS libraries are per
+Requires **MIDI Part State**, **STORE** and **MIDI SRAM**. When combined with
+PLOCKS P2, also select the **Harmony PLOCKS bridge**. KITS libraries are per
 project; recalling a kit supplies Part defaults while pattern locks stay with
 the patterns. See [storage](DEVELOPMENT.md#compact-harmony-storage) and [KITS](KITS.md).
 

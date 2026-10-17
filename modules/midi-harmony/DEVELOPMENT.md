@@ -306,3 +306,59 @@ physical-device acceptance.
 The preserved-source general check completed 47 image gates with one failure:
 the old Part initializer instruction cap. The corrected focused gate passes without weakening its
 behavioral assertions; that initial general run is not a clean all-pass result.
+
+### Single-implementation qualification, 2026-10-17
+
+The consolidated source builds on the same integration pin, BUILD 80, PGO off:
+
+| Remix | MAIN OS bytes | SHA-256 |
+| --- | ---: | --- |
+| harmony-track-bus | 1,227,784 | `e4d266af31a991e6e45a3074b827c4261e68db1ccc6c692fa69cca23ae8a4b67` |
+| test/midi-harmony | 1,147,776 | `a3fa9fd09cdc80e3a242f4092b272d199f0c0053287823b2451747fbdce1a6ba` |
+
+Against the pre-consolidation combined image, linked text is 888 bytes smaller;
+data (51,364 bytes) and BSS (6,344,808 bytes) are unchanged. This is linked
+image accounting, not measured device memory pressure or CPU timing.
+
+Author source/provenance checks and 21 tests pass, as does the unified generator
+check. Both images pass the accumulator arithmetic/reset/packing/obsolete-format
+gate; disabling advancement still fails its negative control. The core gate
+passes with and without MIDI Scales. The combined image also passes companion
+I/O failure protection, publication atomicity, native Part initialization and
+the Harmony/PLOCKS bridge. Dense linked retention covers all 765 legal tuples,
+134 corruption cases, first/middle/last track clears and a preempting saver.
+
+The full-port dense test passes on the combined image with 8,192 Harmony/ACC
+steps, 4,768 PLOCKS locks and 16,384 Scenes bytes. It checks native checkpoint,
+retained restarts, track clear, and new-project reset followed by restart.
+
+All 12 accumulator full-port result groups pass on the consolidated image:
+defaults/locks, sequence, retained restart, transport reset, navigation,
+measured pixels, positional encoders, held/native controls, project save/cold
+reload, chord, arp and Follow plus TRAN. Standalone Harmony also passes its
+complete native musical/control gate and dense retention gate, without optional
+Follow, Scales or PLOCKS dependencies.
+
+The direct combined image-gate run completes with **47 gates, zero failures**:
+`.venv/bin/python tools/verify/module_gates.py harmony-track-bus --stage image`.
+Project-dependent subcases explicitly skip without `OT_PROJECT`; they are not
+counted as tested. The separate accumulator and dense-coexistence port runs
+above do use valid disposable projects. The final MAIN OS hash still matches
+the frozen port candidate. All 57 Harmony runtime/source files match the author
+branch; all 239 original provenance records survive in current/retired entries.
+The BRAIN lock check also confirms the removed RETENTION key is retired.
+
+The pinned builder's broad `make verify` is not an all-pass receipt. Its shared
+documentation gate first needed generated indexes refreshed with `make docs`,
+then reported eight references inside its historical
+`docs/guide/MIDI_SOURCE_PROVENANCE.json` to removed degree-folder Markdown paths.
+Those are original-source provenance, not live document links; they have not
+been rewritten or silently exempted to make the gate green. The author receipt
+preserves original paths/hashes and separately records current paths/removals.
+
+An initial linked run expected zero rather than native error `-7` when refusing
+an obsolete companion; the corrected assertion verifies both the error and
+unchanged file bytes. A later test setup read an isolated gate's temporary image
+from shared output and failed before running. The selected image was rebuilt,
+its identity checked, and the file/publication/Part tests rerun successfully.
+Full-port tests use frozen candidates. These failed setups are not passes.
