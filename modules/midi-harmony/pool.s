@@ -1,4 +1,3 @@
-.include "remix.inc"
 /* Regenerate a sequence arp pool at the next native track iteration after
  * a mode change. That keeps an old transposed Harmony pool from receiving
  * stock TRAN a second time when switching OFF. Live held pools retain their

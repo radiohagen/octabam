@@ -2,11 +2,13 @@
  * Part context is independent of UI navigation and later pattern assignment.
  * Only runtime provenance is stored here; defaults remain native Part bytes. */
 #include "core.h"
+#include "accumulator.h"
 
 typedef struct {
     uint8_t context, degree, note, active, valid, converted, inherited, attached;
     uint16_t scale;
     int16_t output;
+    uint8_t bank, pattern, step, note_trigger;
 } HdEvent;
 static HdEvent staged[8], pending[32], fired[8];
 volatile uint8_t hd_rebuild[8];
@@ -56,6 +58,8 @@ void hd_event_stage_c(unsigned bank, unsigned pattern, unsigned track, unsigned 
     unsigned note = BYTE(native + pattern*0x8ed8 + 0x4900 + track*0x8b0 + step*32);
     HdEvent next = {0};
     next.context = (uint8_t)context;
+    next.bank=(uint8_t)bank; next.pattern=(uint8_t)pattern; next.step=(uint8_t)step;
+    next.note_trigger=(BYTE(native+pattern*0x8ed8+0x48d0+track*0x8b0+7-step/8) >> (step%8))&1u;
     next.inherited = note == HD_NONE;
     next.note = (uint8_t)(next.inherited ? native_base((unsigned)context,track) : note);
     next.active = (uint8_t)active;
@@ -81,6 +85,9 @@ int hd_event_fire_c(unsigned slot, unsigned track) {
     uint16_t sr = mask();
     fired[track] = pending[slot];
     HdEvent *e = &fired[track];
+    /* Trigless locks can edit a sustained pool, but are not a new note
+     * occurrence and must not steal that pool's captured ACC phase. */
+    if (e->valid && e->note_trigger) ha_fire_c(e->bank,e->pattern,track,e->step);
     if (e->valid) convert(e,track,hd_part_type_c(e->context/4,e->context%4,track));
     int note = e->valid && e->converted && !e->active ? e->note : -1;
     unmask(sr);

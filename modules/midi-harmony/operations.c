@@ -3,17 +3,19 @@
  * The synchronous native memcpy wrapper captures before copying and repairs
  * representation after copying. It never calls back into a UI dispatcher. */
 #include "core.h"
+#include "accumulator.h"
 #define BYTE(a) (*(volatile uint8_t *)(uintptr_t)(a))
 #define LONG(a) (*(volatile uint32_t *)(uintptr_t)(a))
 
-typedef struct { uint8_t degree, note; } Copied;
-typedef struct { Copied root[512]; unsigned length, valid; } Clipboard;
+typedef struct { uint8_t degree, note, amount; } Copied;
+typedef struct { Copied root[512]; HaLane settings[8]; unsigned length, valid; } Clipboard;
 typedef struct { unsigned kind, bank, pattern, track, buffer; } Location;
 enum { UNKNOWN, CLIP, PATTERN, TRACK };
 static Clipboard clips[2], transfer;
 static Location destination;
 static void copy_clip(Clipboard *dst, const Clipboard *src) {
     for (unsigned i = 0; i < 512; ++i) dst->root[i] = src->root[i];
+    for (unsigned i = 0; i < 8; ++i) dst->settings[i] = src->settings[i];
     dst->length = src->length;
     dst->valid = src->valid;
 }
@@ -60,7 +62,8 @@ static int absolute(int code, int scale) {
 }
 static Copied capture(unsigned bank, unsigned pattern, unsigned track, unsigned step) {
     uintptr_t native = 0x400e21e0u + bank*0x9b340;
-    Copied result = {HD_NONE,HD_NONE};
+    Copied result = {HD_NONE,HD_NONE,0};
+    result.amount=(uint8_t)ha_lock_c(bank,pattern,track,step);
     int context = hd_pattern_context_c(bank,pattern);
     if (context < 0) return result;
     (void)hd_sync_c(bank,pattern,track);
@@ -89,6 +92,8 @@ void hd_copy_before_c(uintptr_t dst, uintptr_t src, unsigned length) {
         copy_clip(&transfer,&clips[source.buffer]);
     } else {
         unsigned count = source.kind == PATTERN ? 512 : 64;
+        for (unsigned i=0;i<count/64;++i)
+            transfer.settings[i]=ha_lanes[source.bank][source.pattern*8+(source.kind==PATTERN ? i : source.track)];
         for (unsigned i = 0; i < count; ++i) {
             unsigned track = source.kind == PATTERN ? i/64 : source.track;
             transfer.root[i] = capture(source.bank,source.pattern,track,i%64);
@@ -104,11 +109,14 @@ int hd_copy_after_c(void) {
         return -1;
     }
     unsigned count = destination.kind == PATTERN ? 512 : 64;
+    for (unsigned i=0;i<count/64;++i)
+        ha_settings_copy_c(destination.bank,destination.pattern,destination.kind==PATTERN ? i : destination.track,&transfer.settings[i]);
     for (unsigned i = 0; i < count; ++i) {
         unsigned track = destination.kind == PATTERN ? i/64 : destination.track;
         Copied c = transfer.root[i];
         int degree = c.degree < HD_CODES ? c.degree : -1;
         hd_copy_note_c(destination.bank,destination.pattern,track,i%64,degree,c.note);
+        ha_set_c(destination.bank,destination.pattern,track,i%64,c.amount);
     }
     return (int)destination.bank;
 }
@@ -135,5 +143,6 @@ int hd_step_paste_c(uintptr_t buffer, unsigned slot, unsigned pattern, unsigned 
     if (bank >= 16) return -1;
     Copied root = c->root[slot];
     hd_copy_note_c(bank,pattern,track,step,root.degree < HD_CODES ? root.degree : -1,root.note);
+    ha_set_c(bank,pattern,track,step,root.amount);
     return (int)bank;
 }

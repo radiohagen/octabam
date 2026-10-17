@@ -326,6 +326,18 @@ ch_bitmap_all:
     bsr.w .ui_bank
     moveq #0,%d1
     move.b 0x100b14d0,%d1
+    lea -16(%sp),%sp
+    movem.l %d0-%d3,(%sp)
+    move.l %d3,-(%sp)
+    move.l %d2,-(%sp)
+    move.l %d1,-(%sp)
+    move.l %d0,-(%sp)
+    jsr ha_lock_c
+    lea 16(%sp),%sp
+    tst.l %d0
+    movem.l (%sp),%d0-%d3
+    lea 16(%sp),%sp
+    bne.s .bitmap_set
     jsr ch_lock_ptr
     move.l %a0,%d0
     beq.s .bitmap_done
@@ -333,6 +345,7 @@ ch_bitmap_all:
     move.b (%a0),%d0
     cmpi.l #7,%d0
     bhi.s .bitmap_done
+.bitmap_set:
     lea 0x46c7d2e4,%a0
     moveq #0,%d0
     move.b (%a0,%d3.l),%d0

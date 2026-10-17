@@ -1,5 +1,6 @@
 /* Pattern-owned degree roots; defaults belong to native Parts. No KITS or files. */
 #include "core.h"
+#include "accumulator.h"
 #define BANK_SIZE 0x9b340u
 #define PATTERN_SIZE 0x8ed8u
 #define PART_SIZE 0x18b2u
@@ -43,6 +44,11 @@ static void changed(unsigned bank, unsigned pattern, unsigned track) {
 }
 uint32_t hd_revision_c(unsigned bank) {
     return bank < HD_BANKS ? bank_revision[bank] : 0;
+}
+void hd_configuration_changed_c(unsigned bank) {
+    if (bank>=HD_BANKS) return;
+    hd_nv_dirty_c(bank);
+    ++bank_revision[bank];
 }
 static unsigned scale_id(unsigned scale) {
     return (scale >> 6)*12+((scale >> 2)&15u);
@@ -158,6 +164,7 @@ static int same_roots(const HdRoots *a, const HdRoots *b) {
 }
 void hd_bank_reset_c(unsigned bank) {
     if (bank >= 16) return;
+    ha_bank_reset_c(bank);
     for (unsigned i = 0; i < HD_LANES; ++i) {
         hd_roots_reset_c(&hd_banks[bank].roots[i]);
         revision[bank][i] = 0;
@@ -165,6 +172,7 @@ void hd_bank_reset_c(unsigned bank) {
     ++bank_revision[bank];
 }
 void hd_reset_c(void) {
+    ha_runtime_reset_c();
     for (unsigned bank = 0; bank < 16; ++bank) hd_bank_reset_c(bank);
     for (unsigned track = 0; track < 8; ++track) hd_busy[track] = hd_target[track] = 0;
 }
@@ -433,6 +441,7 @@ int hd_validate_c(const HdBank *bank) {
 }
 void hd_forget_c(unsigned bank, unsigned pattern, unsigned track, unsigned step) {
     if (bank >= 16 || pattern >= 16 || track >= 8 || step >= 64) return;
+    ha_set_c(bank,pattern,track,step,0);
     HdRoots *r = roots(bank,pattern,track);
     int context = hd_pattern_context_c(bank,pattern);
     unsigned active = context >= 0 && hd_part_type_c(bank,(unsigned)context%4,track);

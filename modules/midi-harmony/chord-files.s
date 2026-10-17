@@ -1,4 +1,3 @@
-.include "remix.inc"
 /* CHRD companion files. File I/O follows the repository's PLOCKS P2
  * APIs, with dedicated storage, validated bank/version/size/value range,
  * payload checksum and native NOTE/trig fingerprint before publication.
@@ -14,8 +13,9 @@
         .set    IOB_LEN,    0x1000
 
     .set BANK_B,8192
-    .set FILE_B,10368
-    .set FILE_MAGIC,0x48445033 /* HDP3: packed quality, degree and exact NOTE snapshot */
+    .set FILE_B,15104
+    .set FILE_MAGIC,0x48445034 /* HDP4: packed roots plus ACC lanes */
+    .set FILE_VERSION,4
     .set FILE_NONE,0x48445030  /* HDP0: explicit empty companion */
     .text
     .global ch_st_bankw_guard,ch_st_bankcopy_guard,ch_st_bankcopy_done
@@ -87,7 +87,7 @@ bl_loop:
 | hdr: d0 = bank -> HDR filled.
 hdr:    lea     HDR,%a0
         movel   #FILE_MAGIC,%a0@
-        moveq   #3,%d1
+        moveq   #FILE_VERSION,%d1
         movel   %d1,%a0@(4)
         movel   %d0,%a0@(8)
         movel   #FILE_B,%d1
@@ -295,7 +295,7 @@ ch_file_read:
     cmpi.l #FILE_MAGIC,%d0
     bne.w .rd_bad
     move.l HDR+4,%d0
-    cmpi.l #3,%d0
+    cmpi.l #FILE_VERSION,%d0
     bne.w .rd_bad
     cmp.l HDR+8,%d2
     bne.w .rd_bad
@@ -326,13 +326,13 @@ ch_file_read:
     move.l %d2,%d0
     bsr.w ch_native_hash
     cmp.l HDR+20,%d0
-    bne.s .rd_bad
+    bne.w .rd_bad
     bsr.w fclose
     move.l %d2,%d0
     lea PAYLOAD,%a0
     jsr hd_import
     moveq #1,%d3
-    bra.s .rd_status
+    bra.w .rd_status
 .rd_none:
     pea FOBJ
     jsr 0x400148d4
@@ -467,11 +467,7 @@ ch_st_newproj:
     clr.l 4(%a0)
     clr.l 8(%a0)
     clr.l 12(%a0)
-    .ifdef HD_TRACK_SRAM
     jsr hd_track_invalidate_c
-    .else
-    clr.l hd_nv_base
-    .endif
     jsr hd_reset
     movem.l (%sp),%d0-%d1/%a0
     lea 12(%sp),%sp

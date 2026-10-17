@@ -38,8 +38,10 @@ wrapper and its unused verifier have been removed.
 Pattern roots are 131-byte records: 64 degrees, 64 native edit snapshots,
 representation, outgoing scale and last context. One runtime bank is 16,768 bytes. Packed storage reconstructs the canonical
 NOTE snapshots and omits context: CHRD plus roots is 10,368 bytes, or 10,400
-with its header. Files use HDP3/version 3; retention uses HDN3/version 3.
-Empty files use HDP0. See the [storage invariant](DEVELOPMENT.md#compact-hdp3--hdn3-storage).
+with its header before ACC. MIDI TRACK stores ACC alongside those roots using
+HDP4/HMT2, for a 15,136-byte companion and the same 16,384-byte retained pool.
+Empty files use HDP0. See the [storage invariant](DEVELOPMENT.md#compact-harmony-storage).
+ACC settings and amounts belong to the pattern/track and are not Kit defaults.
 Companions contain no Part defaults and ignore Part assignments/defaults in
 their native fingerprint. Loads detach reusable physical-slot provenance.
 Strict validation, failed-write protection and atomic publication remain.

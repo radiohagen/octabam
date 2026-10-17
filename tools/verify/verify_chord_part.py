@@ -17,9 +17,11 @@ def symbols():
 
 class PartMachine(Machine):
     def instruction_limit(self, name):
-        # Both initializers clear dense state. Give standalone Harmony the
-        # same bounded allowance as a build that also includes degrees.
-        return 1000000 if name in ('ch_lock_init', 'native_part_init') else super().instruction_limit(name)
+        # Both initializers clear dense state. Keep the standalone minimum,
+        # without lowering the degree-aware allowance when ACC adds its
+        # 75,776-byte configuration table to all-bank initialization.
+        limit=super().instruction_limit(name)
+        return max(1000000,limit) if name in ('ch_lock_init', 'native_part_init') else limit
 
 
 def main():

@@ -5,7 +5,6 @@ from unicorn import UC_HOOK_CODE, UC_HOOK_MEM_WRITE
 from unicorn.m68k_const import *
 from verify_harmony_degree_integration import DegreeMachine, ROOT
 from midi_machine import InterruptMaskTrace
-from harmony_retained import track_layout
 from verify_midi_sram import BASE, OFFSETS
 
 
@@ -24,12 +23,12 @@ def main():
         if n==255:return 255
         n=min(pitches,key=lambda p:(abs(p-n),p))
         return (n//12+1)*7+tones.index(n%12)
-    retained_addresses={BASE+o for o in OFFSETS} if track_layout(m) else set(range(m.sym["hd_nv_base"]+32,m.sym["hd_nv_base"]+10400))
+    retained_addresses={BASE+o for o in OFFSETS}
     def written(u,access,address,size,value,data):
         nonlocal pending
         if not watch:return
         if any(address<=a<address+size for a in (note,degree,snapshot)):pending=True
-        if check_nv and any(a in retained_addresses for a in range(address,address+size)) and address != m.sym['hd_nv_base']:
+        if check_nv and any(a in retained_addresses for a in range(address,address+size)) and address != BASE+OFFSETS[0]:
             assert mask_trace.ipl==0,'bulk retention ran with interrupts masked'
     def inspect(u,pc,size,data):
         nonlocal pending,max_masked,masked,observations

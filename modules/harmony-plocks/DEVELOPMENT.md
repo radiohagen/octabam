@@ -18,8 +18,8 @@ MIDI step, and upstream PLOCKS P2 storage (4,768 unsaved retained locks). The se
 PLOCKS editor correction changes no retained allocation.
 Neither PLOCKS nor MIDI Scenes changes its reservation. See
 [MIDI SRAM](../midi-sram/README.md) and
-[Harmony layout](../midi-harmony/degrees/README.md).
-Project companion formats remain P2LK v1 and HDP3.
+[Harmony layout](../midi-harmony/DEVELOPMENT.md).
+Project companion formats use P2LK v1 and HDP4.
 
 `tools/verify/verify_harmony_plocks.py` exercises capacity, copy/undo,
 companion I/O, error guards and reset with substituted filesystem boundaries. The registered packed-storage gate

@@ -8,7 +8,7 @@ installed edit/clear bodies, SRAM protection and retention are executed.
 import json
 from unicorn import UC_HOOK_CODE, UC_HOOK_MEM_WRITE
 from unicorn.m68k_const import *
-from verify_harmony_plocks import Combined, BANK, STRIDE
+from verify_harmony_degree_files import Files, BANK, STRIDE
 from verify_harmony_degree_packed import oracle, mirror
 from verify_midi_sram import BASE, OFFSETS, SIZE
 from midi_machine import ROOT, InterruptMaskTrace
@@ -22,33 +22,36 @@ def fnv(data):
 
 
 def encode(payload, bank=0, ticket=1, status=1):
+    if len(payload)==10368:
+        payload=payload+(bytes(32)+bytes((0,7,0,3,1)))*128
     result=bytearray()
     for lane in range(128):
         p=payload[lane*81:(lane+1)*81]
-        header=bytes((1,bank,lane,p[0],status,0,0,0))+ticket.to_bytes(4,'big')
-        header+=fnv(header+p).to_bytes(4,'big')
-        meta=int.from_bytes(header,'big')<<4
+        a=payload[10368+lane*37:10368+(lane+1)*37]
+        header=bytes((2,p[0],status))+ticket.to_bytes(4,'big')
+        header+=fnv(bytes((bank,lane))+header+p+a).to_bytes(4,'big')
+        header+=a[32:36]+bytes((a[36]<<4,))
+        meta=int.from_bytes(header,'big')>>2
         tokens=int.from_bytes(p[1:],'big')
         for step in range(64):
-            top=43 if step==0 else (meta>>(6*(22-step)))&63 if step<=22 else 0
+            top=2 if step==0 else (meta>>(2*(63-step)))&3
             token=(tokens>>(10*(63-step)))&1023
-            result.extend(((top<<10)|token).to_bytes(2,'big'))
+            amount=(a[step//2]>>(0 if step%2 else 4))&15
+            result.extend(((top<<14)|(amount<<10)|token).to_bytes(2,'big'))
     return bytes(result)
 
 
 def header(data,lane=0):
     words=[int.from_bytes(data[i:i+2],'big') for i in range(lane*128,(lane+1)*128,2)]
     n=0
-    for word in words[1:23]:n=(n<<6)|(word>>10)
-    return (n>>4).to_bytes(16,'big')
+    for word in words[1:]:n=(n<<2)|(word>>14)
+    return (n<<2).to_bytes(16,'big')
 
 
 def main():
-    m=Combined();u=m.uc;s=m.sym
-    if not retained.track_layout(m):
-        print("[N/A] Harmony MIDI TRACK retention is not selected")
-        return
-    roots,qualities,_,_=m.seed()
+    m=Files();u=m.uc;s=m.sym
+    m.call('ch_lock_init')
+    roots,qualities=m.seed()
     # Exercise ALL 765 legal degree/chord pairs, including independent unlocks.
     roots=bytearray(roots);qualities=bytearray(qualities)
     for lane in range(128):
@@ -67,7 +70,7 @@ def main():
     m.c('hd_nv_save_c',0)
     expected_payload=oracle(bytes(u.mem_read(s['hd_banks'],16768)),qualities)
     snapshot=retained.snapshot(m);h=header(snapshot)
-    assert snapshot==encode(expected_payload,0,int.from_bytes(h[8:12],'big'),h[4])
+    assert snapshot==encode(expected_payload,0,int.from_bytes(h[3:7],'big'),h[2])
     after=bytes(u.mem_read(BASE,SIZE));pads=set(OFFSETS)
     assert all(a==b for i,(a,b) in enumerate(zip(before,after)) if i not in pads)
     assert bytes(u.mem_read(0x100f8600,len(guard)))==guard
@@ -83,14 +86,14 @@ def main():
     for lane in range(128):
         bad=bytearray(snapshot);bad[lane*128+127]^=1;corruptions.append(bad)
     bad=bytearray(snapshot);bad[:128],bad[128:256]=bad[128:256],bad[:128];corruptions.append(bad)
-    old=encode(expected_payload,0,int.from_bytes(h[8:12],'big')-1,h[4])
+    old=encode(expected_payload,0,int.from_bytes(h[3:7],'big')-1,h[2])
     bad=bytearray(snapshot);bad[127*128:]=old[127*128:];corruptions.append(bad)
     # Valid checksums must not make illegal musical tokens acceptable.
     for state,token in ((0,0),(1,0),(2,765),(2,1023)):
         p=bytearray(expected_payload);p[0]=state*84
         packed=int.from_bytes(p[1:81],'big')
         p[1:81]=((packed & ((1<<630)-1)) | (token<<630)).to_bytes(80,'big')
-        corruptions.append(encode(p,0,int.from_bytes(h[8:12],'big'),h[4]))
+        corruptions.append(encode(p,0,int.from_bytes(h[3:7],'big'),h[2]))
     for bad in corruptions:
         retained.install(m,bad)
         assert m.c('hd_nv_restore_c',0)==0
@@ -123,7 +126,7 @@ def main():
     # A preempting saver cannot commit its buffer while the outer saver is
     # writing. Capture a torn checkpoint, then retry with the new last step.
     m.seed();m.c('hd_nv_save_c',0)
-    last_ticket=int.from_bytes(header(retained.snapshot(m))[8:12],'big')
+    last_ticket=int.from_bytes(header(retained.snapshot(m))[3:7],'big')
     watch=False;pending=False;interrupted=False;writes=0;torn=None
     trace=InterruptMaskTrace(u);addresses={BASE+o for o in OFFSETS}
     def written(uc,access,address,size,value,data):
@@ -145,7 +148,7 @@ def main():
     assert pending
     saved=u.context_save();torn=retained.snapshot(m);interrupted=True;pending=False;watch=False
     outer=m.stack;m.stack=0x4700c000
-    m.c('hd_nv_dirty_c',0)  # a real edit makes pending true while the writer is busy
+    m.c('ha_set_c',0,15,7,63,10)  # real ACC edit invalidates the in-flight bank
     u.mem_write(s['ch_lock_table']+8191,b'\x06')
     for _ in range(20):m.c('hd_nv_poll_c')
     m.c('hd_nv_save_c',0)
@@ -154,11 +157,12 @@ def main():
     u.emu_start(u.reg_read(UC_M68K_REG_PC),0,count=30000000);watch=False
     assert m.arrival==m.done and writes>8192
     finished=retained.snapshot(m)
-    assert int.from_bytes(header(finished)[8:12],'big')==last_ticket+3,'UI polls created spurious generations'
+    assert int.from_bytes(header(finished)[3:7],'big')==last_ticket+3,'UI polls created spurious generations'
     retained.install(m,torn)
     assert m.c('hd_nv_restore_c',0)==0
     retained.install(m,finished);u.mem_write(s['ch_lock_table']+8191,b'\xff')
     assert m.c('hd_nv_restore_c',0)==1 and u.mem_read(s['ch_lock_table']+8191,1)==b'\x06'
+    assert m.c('ha_lock_c',0,15,7,63)==10
     result=dict(step_mapping='same pattern/track/step',legal_tuples=765,lanes=128,steps=8192,
         corruption_cases=len(corruptions),native_track_clear_restore=[0,59,127],
         preempting_save='retried',busy_ui_polls_coalesced=20,torn_snapshot_rejected=True,bulk_writes_unmasked=True,

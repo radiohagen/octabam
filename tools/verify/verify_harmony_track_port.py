@@ -50,6 +50,11 @@ def main():
             at=BASE-0x10000000+(lane//8)*0x8ed8+0x4900+(lane%8)*0x8b0+step*32
             seed[at]=max(0,min(127,12*(d//7-1)+tones[d%7]))
         payload.extend(bits.to_bytes(80,'big'))
+    accumulator=bytearray()
+    for lane in range(128):
+        accumulator.extend(bytes((((lane+2*i)%16)<<4)|((lane+2*i+1)%16) for i in range(32)))
+        accumulator.extend(bytes(((-(lane%64))&255,lane%64,lane%4,(lane//4)%4,1+lane%15)))
+    payload.extend(accumulator)
     checkpoint=encode(payload)
     for off,v in zip(OFFSETS,checkpoint):seed[BASE-0x10000000+off]=v
     # Fill all 4096 bytes in each of four Scene tables; no sparse shortcut.
@@ -61,18 +66,19 @@ def main():
     for name,source,checkpoint in (('resume',w/'dense-cs1.bin',True),('again',w/'resume-cs1.bin',False)):
         extra=['--cs1-in',source,'--no-post','--sequencer','--internal-clock','--frames','1']
         if checkpoint:extra+=['--step','-:call:0x4000faf0,0']
-        extra+=['--mem-dump',f'{sym["STORE"]:#x},98304={w}/{name}-p2.bin;{sym["ch_lock_table"]:#x},8192={w}/{name}-quality.bin;{sym["hd_banks"]:#x},16768={w}/{name}-roots.bin;{sym["scn_lib"]:#x},16384={w}/{name}-scenes.bin;0x10000000,0x100000={w}/{name}-cs1.bin']
+        extra+=['--mem-dump',f'{sym["STORE"]:#x},98304={w}/{name}-p2.bin;{sym["ch_lock_table"]:#x},8192={w}/{name}-quality.bin;{sym["hd_banks"]:#x},16768={w}/{name}-roots.bin;{sym["ha_lanes"]:#x},4736={w}/{name}-accumulator.bin;{sym["scn_lib"]:#x},16384={w}/{name}-scenes.bin;0x10000000,0x100000={w}/{name}-cs1.bin']
         port.run(w,name,extra,image=image,card=w/'base-card.img')
         assert 'DID NOT RETURN' not in (w/f'{name}.log').read_text(),name
         assert (w/f'{name}-p2.bin').read_bytes()==expected_p2,(name,'P2 mismatch')
         assert (w/f'{name}-quality.bin').read_bytes()==qualities,(name,'quality mismatch')
+        assert (w/f'{name}-accumulator.bin').read_bytes()==accumulator,(name,'ACC mismatch')
         roots=(w/f'{name}-roots.bin').read_bytes()
         actual_degrees=b''.join(roots[lane*131:lane*131+64] for lane in range(128))
         assert actual_degrees==degrees,(name,'degree mismatch')
         assert (w/f'{name}-scenes.bin').read_bytes()==scenes,(name,'Scenes mismatch')
         after=(w/f'{name}-cs1.bin').read_bytes()
         assert after[0xf8600:0xfbdf0]==encoded
-        assert after[0x1aa6c] & 0xfc == 0xac
+        assert after[0x1aa6c] & 0xc0 == 0x80
         assert after[0xfbdf0:0xfbdf4]==b'SCS1'
     # Clear a middle track using the complete native operation, then restart.
     lane=59
@@ -81,12 +87,14 @@ def main():
         extra=['--cs1-in',source,'--no-post','--sequencer','--internal-clock','--frames','1']
         if clear:extra+=['--step',f'-:call:0x40039b00,{lane//8},{lane%8},1',
                           '--step',f'-:call:{sym["hd_nv_poll_c"]:#x}']
-        extra+=['--mem-dump',f'{sym["STORE"]:#x},98304={w}/{name}-p2.bin;{sym["ch_lock_table"]:#x},8192={w}/{name}-quality.bin;{sym["hd_banks"]:#x},16768={w}/{name}-roots.bin;{sym["scn_lib"]:#x},16384={w}/{name}-scenes.bin;0x10000000,0x100000={w}/{name}-cs1.bin']
+        extra+=['--mem-dump',f'{sym["STORE"]:#x},98304={w}/{name}-p2.bin;{sym["ch_lock_table"]:#x},8192={w}/{name}-quality.bin;{sym["hd_banks"]:#x},16768={w}/{name}-roots.bin;{sym["ha_lanes"]:#x},4736={w}/{name}-accumulator.bin;{sym["scn_lib"]:#x},16384={w}/{name}-scenes.bin;0x10000000,0x100000={w}/{name}-cs1.bin']
         port.run(w,name,extra,image=image,card=w/'base-card.img')
         assert 'DID NOT RETURN' not in (w/f'{name}.log').read_text(),name
         expected_q=bytearray(qualities);expected_q[lane*64:(lane+1)*64]=b'\xff'*64
         expected_d=bytearray(degrees);expected_d[lane*64:(lane+1)*64]=b'\xff'*64
         assert (w/f'{name}-quality.bin').read_bytes()==expected_q,name
+        expected_acc=bytearray(accumulator);expected_acc[lane*37:lane*37+32]=bytes(32)
+        assert (w/f'{name}-accumulator.bin').read_bytes()==expected_acc,name
         roots=(w/f'{name}-roots.bin').read_bytes()
         assert b''.join(roots[i*131:i*131+64] for i in range(128))==expected_d,name
         assert (w/f'{name}-p2.bin').read_bytes()==expected_p2,name
@@ -98,12 +106,13 @@ def main():
                               ('new-project-resume',w/'new-project-cs1.bin',False)):
         extra=['--cs1-in',source,'--no-post','--sequencer','--internal-clock','--frames','1']
         if reset:extra+=['--step',f'-:call:{sym["store_newproj"]:#x}']
-        extra+=['--mem-dump',f'{sym["STORE"]:#x},1572864={w}/{name}-p2.bin;{sym["ch_lock_table"]:#x},131072={w}/{name}-quality.bin;{sym["scn_lib"]:#x},262144={w}/{name}-scenes.bin;0x10000000,0x100000={w}/{name}-cs1.bin']
+        extra+=['--mem-dump',f'{sym["STORE"]:#x},1572864={w}/{name}-p2.bin;{sym["ch_lock_table"]:#x},131072={w}/{name}-quality.bin;{sym["ha_lanes"]:#x},75776={w}/{name}-accumulator.bin;{sym["scn_lib"]:#x},262144={w}/{name}-scenes.bin;0x10000000,0x100000={w}/{name}-cs1.bin']
         port.run(w,name,extra,image=image,card=w/'base-card.img')
         assert 'DID NOT RETURN' not in (w/f'{name}.log').read_text(),name
         for store,length in (('p2',1572864),('quality',131072),('scenes',262144)):
             assert (w/f'{name}-{store}.bin').read_bytes()==b'\xff'*length,(name,store,'old state survived reset')
-    result={'p2_locks':count,'p2_encoded_bytes':len(encoded),'harmony_step_tuples':8192,
+        assert (w/f'{name}-accumulator.bin').read_bytes()==(bytes(32)+bytes((0,7,0,3,1)))*2048,name
+    result={'p2_locks':count,'p2_encoded_bytes':len(encoded),'harmony_step_tuples':8192,'accumulator_steps':8192,
             'midi_scenes_bytes':16384,'retained_restarts':2,'native_checkpoint':True,'native_new_project_and_retained_restart':True,
             'p2_matches_upstream_capacity':True,'harmony_capacity_reduced':False,'track_clear_restart':True,'hardware_tested':False,
             'image_sha256':hashlib.sha256(image.read_bytes()).hexdigest()}

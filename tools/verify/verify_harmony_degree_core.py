@@ -25,15 +25,13 @@ LANE = 131
 
 
 def main():
-    subprocess.run(['python3', str(ROOT/'modules/midi-harmony/degrees/generate.py'), '--check'], check=True)
+    subprocess.run(['python3', str(ROOT/'modules/midi-harmony/generate.py'), '--check'], check=True)
     with tempfile.TemporaryDirectory(prefix='harmony-degree-core-') as tmp:
         out = pathlib.Path(tmp)
         scales = '--without-scales' not in sys.argv
         (out/'remix.inc').write_text(f'.set MP_DEFINE,1\n.set HD_FOLLOW,1\n.set HD_SCENES,0\n.set HD_SCALES,{int(scales)}\n')
         (out/'stub.s').write_text("""
 .data
-.global hd_nv_base
-.set hd_nv_base,0x100fd560
 .global ch_lock_table,ch_nv_bank,ch_lock_status
 ch_nv_bank: .long -1
 ch_lock_status: .space 16
@@ -47,18 +45,20 @@ mp_snapshot: .space 1152
 mp_part_epochs: .space 256
 """)
         objects = []
-        for name, source in [('codec', ROOT/'modules/midi-harmony/degrees/codec.s'),
-                             ('roots', ROOT/'modules/midi-harmony/degrees/roots.s'),
-                             ('core', ROOT/'modules/midi-harmony/degrees/core.s'),
-                             ('access', ROOT/'modules/midi-harmony/degrees/part-access.s'),
+        for name, source in [('codec', ROOT/'modules/midi-harmony/codec.s'),
+                             ('accumulator', ROOT/'modules/midi-harmony/accumulator.s'),
+                             ('roots', ROOT/'modules/midi-harmony/roots.s'),
+                             ('core', ROOT/'modules/midi-harmony/core.s'),
+                             ('access', ROOT/'modules/midi-harmony/part-access.s'),
                              ('part', ROOT/'modules/midi-part-state/part.s'),
-                             ('events', ROOT/'modules/midi-harmony/degrees/events.s'),
-                             ('scenes', ROOT/'modules/midi-harmony/degrees/scenes.s'),
-                             ('ui', ROOT/'modules/midi-harmony/degrees/ui.s'),
-                             ('scene_access', ROOT/'modules/midi-harmony/degrees/scene-access.s'),
-                             ('recording', ROOT/'modules/midi-harmony/degrees/recording.s'),
-                             ('packed', ROOT/'modules/midi-harmony/degrees/packed.s'),
-                             ('storage', ROOT/'modules/midi-harmony/degrees/storage.s'),
+                             ('events', ROOT/'modules/midi-harmony/events.s'),
+                             ('scenes', ROOT/'modules/midi-harmony/scenes.s'),
+                             ('ui', ROOT/'modules/midi-harmony/ui.s'),
+                             ('scene_access', ROOT/'modules/midi-harmony/scene-access.s'),
+                             ('recording', ROOT/'modules/midi-harmony/recording.s'),
+                             ('packed', ROOT/'modules/midi-harmony/packed.s'),
+                             ('storage', ROOT/'modules/midi-harmony/storage.s'),
+                             ('track-retention', ROOT/'modules/midi-harmony/track-retention.s'),
                              ('stub', out/'stub.s')]:
             obj = out/f'{name}.o'
             subprocess.run(['m68k-elf-as', '-mcpu=54455', '-I', str(out), '-o', str(obj), str(source)], check=True)
@@ -294,13 +294,18 @@ mp_part_epochs: .space 256
         put(field(0,0,0,19),55); put(base(0,0,0),99); put(BASE+0x8e57,3)
         assert call('hd_native_hash_c',0,0x12345678)==0x12345678
         # Dense retention: all qualities and pattern lanes, no Part defaults.
-        payload_len=10368
-        chord=sym['ch_lock_table']; nv=0x100fd560
+        from verify_midi_sram import BASE as SRAM_BASE, OFFSETS
+        payload_len=15104
+        chord=sym['ch_lock_table']
+        def snapshot():
+            bank=bytes(u.mem_read(SRAM_BASE,16*0x8ed8))
+            return bytes(bank[o] for o in OFFSETS)
+        def install(data):
+            for i in range(0,len(data),2):u.mem_write(SRAM_BASE+OFFSETS[i],data[i:i+2])
         u.mem_write(chord,bytes(i%8 for i in range(8192)))
         call('hd_nv_save_c',0)
-        saved=bytes(u.mem_read(nv,32+payload_len))
-        assert saved[:4]==b'HDN3' and int.from_bytes(saved[4:8],'big')==3
-        assert int.from_bytes(saved[12:16],'big')==10368
+        saved=snapshot()
+        assert len(saved)==16384 and int.from_bytes(saved[:2],'big')&0xc000==0x8000
         h_before=bytearray(u.mem_read(sym['hd_banks'],HDSIZE))
         for lane in range(128): h_before[lane*LANE+130]=255
         q_before=bytes(u.mem_read(chord,8192))
@@ -313,11 +318,11 @@ mp_part_epochs: .space 256
         corrupt_positions=(0,4,8,12,16,24,28,32,8223,8224,8352,8353,8354,len(saved)-1)
         for pos in corrupt_positions:
             broken=bytearray(saved); broken[pos]^=0x80
-            u.mem_write(nv,bytes(broken))
+            install(bytes(broken))
             assert call('hd_nv_restore_c',0)==0,pos
             assert bytes(u.mem_read(sym['hd_banks'],HDSIZE))==h_before
             assert bytes(u.mem_read(chord,8192))==q_before
-        u.mem_write(nv,saved)
+        install(saved)
         assert call('hd_nv_restore_c',1)==0
         assert call('hd_validate_c',sym['hd_banks'])==1
         print(json.dumps({'banks':16,'patterns':256,'scales_module':scales,'native_key_values':256,'part_default_authority':'passed',

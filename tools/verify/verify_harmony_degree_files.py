@@ -12,6 +12,9 @@ from unicorn.m68k_const import *
 from verify_harmony_degree_integration import DegreeMachine, ROOT
 
 
+BANK, STRIDE, PATTERN = 0x400e21e0, 0x9b340, 0x8ed8
+
+
 class Files(DegreeMachine):
     def __init__(self):
         super().__init__()
@@ -20,6 +23,31 @@ class Files(DegreeMachine):
         self.uc.mem_write(0x46c823fa,self.exists.to_bytes(4,'big'))
         self.uc.mem_write(self.scratch,b'/SET/PROJECT\0')
         self.uc.hook_add(UC_HOOK_CODE,self.io)
+    def seed(self):
+        u, s = self.uc, self.sym
+        u.mem_write(BANK, b'\xff'*STRIDE)
+        for p in range(16):
+            u.mem_write(BANK+p*PATTERN+0x8e57, b'\0')
+        for part in range(8):
+            base = BANK+(0x8ed80+part*0x18b2 if part<4 else 0x9504a+(part-4)*0x18b2)
+            for t in range(8):
+                u.mem_write(base+0x3e2+t*32, b'\x30')
+                for field, value in ((3,0),(5,2),(16,0),(17,1),(18,0),(19,35)):
+                    u.mem_write(base+0x4e2+t*36+field, bytes((value,)))
+        self.call('hd_bank_loaded', 0)
+        roots = bytearray()
+        qualities = bytearray()
+        for lane in range(128):
+            ds = [(lane+step)%84 for step in range(64)]
+            notes = [max(0, min(127, 12*(d//7-1)+(0,2,4,5,7,9,11)[d%7])) for d in ds]
+            roots.extend(bytes(ds+notes+[2,0,255]))
+            qualities.extend(bytes((lane+step)%8 for step in range(64)))
+            for step, note in enumerate(notes):
+                u.mem_write(BANK+(lane//8)*PATTERN+0x4900+(lane%8)*0x8b0+step*32, bytes((note,)))
+        u.mem_write(s['hd_banks'], bytes(roots))
+        u.mem_write(s['ch_lock_table'], bytes(qualities))
+        return bytes(roots), bytes(qualities)
+
     def string(self,address):return bytes(self.uc.mem_read(address,260)).split(b'\0')[0].decode()
     def io(self,u,pc,size,user):
         if pc not in (self.exists,0x40025230,0x40013a08,0x40016864,0x40016564,
@@ -83,7 +111,9 @@ def main():
     u.mem_write(s['ch_lock_table']+3,b'\x04')
     assert m.call('ch_file_write',0)==1
     path='/SET/PROJECT/hdeg01.work';original=m.files[path]
-    assert len(original)==10400 and original[:8]==b'HDP3'+(3).to_bytes(4,'big')
+    version=4
+    assert len(original)==15136
+    assert original[:8]==f'HDP{version}'.encode()+version.to_bytes(4,'big')
     assert int.from_bytes(original[16:20],'big')==fnv(original[32:])
     # The validation helper may tail-call and rewrite its argument; the hash
     # wrapper must still hash the COMPLETE payload from its original pointer.
@@ -123,7 +153,8 @@ def main():
     result={'round_trip':'passed','incoming_part_default_preserved':'passed','full_payload_checksum':'passed','malformed_files':len(invalid),
             'injected_write_failures':4,'stored_backup_guard':'passed','hardware_tested':False}
     print(json.dumps(result))
-    (ROOT/'out/harmony-degrees/files.json').write_text(json.dumps(result,indent=2)+'\n')
+    out=ROOT/'out/harmony-degrees';out.mkdir(parents=True,exist_ok=True)
+    (out/'files.json').write_text(json.dumps(result,indent=2)+'\n')
 
 
 if __name__=='__main__':main()

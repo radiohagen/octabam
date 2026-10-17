@@ -17,7 +17,7 @@ from midi_machine import MODES, raw_scale, Machine as LinkedMidiMachine
 
 def symbols():
     raw = subprocess.check_output(['m68k-elf-nm', str(ROOT/'out/platform/runtime/runtime.elf')], text=True)
-    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [TtBbAa] ((?:hd|ch|mh|bf|ms)_\w+)$',raw,re.M)}
+    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [TtBbAa] ((?:ha|hd|ch|mh|bf|ms)_\w+)$',raw,re.M)}
 
 class Machine(LinkedMidiMachine):
     def __init__(self):
@@ -722,11 +722,10 @@ def controls_gate():
         assert m.call('mh_get',1)==want
         assert m.call('mh_get',0)==0
     u.mem_write(m.sym['mh_page_track'],(1).to_bytes(4,'big'))
-    for slot,getter,values in ((0,'mh_get',[0,1,2]),
-                              (1,'mh_voic_get',[0,2,3,4,1]),
-                              (2,'mh_sprd_get',[0,1,2]),
-                              (3,'mh_root_get',[0,1,2,3]),
-                              (4,'mh_size_get',[0,1,2,3])):
+    for slot,getter,values in ((0,'mh_voic_get',[0,2,3,4,1]),
+                              (1,'mh_sprd_get',[0,1,2]),
+                              (2,'mh_root_get',[0,1,2,3]),
+                              (3,'mh_size_get',[0,1,2,3])):
         for want in values[1:]:
             for tick in range(4):
                 args(slot,1);m.call('mh_page_encoder',stop=m.sym['mh_page_draw'])
@@ -736,7 +735,7 @@ def controls_gate():
         for want in reversed(values[:-1]):
             args(slot,-0x80000000);m.call('mh_page_encoder',stop=m.sym['mh_page_draw'])
             assert m.call(getter,1)==want
-    for slot in range(5,7):
+    for slot in range(4,7):
         before=m.harmony_state()
         args(slot,100);m.call('mh_page_encoder')
         assert m.harmony_state()==before

@@ -58,6 +58,8 @@ ch_descriptor:
     andi.l #0xff00ffff,%d0
     move.l %d0,ch_note_descriptor+0x18e /* disable E/F only */
 .desc_degree_return:
+    lea ch_note_descriptor,%a0
+    jsr ha_descriptor
     move.l #ch_note_descriptor,%d0
     bra.s .desc_return
 .desc_stock:
@@ -86,6 +88,17 @@ ch_draw_value:
     move.l %d0,(%sp)
     bra.w .draw_restore
 .draw_chord:
+    cmpa.l #4,%a4
+    bne.s .draw_not_accum
+    moveq #0,%d0
+    move.b 0x100b14cc,%d0
+    jsr mh_get
+    tst.l %d0
+    beq.w .draw_restore
+    jsr ha_draw
+    move.l %d0,(%sp)
+    bra.w .draw_restore
+.draw_not_accum:
     cmpa.l #3,%a4
     bne.w .draw_restore
     moveq #0,%d0
@@ -137,6 +150,14 @@ ch_draw_value:
 
 /* Both stock editors take (slot, delta). Only main NOTE D/E/F are owned. */
 ch_encoder:
+    tst.l mh_page_win
+    bne.w mh_page_encoder
+    move.l 4(%sp),%d1
+    jsr ha_ui_owned
+    tst.l %d0
+    beq.s .ha_encoder_ordinary
+    jmp ha_encoder
+.ha_encoder_ordinary:
     move.l 4(%sp),%d1
     jsr hd_ui_owned
     tst.l %d0
@@ -182,6 +203,16 @@ ch_encoder:
     rts
 
 ch_step_encoder:
+    /* Native trig holds install an encoder layer above the modal. Keep
+     * its releases native, but route edits to this track-only window. */
+    tst.l mh_page_win
+    bne.w mh_page_encoder
+    move.l 4(%sp),%d1
+    jsr ha_ui_owned
+    tst.l %d0
+    beq.s .ha_steps_ordinary
+    jmp ha_step_encoder
+.ha_steps_ordinary:
     move.l 4(%sp),%d1
     jsr hd_ui_owned
     tst.l %d0
@@ -349,6 +380,15 @@ ch_note_descriptor: .space 402
     .text
     .global ch_step_push
 ch_step_push:
+    tst.l mh_page_win
+    bne.w mh_page_noop
+    move.l 4(%sp),%d1
+    subi.l #56,%d1
+    jsr ha_ui_owned
+    tst.l %d0
+    beq.s .ha_push_ordinary
+    jmp ha_step_push
+.ha_push_ordinary:
     move.l 4(%sp),%d1
     subi.l #56,%d1
     jsr hd_ui_owned

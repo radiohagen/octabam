@@ -74,7 +74,7 @@ SIZE is a per-track Part default, not a parameter lock. CHRD locks still
 select chord identity; SIZE determines its realization. The guide displays
 the requested chord name and actual sounding pitches; a reduced voicing can
 omit a tone implied by that name. Native Part Save/Reload, copy and KITS recall
-carry SIZE. Old valid CHRD bytes select NAT. Pattern HDP3/HDN3 storage and the
+carry SIZE. Old valid CHRD bytes select NAT. Pattern HDP4/HMT2 storage and the
 10,400-byte retained reservation are unchanged. Older firmware does not decode
 the newly packed CHRD/SIZE byte; use a project copy when testing this candidate.
 

@@ -8,6 +8,6 @@ BottleService carrier without requiring its audio rig or USB layout.
 Build/check: `make check REMIX=midi-ensemble`. With a prepared project, run
 `verify_harmony_degree_kits_port.py --project DIR --scenes --size-four`,
 `verify_harmony_size_scenes_port.py --project DIR`, and
-`verify_integrated_retention_port.py --project DIR` against a frozen image.
+`verify_harmony_track_port.py --project DIR` against a frozen image.
 These are emulator checks. Physical boot, timing and retained-state acceptance
 are separate; this carrier is not a boot fix.

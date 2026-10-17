@@ -22,17 +22,57 @@ DEG `1:3` means degree 1 in tonic octave 3. Turn DEG to move through the scale;
 **FUNC + DEG** changes only the octave. Hold steps to edit DEG/CHRD locks;
 press the corresponding encoder while holding steps to toggle the locks.
 
-Press **F** on NOTE SETUP to open **HARMONY**:
+Press **F** on NOTE SETUP to open **HARMONY**.
+UP/DOWN selects CHORD or ACCUM. HARM OFF/NOTE/CHORD stays on the parent page.
+CHORD controls follow the displayed positions: A/B/C across the top and D
+at bottom left. Empty E/F cells ignore turns.
 
-| Control | Choices |
-| --- | --- |
-| VOIC | ROOT, AUTO voice leading, 1ST, 2ND or 3RD inversion. |
-| SPRD | CLOSE, OPEN or WIDE. |
-| ROOT | KEEP, OMIT, -1 OCT or -2 OCT. |
-| SIZE | NAT recipe size, or 2, 3 or 4 voices. |
+| Encoder | Control | Choices |
+| --- | --- | --- |
+| A | VOIC | ROOT, AUTO voice leading, 1ST, 2ND or 3RD inversion. |
+| B | SPRD | CLOSE, OPEN or WIDE. |
+| C | ROOT | KEEP, OMIT, -1 OCT or -2 OCT. |
+| D | SIZE | NAT recipe size, or 2, 3 or 4 voices. |
 
-These are track settings. Existing held notes retain their original releases.
+These are track settings affecting CHORD, not NOTE.
+Existing held notes retain their original releases.
 See [Voicing](VOICING.md) for the musical rules.
+
+## Degree accumulator
+
+**NOTE MAIN E: ACC** edits the pattern/track's
+default amount: OFF or −7…−1 / +1…+7 scale degrees. Hold trigs and turn E for
+independent step overrides; press E while holding trigs to add/remove locks.
+An unlocked step inherits the default. OFF is an explicit override, not a
+zero/freeze setting.
+
+Each step's first sounding occurrence is unshifted. Its amount then advances
+the next occurrence. Rests, failed conditions and suppressed outputs do not
+advance it; chord voices and arp repeats share the same captured root shift.
+Live keyboard notes do not accumulate.
+
+Select ACCUM in the Harmony window:
+
+| Encoder | Setting | Values; default |
+| --- | --- | --- |
+| A | LOW | −63…0 degrees; 0 |
+| B | HIGH | 0…63 degrees; 7 |
+| C | BOUND | WRAP / BOUNC / HOLD / ZERO; WRAP |
+| D | RESET | NONE / START / PAT / BOTH; BOTH |
+
+These settings cannot be step-locked. Limits include both endpoints. WRAP
+wraps the overshoot, BOUNC reflects it and reverses direction, HOLD clamps,
+and ZERO returns to zero. START resets on transport start/resume; PAT resets
+when the track changes pattern; BOTH combines them. NONE carries each step
+number's running offset across patterns. Changing an amount resets that step;
+changing the default or limits/policy resets the playing track's offsets.
+
+Follow supplies root/register and KEY first, then ACC shifts in degrees,
+then native semitone TRAN and scale correction apply before chord/arp output.
+ACC settings and overrides belong to the pattern/track, not to a Part or Kit.
+Copy/paste/undo includes them; clearing step locks restores inheritance.
+Configuration survives save/reload and retained restart; running offsets are
+volatile and start at zero after project load or power-on.
 
 ## Chord Play
 
@@ -52,9 +92,10 @@ the root and KEY come from the source; rhythm and chord settings remain local.
 ## Storage and compatibility
 
 HARM, KEY, voicing, SIZE and default DEG/CHRD are native Part settings.
-Pattern DEG/CHRD locks live in the project's `hdeg01.work`–`hdeg16.work` and
+Pattern DEG/CHRD locks and accumulator configuration live in the project's `hdeg01.work`–`hdeg16.work` and
 their `.strd` companions. Keep them with the project. Incompatible companions
-are protected from overwrite; earlier Harmony formats are not migrated.
+are protected from overwrite. Runtime accumulator offsets restart at zero;
+only the configuration is saved.
 
 Turning HARM OFF writes resolved roots back to native NOTE. It preserves
 NOT2–4 but does not render generated chords into those fields.
@@ -64,9 +105,9 @@ NOTE fields are storage mirrors and can play different pitches on stock.
 Stock also resets voicing/spread/root choices and clamps extended KEY modes
 to B Minor; saving persists those changes for the bank written.
 
-Requires **MIDI Part State** and **STORE**. PLOCKS P2 requires the **Harmony
+Requires **MIDI Part State**, **STORE** and **MIDI SRAM**. PLOCKS P2 requires the **Harmony
 PLOCKS bridge** and compatible retention settings. KITS libraries are per
 project; recalling a kit supplies Part defaults while pattern locks stay with
-the patterns. See [storage](degrees/README.md) and [KITS](degrees/KITS.md).
+the patterns. See [storage](DEVELOPMENT.md#compact-harmony-storage) and [KITS](KITS.md).
 
 [Implementation, provenance and verification](DEVELOPMENT.md).

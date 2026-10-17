@@ -1,5 +1,6 @@
 """tools/verify/doclinks.py: what it refuses and what it lets through, on a
 throwaway git repository."""
+import json
 import pathlib
 import subprocess
 import sys
@@ -58,6 +59,28 @@ class DocLinks(unittest.TestCase):
                           "# modules/<name>/README.md, docs/...md\n",
             "README.md": "`lib.a[2](gpt.cpp.o)` and `[x](nowhere.md)`\n",
             "CHANGELOG.md": "[old](docs/TIMESTRETCH_PIPELINE.md)\n"}), [])
+
+    def test_pinned_source_paths_are_historical_but_other_fields_are_live(self):
+        path = "modules/old/README.md"
+        record = {"path": path, "commit": "a" * 40, "sha256": "b" * 64}
+        manifest = "docs/guide/MIDI_SOURCE_PROVENANCE.json"
+        data = {"files": {path: record}}
+        self.assertEqual(self.fails({manifest: json.dumps(data, indent=2)}), [])
+        record["guide"] = path
+        got = self.fails({manifest: json.dumps(data, indent=2)})
+        self.assertEqual(len(got), 1)
+        self.assertIn("no such file", got[0])
+
+    def test_unpinned_or_mismatched_source_paths_are_not_exempt(self):
+        path = "modules/old/README.md"
+        manifest = "docs/guide/MIDI_SOURCE_PROVENANCE.json"
+        for updates in ({"commit": "main"}, {"sha256": "bad"}, {"path": "modules/other/README.md"}):
+            record = {"path": path, "commit": "a" * 40, "sha256": "b" * 64, **updates}
+            with self.subTest(updates=updates):
+                self.assertTrue(self.fails({manifest: json.dumps({"files": {path: record}}, indent=2)}))
+        self.assertTrue(self.fails({manifest: '{"files": broken modules/old/README.md'}))
+        self.assertTrue(self.fails({"docs/guide/OTHER.json": json.dumps(
+            {"files": {path: {"path": path, "commit": "a" * 40, "sha256": "b" * 64}}}, indent=2)}))
 
 
 

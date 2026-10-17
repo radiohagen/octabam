@@ -14,12 +14,12 @@ MIDI Arp Presets, FM Synth/Synth Machine, Sophie, Supersaw and POST FADER.
 
 ## Storage and integration boundaries
 
-Harmony uses `RETENTION=MIDI TRACK`: each step's degree/chord token occupies
+Harmony uses track-local retention: each step's degree/chord token occupies
 that same MIDI step's two reclaimed bytes. Metadata remains inside the same
 track. No track borrows another track's capacity, and Harmony reserves no
 contiguous tail SRAM. Native track clear removes its Harmony locks; copy,
 paste and undo carry the appropriate musical data. See the
-[layout and lifecycle contract](../../modules/midi-harmony/degrees/README.md).
+[layout and lifecycle contract](../../modules/midi-harmony/DEVELOPMENT.md).
 
 PLOCKS P2 keeps upstream's storage at `0x100f8600..0x100fbdf0`, its `P2NV`
 format and its 4,768-lock unsaved recovery capacity. There is no PLOCKS
@@ -33,12 +33,23 @@ initialization correction from OCTABAM85 (`44a7c6b9`). Shared copy/STORE
 integration, the PIO write fix and Quantizer MIDI drawer adapter remain selected.
 These are not removed by moving Harmony's retained data.
 
-HDP3 and P2LK project companion formats are unchanged. Old retained layouts
-are not migrated automatically: save with the previous firmware before
-switching. The MIDI bytes are reverse-engineered reclamation, not an official
+Harmony writes HDP4/HMT2 with per-step ACC. P2LK is unchanged. There are no
+alternate Harmony retention layouts or migration readers. The MIDI bytes are reverse-engineered reclamation, not an official
 free-space contract. MIDI SRAM protects them against native bulk writes and
 strips them from native DRAM, clipboards and bank files; Harmony's lifecycle
 hooks perform the musical copy/clear operation and checkpoint the result.
+
+## Accumulator candidate
+
+The Harmony accumulator update is imported from preserved source
+`510e0aee`. It does not change the integration base pinned in
+`integration/octabam.json`, and the historical BUILD 79 results below do not
+qualify this new candidate. Its focused source-build evidence uses BUILD 80,
+PGO off, MAIN OS SHA-256
+`576403a42614a5b0a18c098a748ed9b9488ffed44f060f072a4dc9103fbd203b`.
+See [Harmony development](../../modules/midi-harmony/DEVELOPMENT.md) for
+the gates and hardware boundary. Retained storage capacity is unchanged;
+ACC adds 75,776 bytes of working configuration in DRAM plus transient phase.
 
 ## Historical completed-source validation
 

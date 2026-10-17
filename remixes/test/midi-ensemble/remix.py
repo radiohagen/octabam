@@ -1,5 +1,5 @@
 """All MIDI modules with KITS/Scenes/P2 on stock audio effects."""
-from remix.schema import Pin, Proof, Remix
+from remix.schema import Proof, Remix
 REMIX = Remix(
     name='midi-ensemble', family='mods', proof=Proof.CHECK,
     proof_note='',
@@ -10,6 +10,5 @@ REMIX = Remix(
              'FILTER', 'EQUALIZER', 'DJ EQ', 'PHASER', 'FLANGER', 'CHORUS',
              'SPATIALIZER', 'COMB FILTER', 'COMPRESSOR', 'LO-FI', 'DELAY',
              'PLATE REV', 'SPRING REV', 'DARK REV'),
-    settings={('mattias.midi-harmony','RETENTION'):Pin('MIDI TRACK')},
     fallback='NONE',
 )

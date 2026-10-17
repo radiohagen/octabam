@@ -106,8 +106,11 @@ def record_save(source):
     files=p.emu_card.extract_image((work/'save-card.img').read_bytes())
     for suffix in ('work','strd'):
         data=files[f'OCTABAM/BASS/hdeg01.{suffix}']
-        assert len(data)==10400 and data[:8]==b'HDP3'+(3).to_bytes(4,'big')
-        assert data[32:]==oracle(degrees[:SIZE], locks[:8192])
+        version=4 if 'hd_track_read_c' in SYMBOLS else 3
+        assert len(data)==(15136 if version==4 else 10400)
+        assert data[:8]==f'HDP{version}'.encode()+version.to_bytes(4,'big')
+        assert data[32:10400]==oracle(degrees[:SIZE], locks[:8192])
+        if version==4:assert data[10400:]==(bytes(32)+bytes((0,7,0,3,1)))*128
     for bank in range(2,17):assert files[f'OCTABAM/BASS/hdeg{bank:02d}.strd']==b'HDP0'+bytes(28)
     print('[ok] real REC+PLAY captures degree and quality; project SAVE stores the complete companion',flush=True)
     script='100 key 0x31 down\n200 key 0x31 up\n500 key 0x28 down\n600 key 0x28 up\n9000 key 0x27 down\n9100 key 0x27 up\n10000 quit\n'

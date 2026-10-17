@@ -11,6 +11,6 @@ It adds no controls.
 
 The bridge allocates no retained memory. With Harmony **MIDI TRACK**, Harmony
 uses [MIDI SRAM](../midi-sram/README.md); PLOCKS retains its separate capacity
-of 4,768 unsaved locks. Project companions remain P2LK v1 and HDP3.
+of 4,768 unsaved locks. Project companions use P2LK v1 and HDP4.
 
 [Shared hooks, storage boundaries and verification](DEVELOPMENT.md).

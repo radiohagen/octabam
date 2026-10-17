@@ -148,11 +148,15 @@ hd_step_encoder:
     movem.l %d2-%d7/%a2-%fp,(%sp)
     jmp 0x40050ec2
 .edit_finish:
+    .global hd_edit_finish
+hd_edit_finish:
     moveq #0,%d0
     move.b 0x80000002,%d0
     jsr ch_nv_save
     jmp ch_ui_dirty
 .bitmaps:
+    .global hd_bitmaps
+hd_bitmaps:
     lea -8(%sp),%sp
     movem.l %d2-%d3,(%sp)
     moveq #0,%d2

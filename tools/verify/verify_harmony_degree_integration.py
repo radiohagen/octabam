@@ -9,7 +9,7 @@ from midi_machine import Machine, ROOT
 
 def symbols():
     raw = subprocess.check_output(['m68k-elf-nm', str(ROOT/'out/platform/runtime/runtime.elf')], text=True)
-    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [TtBbDdAa] ((?:hd|ch|mh|bf|ms|mp)_\w+)$',raw,re.M)}
+    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [TtBbDdAa] ((?:ha|hd|ch|mh|bf|ms|mp)_\w+)$',raw,re.M)}
 
 
 class DegreeMachine(Machine):
@@ -106,9 +106,8 @@ def main():
     assert m.call('hd_capture',50,0)==36
     # Combined current-bank retention uses a separate identity.
     m.call('ch_nv_save',0)
-    from harmony_retained import committed, track_layout
+    from harmony_retained import committed
     assert committed(m)
-    if not track_layout(m): assert get(m.sym['hd_nv_base']+12,4)==10368
     assert m.call('ch_nv_restore',0)==1
     # Copy a degree while the native NOTE snapshot is stale, then paste into
     # another Part/key and an OFF track. Exercise actual native memcpy too.
@@ -242,7 +241,7 @@ def main():
         u.mem_write(m.stack+4,b''.join(v.to_bytes(4,'big') for v in args))
         m.call(name,stop=stop,regs=regs)
         assert get(s['hd_banks'])==255 and get(s['hd_banks']+64)==255,name
-    # In HARM NOTE, hidden D/E/F controls cannot silently change dormant
+    # In HARM NOTE, hidden controls cannot silently change dormant
     # stock NOT2-4, including encoder pushes while a step is held.
     m.call('mh_set',0,1)
     put(0x80000012,1,4);put(0x460d1684,0,4);put(0x460d175c,0,4)
@@ -259,7 +258,7 @@ def main():
     m.call('mh_set',0,1)
     before=bytes(u.mem_read(bank,0x9b340))
     degree_before=bytes(u.mem_read(s['hd_banks'],16768))
-    for slot in (3,4,5):
+    for slot in (3,5):
         m.c('ch_encoder',slot,4)
         m.c('ch_step_encoder',slot,4)
         m.c('ch_step_push',slot+56,1)

@@ -9,13 +9,12 @@ import struct
 import subprocess
 from collections import Counter
 from unicorn.m68k_const import *
-from verify_harmony_degree_files import Files, ROOT
+from verify_harmony_degree_files import Files, ROOT, BANK, STRIDE, PATTERN
 from harmony_retained import raw_p2 as raw
 from verify_midi_sram import OFFSETS
 import harmony_retained as retained
 
-BANK, STRIDE, PATTERN = 0x400e21e0, 0x9b340, 0x8ed8
-P2NV, HNV, P2SIZE, HSIZE = 0x100f8600, 0x100fd560, 15464, 10400
+P2NV, P2SIZE = 0x100f8600, 15464
 
 
 class Combined(Files):
@@ -66,28 +65,8 @@ class Combined(Files):
         super().io(u, pc, size, user)
 
     def seed(self):
+        roots, qualities = super().seed()
         u, s = self.uc, self.sym
-        u.mem_write(BANK, b'\xff'*STRIDE)
-        for p in range(16):
-            u.mem_write(BANK+p*PATTERN+0x8e57, b'\0')
-        for part in range(8):
-            base = BANK+(0x8ed80+part*0x18b2 if part<4 else 0x9504a+(part-4)*0x18b2)
-            for t in range(8):
-                u.mem_write(base+0x3e2+t*32, b'\x30')
-                for field, value in ((3,0),(5,2),(16,0),(17,1),(18,0),(19,35)):
-                    u.mem_write(base+0x4e2+t*36+field, bytes((value,)))
-        self.call('hd_bank_loaded', 0)
-        roots = bytearray()
-        qualities = bytearray()
-        for lane in range(128):
-            ds = [(lane+step)%84 for step in range(64)]
-            notes = [max(0, min(127, 12*(d//7-1)+(0,2,4,5,7,9,11)[d%7])) for d in ds]
-            roots.extend(bytes(ds+notes+[2,0,255]))
-            qualities.extend(bytes((lane+step)%8 for step in range(64)))
-            for step, note in enumerate(notes):
-                u.mem_write(BANK+(lane//8)*PATTERN+0x4900+(lane%8)*0x8b0+step*32, bytes((note,)))
-        u.mem_write(s['hd_banks'], bytes(roots))
-        u.mem_write(s['ch_lock_table'], bytes(qualities))
         p2 = bytearray(b'\xff'*98304)
         records = [(i*9, i%128) for i in range(4768 if 'plk_nv_encode' not in s and 'plk_pool_encode' not in s else 10234)]
         for i, value in records: p2[i] = value
@@ -102,15 +81,13 @@ class Combined(Files):
 
 def main():
     m = Combined(); u, s = m.uc, m.sym
-    global HNV, P2SIZE
-    HNV=s['hd_nv_base']; pooled='plk_pool_encode' in s
-    track=retained.track_layout(m)
+    global P2SIZE
+    pooled='plk_pool_encode' in s
     upstream_p2='plk_nv_encode' not in s and not pooled
     P2SIZE=14320 if upstream_p2 else 20 if pooled else 15464
     magic=b'P2NV' if upstream_p2 else b'P2S1' if pooled else b'P2R1'
     roots, qualities, p2, records = m.seed()
-    guards = ((P2NV-16, 16), (P2NV+P2SIZE, HNV-P2NV-P2SIZE), (HNV+HSIZE, 16))
-    if track: guards=((P2NV-16,16),)  # MIDI Scenes owns the immediately following range
+    guards=((P2NV-16,16),)  # MIDI Scenes owns the immediately following range
     for address, length in guards: u.mem_write(address, b'\xa5'*length)
     # Both full-capacity stores are checkpointed through the real shared entry.
     u.mem_write(m.stack+4, struct.pack('>I', 0))
@@ -170,7 +147,7 @@ def main():
     m.call('store_bankw_mid',stop=0x400918b0,regs={UC_M68K_REG_D6:1})
     assert u.reg_read(UC_M68K_REG_A7) == m.stack
     assert m.files['/SET/PROJECT/p2lk01.work'][16:] == p2
-    assert m.files['/SET/PROJECT/hdeg01.work'][:4] == b'HDP3'
+    assert m.files['/SET/PROJECT/hdeg01.work'][:4] == b'HDP4'
     m.files['/SET/PROJECT/bank01.work'] = bytes(u.mem_read(BANK,STRIDE))
     dst, src = m.scratch+0x300, m.scratch+0x400
     u.mem_write(dst,b'/SET/PROJECT/bank01.strd\0')

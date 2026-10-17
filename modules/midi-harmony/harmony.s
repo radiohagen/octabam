@@ -267,15 +267,30 @@ mh_direct:
     cmpi.l #256,%d0
     beq.s .gen_own
     move.l %d0,%d2
-    add.l (%sp),%d2
-    bra.s .gen_bounds /* Follow's signed octave must not wrap as a byte. */
+    moveq #2,%d5 /* followed: retain signed register bounds after TRAN */
+    bra.s .gen_accumulate
 .gen_own:
 .endif
     /* A follower ignores its own degree, but an invalid own root must not
      * wrap into range when native TRAN arithmetic is applied. */
     cmpi.l #127,%d2
     bhi.w .gen_invalid
+.gen_accumulate:
+    tst.l %d5 /* Live keyboard pitches do not participate. */
+    beq.s .gen_accum_done
+    cmpi.l #127,%d2 /* Preserve Follow's signed register + TRAN path. */
+    bhi.s .gen_accum_done
+    move.l %d2,%d0
+    move.l %d7,%d1
+    move.l 36(%sp),%d2
+    jsr ha_shift
+    move.l %d0,%d2
+    cmpi.l #127,%d2
+    bhi.w .gen_invalid
+.gen_accum_done:
     add.l (%sp),%d2
+    cmpi.l #2,%d5
+    beq.s .gen_bounds
     andi.l #255,%d2 /* Same byte arithmetic as stock TRAN/arranger. */
 .gen_bounds:
     cmpi.l #127,%d2
@@ -482,6 +497,42 @@ mh_output:
     move.l %d6,%d0
     add.l %d3,%d0
     jmp 0x4009fb8c
+
+/* The two successful sequencer note-on continuations, after native ownership
+ * arbitration and the composed MIDI sender. A rejected duplicate never gets
+ * here. Live arp pools and zero-velocity note-offs do not advance ACC. */
+    .global ha_sent_a,ha_sent_b
+ha_sent_a:
+    bsr.s .accum_sent
+    move.b 0x400d807c,%d1
+    extb.l %d1
+    jmp 0x4009fbb8
+ha_sent_b:
+    bsr.s .accum_sent
+    move.b 0x400d807c,%d0
+    extb.l %d0
+    jmp 0x4009fd00
+.accum_sent:
+    lea -16(%sp),%sp
+    movem.l %d0-%d1/%a0-%a1,(%sp)
+    tst.b 0x400d807e
+    beq.s .accum_sent_done
+    moveq #10,%d0
+    mulu.l %d7,%d0
+    lea 0x46c77b1e,%a0
+    move.b (%a0,%d0.l),%d0
+    cmpi.b #1,%d0
+    beq.s .accum_sent_done
+    move.l %d7,%d0
+    bsr.w mh_active
+    tst.l %d0
+    beq.s .accum_sent_done
+    move.l %d7,%d0
+    jsr ha_sounded
+.accum_sent_done:
+    movem.l (%sp),%d0-%d1/%a0-%a1
+    lea 16(%sp),%sp
+    rts
 
 /* Settings live in native Parts. These hooks reset runtime state only. */
 mh_reset:

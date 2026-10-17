@@ -18,6 +18,7 @@ fixtures under tools/verify/tests/.
 A `.md` file may not contain the section sign: "BUILDING.md section 5",
 never the symbol (30 Sep 2026: it reads like a mis-decoded character).
 """
+import json
 import pathlib
 import re
 import subprocess
@@ -74,6 +75,25 @@ def placeholder(p):
     return "..." in p or any(c in p for c in "<>*{}$") or re.search(r"(^|/)(X|x|N|NAME|name)(\.md|/)", p)
 
 
+def historical_source_paths(rel, text):
+    """Pinned import records name files at their source commit, not HEAD.
+
+    Like git-show citations, this checks reference form, not availability of
+    historical Git objects. Only the manifest's keyed source paths qualify;
+    ordinary links and other fields still go through the live-path checker.
+    """
+    if rel != "docs/guide/MIDI_SOURCE_PROVENANCE.json":
+        return set()
+    try:
+        files = json.loads(text)["files"]
+        return {p for p, record in files.items()
+                if isinstance(record, dict) and record.get("path") == p
+                and re.fullmatch(r"[0-9a-f]{40}", str(record.get("commit", "")))
+                and re.fullmatch(r"[0-9a-f]{64}", str(record.get("sha256", "")))}
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return set()
+
+
 def check(root=ROOT):
     fails = []
     for rel in tracked(root):
@@ -84,6 +104,7 @@ def check(root=ROOT):
             text = path.read_text()
         except (UnicodeDecodeError, OSError):
             continue
+        historical = historical_source_paths(rel, text)
         fenced = False
         for n, line in enumerate(text.splitlines(), 1):
             if path.suffix == ".md" and FENCE.match(line):
@@ -107,6 +128,9 @@ def check(root=ROOT):
                 if p.startswith("docs/history/") or placeholder(p):
                     continue
                 if GITSHOW.search(line[:m.end()]):
+                    continue
+                if p in historical and (line.strip() == f'{json.dumps(p)}: {{'
+                                        or line.strip().rstrip(",") == f'"path": {json.dumps(p)}'):
                     continue
                 if not (root / p).exists():
                     fails.append(f"{rel}:{n}: {p} -- no such file")
