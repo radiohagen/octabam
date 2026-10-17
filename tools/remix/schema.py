@@ -1208,6 +1208,12 @@ class Linked:
     # CavePatch.registers_formatter: the build writes the unit's
     # `registers_formatter.symbol` into that module's descriptor clone.
     registers_formatter: FormatterReg | None = None
+    # Resident-only references resolved AFTER the platform runtime link.
+    # (local defsym name, DRAM unit label, symbol defined by that unit).
+    # Each local name must have a defsyms value for the author reference and
+    # first placement link. That value is never a fallback in a final image:
+    # the provider must exist, and relinking must preserve size and exports.
+    runtime_refs: tuple[tuple[str, str, str], ...] = ()
 
     def __post_init__(self):
         if self.registers_formatter is not None and not (
@@ -1217,6 +1223,15 @@ class Linked:
         names = [n for n, _v in self.defsyms]
         if len(names) != len(set(names)):
             raise ValueError(f"Linked({self.label!r}): a defsym name declared twice")
+        if self.runtime_refs:
+            if self.dram or self.loader:
+                raise ValueError(f"Linked({self.label!r}): runtime_refs require a resident unit")
+            refs = [ref[0] for ref in self.runtime_refs if len(ref) == 3]
+            if len(refs) != len(self.runtime_refs) or any(
+                    not all(isinstance(v, str) and v for v in ref) for ref in self.runtime_refs):
+                raise ValueError(f"Linked({self.label!r}): runtime_refs need three nonempty names")
+            if len(refs) != len(set(refs)) or not set(refs) <= set(names):
+                raise ValueError(f"Linked({self.label!r}): runtime_refs need distinct declared defsyms")
         if self.reference is not None and not callable(self.reference):
             reference_shape(self.label, self.reference)
 

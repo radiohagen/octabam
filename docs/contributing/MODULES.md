@@ -617,6 +617,17 @@ two DRAM units resolving one name to different values are refused (one
 link). A switch that depends on another module being in the image is
 `include`'s job, not a defsym's.
 
+For resident code that must publish runtime callbacks,
+`Linked.runtime_refs=(("NAME", "runtime_unit", "symbol"), ...)` explicitly
+defers selected `defsyms` until the runtime has linked. Each name still has a
+declared author-reference value for the first placement and oracle links.
+The final link must resolve the named symbol from that specific DRAM unit;
+missing providers never fall back to the reference value. Reference values
+are not exported to other units. Final linking must preserve the resident
+unit's size and exported addresses, because the runtime and neighboring units
+already depend on them. This is available only to resident units, not DRAM
+or loader units. The build's ordinary `defsyms` behavior is unchanged.
+
 DRAM units are assembled for the chip itself (`-mcpu=54455`, ISA C):
 GNU ld refuses to link an ISA-C object beside ISA-B ones, and an ISA-C
 assembly of ISA-A/B text is the same bytes (refhash, 25 Sep 2026), so a

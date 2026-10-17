@@ -1064,6 +1064,12 @@ def main():
     _units = [(m, u) for m, u in _all_units if not u.dram and not u.loader]  # ROM-placed
     _dram = [(m, u) for m, u in _all_units if u.dram]           # platform runtime (1e)
     _early = [(m, u) for m, u in _all_units if u.loader]        # in the loader itself (1e)
+    _resident_links = []
+    for _m, _u in _units:
+        for _name, _provider, _symbol in _u.runtime_refs:
+            if sum(u.label == _provider for _, u in _dram) != 1:
+                sys.exit(f"{_u.label}: runtime reference {_name} needs exactly one "
+                         f"DRAM unit {_provider}")
     if _early and not _dram:
         sys.exit(f"{', '.join(m.key for m, _ in _early)}: a loader unit needs the platform "
                  f"(a DRAM unit in the remix); there is none")
@@ -1101,6 +1107,12 @@ def main():
         _at = _u.cave_addr if _u.cave_addr is not None else (_cave_top + 0x7f) & ~0x7f
         _b, _syms, _glob = _link(_src, _at, _u.cpu, _work, defsyms=_mine + _rest, incdir=_inc,
                                  asdefs=_mine)
+        if _u.runtime_refs:
+            # Author-reference values are temporary imports, not exports other
+            # units may resolve. Only the final runtime supplies these names.
+            _late_names = {ref[0] for ref in _u.runtime_refs}
+            _glob = {n: v for n, v in _glob.items() if n not in _late_names}
+            _resident_links.append((_u, _at, _b, _glob, _mine, _rest, _inc, _work))
         _exports.update(_glob)
         if _at >= SAFE_CAVE_CEIL:
             sys.exit(f"{_u.label}: linked at 0x{_at:08x}, above the safe ceiling")
@@ -1507,6 +1519,25 @@ def main():
                              f"author's {_rsha} -- source or toolchain drift; refusing")
                 print(f"  {_m.key} {_u.label}: matches the author's build at 0x{_ra:08x} ({len(_rb):,} B)")
         _exports.update(_pgsyms)
+        # Entry addresses were needed to link the runtime; now complete the
+        # reverse references using that runtime's per-unit symbol tables.
+        from remix import resident_link
+        for _u, _at, _before, _oldglob, _mine, _rest, _inc, _work in _resident_links:
+            try:
+                _resolved = resident_link.resolve(_u, _punits)
+                _defs = tuple((n, _resolved.get(n, v)) for n, v in _mine)
+                _after, _syms, _glob = _link(pathlib.Path(_u.source), _at, _u.cpu, _work,
+                                            defsyms=_defs + _rest, incdir=_inc, asdefs=_defs)
+                _glob = {n: v for n, v in _glob.items() if n not in _resolved}
+                resident_link.check_layout(_u.label, _before, _oldglob, _after, _glob)
+            except ValueError as _error:
+                sys.exit(str(_error))
+            if bytes(img[_at - BASE:_at - BASE + len(_before)]) != _before:
+                sys.exit(f"{_u.label}: resident bytes changed before runtime reference link")
+            img[_at - BASE:_at - BASE + len(_after)] = _after
+            _sym[_u.label] = _syms
+            _exports.update(_glob)
+            print(f"  {_u.label}: {len(_resolved)} runtime references resolved; resident layout unchanged")
         # DRAM label formatters (Linked.registers_formatter), as the cave
         # registration above: skipped for a module not cloned or BLANKED,
         # (CAVE OFF drops TEMPO SYNC's unit itself).

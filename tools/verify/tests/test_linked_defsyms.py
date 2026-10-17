@@ -9,6 +9,7 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "tools"))
 from remix import platform_build  # noqa: E402
+from remix import resident_link  # noqa: E402
 from remix.schema import Linked  # noqa: E402
 
 TOOLS = all(shutil.which(t) for t in ("m68k-elf-as", "m68k-elf-ld", "m68k-elf-objcopy", "m68k-elf-nm"))
@@ -102,6 +103,66 @@ class ReferenceTests(unittest.TestCase):
     def test_a_name_declared_twice_is_refused(self):
         with self.assertRaises(ValueError):
             Linked("u", "u.s", defsyms=(("A", 1), ("A", 2)))
+
+
+class ResidentReferenceTests(unittest.TestCase):
+    def unit(self, **kwargs):
+        return Linked('entry', 'entry.s', defsyms=(('CALLBACK', 0),),
+                      runtime_refs=(('CALLBACK', 'provider', 'callback'),), **kwargs)
+
+    def test_only_resident_units_and_explicit_defaults(self):
+        for kwargs in ({'dram': True}, {'loader': True}):
+            with self.assertRaises(ValueError):
+                self.unit(**kwargs)
+        with self.assertRaises(ValueError):
+            Linked('u', 'u.s', runtime_refs=(('A', 'v', 'target'),))
+        with self.assertRaises(ValueError):
+            Linked('u', 'u.s', defsyms=(('A', 0),),
+                   runtime_refs=(('A', 'v', 'target'), ('A', 'w', 'target')))
+
+    def test_provider_scope_beats_same_named_symbol_elsewhere(self):
+        tables = {'provider': {'callback': 0x40a90000},
+                  'other': {'callback': 0x40aa0000}}
+        self.assertEqual(resident_link.resolve(self.unit(), tables), {'CALLBACK': 0x40a90000})
+
+    def test_missing_provider_or_symbol_never_uses_reference_default(self):
+        for tables in ({}, {'provider': {}}, {'other': {'callback': 0x40a90000}}):
+            with self.assertRaisesRegex(ValueError, 'does not define'):
+                resident_link.resolve(self.unit(), tables)
+
+    @unittest.skipUnless(TOOLS, 'needs the m68k-elf toolchain')
+    def test_real_relink_preserves_entries_and_rejects_changed_layout(self):
+        with tempfile.TemporaryDirectory(prefix='resident-link-', dir=ROOT/'out') as temp:
+            work = pathlib.Path(temp)
+            source = work/'entry.s'
+            source.write_text('.text\n.global entry, slot\nentry:\n'
+                              'move.l #CALLBACK,%d0\nslot: .long 0\n')
+            unit = Linked('resident', str(source), defsyms=(('CALLBACK', 0),),
+                          runtime_refs=(('CALLBACK', 'provider', 'callback'),))
+            def link(folder, value):
+                raw, _, exports, _ = platform_build.link_runtime(
+                    [('K', unit)], work/folder, {'CALLBACK': value}, 0x400d6b80,
+                    unit_defs={'resident': (('CALLBACK', value),)})
+                return raw, {n:v for n,v in exports.items() if n != 'CALLBACK'}
+            before, old = link('first', 0x11223344)
+            after, new = link('final', 0x40a9582e)
+            resident_link.check_layout('resident', before, old, after, new)
+            self.assertIn(bytes.fromhex('203c40a9582e'), after)
+            # A source whose assembly changes size with the resolved value
+            # must not overwrite the next placed unit.
+            source.write_text('.text\n.global entry, slot\nentry:\n'
+                              'move.l #CALLBACK,%d0\n.if CALLBACK\n nop\n.endif\n'
+                              'slot: .long 0\n')
+            after, new = link('grown', 0x40a9582e)
+            with self.assertRaisesRegex(ValueError, 'changed resident size'):
+                resident_link.check_layout('resident', before, old, after, new)
+            # Equal size alone is insufficient: another unit may already
+            # reference a data slot that moved within the resident unit.
+            source.write_text('.text\n.global entry, slot\nentry:\n'
+                              'move.w #CALLBACK,%d0\nslot: .long 0\n nop\n')
+            after, new = link('moved-slot', 0x1234)
+            with self.assertRaisesRegex(ValueError, 'moved resident exports'):
+                resident_link.check_layout('resident', before, old, after, new)
 
 
 if __name__ == "__main__":
