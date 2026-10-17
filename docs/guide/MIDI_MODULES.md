@@ -66,6 +66,24 @@ AUTO is a small deterministic search for nearby voicings, not a claim of
 classical voice-leading correctness. Notes outside the MIDI range are omitted;
 held notes keep the original pitch/channel identity needed to release them.
 
+## Accumulate selected steps
+
+With HARM NOTE or CHORD, NOTE MAIN E sets ACC: OFF or minus/plus 1 to 7
+scale degrees. Hold a trig to override that step; an unlocked step inherits
+the pattern/track default. OFF explicitly disables a step. There is no
+separate zero/freeze value.
+
+Each step starts unshifted and advances only when it actually sounds.
+Rests, failed conditions and arp repeats do not advance it. Follow supplies
+the root and register first; ACC shifts that root in degrees before native
+semitone TRAN, scale correction and chord/arp output.
+
+Press NOTE SETUP F to open HARMONY. UP/DOWN selects CHORD or ACCUM;
+HARM OFF/NOTE/CHORD remains on the parent page. In ACCUM, A/B/C edit
+LOW/HIGH/BOUND and D edits RESET, following their on-screen positions.
+These are pattern/track settings, not step locks. See
+[Harmony's controls](../../modules/midi-harmony/README.md) for boundary and reset policies.
+
 ## Scenes, Kits and saves
 
 MIDI Scenes controls the normal MIDI main-page parameters through scene A/B.
@@ -77,8 +95,9 @@ Audio scenes continue alongside MIDI scenes on the same crossfader.
 |---|---|---|
 | RFOL, register/response, KEY, HARM, DEG/CHRD defaults and voicing | Native Part | Part and Kit recall supply incoming defaults |
 | Explicit DEG/CHRD step locks | Pattern, with Harmony companion files | Stay attached to the sequence across Kit changes |
+| ACC default, limits, boundary/reset policy and step overrides | Pattern/track, with Harmony companion files | Copy/paste/undo and project save/reload; not Part or Kit settings |
 | MIDI scene locks | MIDI SCENES tables; also saved in Kits | Recall the selected Part/Kit's scene configuration |
-| Roots, AUTO history and held-note ownership | Runtime | Never saved as project settings |
+| Roots, accumulator offsets, AUTO history and held-note ownership | Runtime | Never saved as project settings |
 
 Save a Kit for a reusable setup and save the project for its patterns and
 companion files. Keep the complete project directory when copying it. A Kit
@@ -104,11 +123,11 @@ linked code, data and BSS. These MIDI modules use those linked allocations;
 they do not take pages from the live sample allocator. This DRAM reserve is
 separate from the retained SRAM pool below and does not survive power-off.
 
-Full-capacity composition uses [MIDI SRAM](../../modules/midi-sram/README.md),
-PLOCKS P2 `MIDI POOL` and Harmony `SHARED`. It retains 10,234 P2 locks, 8,192
-Harmony step tuples and four complete MIDI Scene tables in the current bank.
-The protected pool uses only declared MIDI padding bytes; audio sample locks
-remain native. These are opt-in build settings, not a new player menu.
+Harmony always uses [MIDI SRAM](../../modules/midi-sram/README.md) fields
+30/31 of each MIDI step, retaining all 8,192 Harmony/ACC step records in
+their own pattern/track lanes. It leaves upstream's 4,768 PLOCKS P2 locks
+and 16,384 MIDI Scenes bytes available. Audio sample locks remain native.
+There is no alternate Harmony retention setting.
 
 ## Evidence and remaining work
 

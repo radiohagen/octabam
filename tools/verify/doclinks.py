@@ -14,6 +14,8 @@ with `git show 3ceba41:docs/history/<file>`), a path right after
 `git show <sha>:`, a path holding a placeholder (`<name>`, `*`, `X`, `...`), and
 CHANGELOG.md (a record of what was true at each image), and the tests'
 fixtures under tools/verify/tests/.
+The original path/key fields of commit-and-hash-pinned MIDI source provenance
+records also describe history, not live links. Other fields remain checked.
 
 A `.md` file may not contain the section sign: "BUILDING.md section 5",
 never the symbol (30 Sep 2026: it reads like a mis-decoded character).

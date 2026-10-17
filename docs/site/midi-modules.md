@@ -8,11 +8,13 @@ It adds no synths or ARP templates.
 - Scales extends KEY in MIDI ARP SETUP to seven modes in twelve keys.
 - Follow lets a MIDI track follow another track’s root/register.
 - Harmony adds degree roots, chords and Chord Play using the native KEY.
+  NOTE MAIN E sets ACC in scale degrees, with independent step overrides;
+  press NOTE SETUP F for the CHORD and ACCUM settings sections.
 - Loopback chooses EXT, INT or BOTH per Part, including Scenes and USB routing.
 
 Read [the controls](https://github.com/radiohagen/octabam/blob/codex/integrate/midi/docs/guide/MIDI_MODULES.md) and the
 [exact remix boundaries](https://github.com/radiohagen/octabam/blob/codex/integrate/midi/remixes/harmony-track-bus/README.md) before use.
-Harmony selects MIDI TRACK retention and retains upstream PLOCKS and Scenes
+Harmony always uses its own MIDI-step retention and retains upstream PLOCKS and Scenes
 capacity. Software validation does not establish physical power-off recovery,
 device MIDI timing or hardware audio. No firmware is distributed.
 
