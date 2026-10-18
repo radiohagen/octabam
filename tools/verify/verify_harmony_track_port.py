@@ -53,7 +53,9 @@ def main():
     accumulator=bytearray()
     for lane in range(128):
         accumulator.extend(bytes((((lane+2*i)%16)<<4)|((lane+2*i+1)%16) for i in range(32)))
-        accumulator.extend(bytes(((-(lane%64))&255,lane%64,lane%4,(lane//4)%4,1+lane%15)))
+        # Cover every legal three-octave limit; larger legacy bounds are
+        # intentionally rejected by the released accumulator validator.
+        accumulator.extend(bytes(((-(lane%22))&255,lane%22,lane%4,(lane//4)%4,1+lane%15)))
     payload.extend(accumulator)
     checkpoint=encode(payload)
     for off,v in zip(OFFSETS,checkpoint):seed[BASE-0x10000000+off]=v
