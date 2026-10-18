@@ -11,10 +11,14 @@ It adds no synths or ARP templates.
 - Harmony adds degree roots, chords and Chord Play using the native KEY.
   NOTE MAIN E sets ACC in scale degrees, with independent step overrides;
   press NOTE SETUP F for the CHORD and ACCUM settings sections.
+  ACCUM uses native dials/switches beside the CHORD/ACCUM menu, with separate
+  title, graphic and value bands. LOW/HIGH span -21..0 and 0..21 scale
+  degrees (three octaves); E/F remain empty. Values outside these bounds
+  are rejected by the released source rather than migrated.
 - Loopback chooses EXT, INT or BOTH per Part, including Scenes and USB routing.
 
-Read [the controls](https://github.com/radiohagen/octabam/blob/codex/integrate/midi/docs/guide/MIDI_MODULES.md) and the
-[exact remix boundaries](https://github.com/radiohagen/octabam/blob/codex/integrate/midi/remixes/harmony-track-bus/README.md) before use.
+Read [the controls](https://github.com/radiohagen/octabam/blob/codex/package-current-20261018/docs/guide/MIDI_MODULES.md) and the
+[exact remix boundaries](https://github.com/radiohagen/octabam/blob/codex/package-current-20261018/remixes/harmony-track-bus/README.md) before use.
 Harmony always uses its own MIDI-step retention and retains upstream PLOCKS and Scenes
 capacity. Software validation does not establish physical power-off recovery,
 device MIDI timing or hardware audio. No firmware is distributed.
