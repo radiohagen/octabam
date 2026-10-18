@@ -165,7 +165,7 @@ from remix import registry  # noqa: E402
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 EMU = ROOT / "out/emu/ot_emu"
 PY = ROOT / ".venv/bin/python3"
-OUT = ROOT / "out/kitsverify"
+OUT = ROOT / os.environ.get("OCTABAM_KITS_OUT", "out/kitsverify")
 BLOB, BSTRIDE, PSTRIDE, PARTSZ = 0x400e21e0, 0x9b340, 0x8ed8, 0x18b2
 WORK, SAVED, PNAMES, PBYTE = 0x8ed80, 0x9504a, 0x9b316, 0x8e57
 REC, O_ASSIGN, O_VALID, O_RESID, O_LIB = 6338, 64, 320, 352, 416
@@ -324,9 +324,11 @@ def main():
     ap.add_argument("remix", nargs="?", default=os.environ.get("REMIX"))
     proj = os.environ.get("OT_PROJECT") or (pathlib.Path.home() / ".octabam_project").read_text().strip() \
         if (pathlib.Path.home() / ".octabam_project").is_file() else os.environ.get("OT_PROJECT", "")
-    ap.add_argument("--project", default=proj)
-    ap.add_argument("--octakit-project", default=str(pathlib.Path.home() / "octa/backups/card_20261003_bottleservice/kept/Bottleservice 2026"))
-    ap.add_argument("--strand-project", default=str(pathlib.Path.home() / "octa/backups/card_20261004_strand/PROJECT 261004p"))
+    ap.add_argument("--project", default=os.environ.get("OT_KITS_PROJECT", proj))
+    ap.add_argument("--octakit-project", default=os.environ.get("OT_KITS_IMPORT_PROJECT",
+                    str(pathlib.Path.home() / "octa/backups/card_20261003_bottleservice/kept/Bottleservice 2026")))
+    ap.add_argument("--strand-project", default=os.environ.get("OT_KITS_REJECTED_PROJECT",
+                    str(pathlib.Path.home() / "octa/backups/card_20261004_strand/PROJECT 261004p")))
     ap.add_argument("--only", default="", help="comma-separated scenario names")
     ap.add_argument("--quick", action="store_true",
                     help="skip the scenarios in QUICK_SKIP (FULL only); make reach sets OCTABAM_QUICK=1 in QUICK mode")
@@ -859,7 +861,7 @@ def main():
         return s
 
     def exists(tag):
-        return (OUT / f"{tag}_st.bin").is_file()
+        return (not only or tag in only) and (OUT / f"{tag}_st.bin").is_file()
 
     # base: the migration
     if exists("base"):

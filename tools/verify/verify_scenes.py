@@ -226,6 +226,10 @@ def seq_fixture(src, dst, bank, trigs=False):
     fixture(src, dst)
     bf = dst / f"bank{bank + 1:02d}.work"
     dat = bytearray(bf.read_bytes())
+    # Switch scenarios compare Part 1's locks with Part 2's locks. The
+    # caller's template may assign both patterns to Part 1.
+    for pattern, part in ((0, 0), (1, 1)):
+        dat[0x16 + (pattern + 1) * 0x8eec - 5] = part
     for part, ents in (SEQ_PARTS if trigs != "trigs" else {p: TRIG_LOCKS for p in range(4)}).items():
         o = FILE_PART + part * FILE_PSTRIDE + 9 + 0x17a2
         dat[o:o + len(blob(ents))] = blob(ents)

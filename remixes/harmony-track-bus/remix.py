@@ -7,6 +7,6 @@ base = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'octabam-bus/rem
 REMIX = replace(base, name='harmony-track-bus',
     modules=base.modules + ('MIDI PART STATE', 'MIDI SRAM', 'MIDI SCALES',
         'MIDI FOLLOW', 'MIDI HARMONY', 'HARMONY PLOCKS', 'MIDI LOOPBACK',
-        'MIDI LOOPBACK SCENES', 'PIO WRITE FIX', 'QUANTIZER MIDI DRAWER'),
+        'MIDI LOOPBACK SCENES', 'PIO WRITE FIX'),
     proof=Proof.CHECK, proof_note='',
     doc='Bus with Scales, Follow, Harmony and Loopback; Harmony retained per MIDI step; upstream PLOCKS.')

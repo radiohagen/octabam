@@ -3,7 +3,7 @@
 ## Current upstream package, 18 October 2026
 
 OCTABAMN1 follows upstream `c3f37e531f6b072b8197d93f173e063b55249363`
-and author source `16aa9a942fafc9453629a979d66673bf92bb1e15`.
+and author source `e7efb6b5c30acd691028963225085941d5e1beab`.
 The [source lock](../../docs/guide/MIDI_PACKAGE_SOURCE.json) records the
 staging baseline, source reconciliation and optional synth decision. This
 package adds Follow gravity and the latest committed Loopback fixes to the
@@ -15,6 +15,21 @@ exports. Otherwise a resident relink can replace the final DRAM descriptor
 addresses with stale placement addresses; the combined Spectrum formatter
 identity check detects that corruption. The linked-defsyms regression covers
 the stale-import case.
+
+Current upstream #741 already preserves the shared MIDI octave stack push;
+the old QUANTIZER MIDI DRAWER workaround is no longer selected. Both model
+panel paths are checked by upstream's quantizer gate.
+
+KITS uses the existing owned acceptance fixture: bank 3, rotating Parts,
+enabled MIDI transport reception and pattern 14 as the first empty pattern.
+The generic normalized bus fixture reproduced KITS failures on untouched
+upstream. `OT_KITS_PROJECT`, `OT_KITS_IMPORT_PROJECT` and
+`OT_KITS_REJECTED_PROJECT` select the dedicated fixtures without changing the
+bus fixture used by other gates. Imports are synthetic documented-format
+examples, not author-produced files. `OCTABAM_KITS_OUT` isolates receipts;
+`--only` no longer evaluates stale outputs from unselected scenarios.
+Scenes switch fixtures explicitly assign pattern 1 to Part 1 and pattern 2
+to Part 2.
 
 The complete MIDI integration is on `codex/integrate/midi` in
 [radiohagen/octabam](https://github.com/radiohagen/octabam), extracted onto
