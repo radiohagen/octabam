@@ -1,12 +1,8 @@
 # Quantizer MIDI Drawer
 
-Historical compatibility helper. Current upstream includes the shared-stack
-fix from #741; leave this helper out of current-upstream selections.
+The selection name remains accepted for existing custom remixes. Current
+upstream #741 supplies the native MIDI chromatic octave fix; this declaration
+adds no code, hooks, controls or storage.
 
-Compatibility support for the native MIDI chromatic octave display when
-SCALE QUANTIZER is selected. It preserves the MIDI formatter's arguments
-across the shared audio/MIDI drawing path.
-
-Adds no controls or storage. The quantizer's audio behavior stays the same.
-
-[Developer notes and verification](DEVELOPMENT.md).
+New selections can use SCALE QUANTIZER directly. The original implementation
+is preserved in the author repository's inactive legacy directory.

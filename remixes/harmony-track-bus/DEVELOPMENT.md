@@ -3,7 +3,7 @@
 ## Current upstream package, 18 October 2026
 
 OCTABAMN1 follows upstream `c3f37e531f6b072b8197d93f173e063b55249363`
-and author source `e7efb6b5c30acd691028963225085941d5e1beab`.
+and author source `550c63785d5f76e72364692dd5b4dc4c1913754d`.
 The [source lock](../../docs/guide/MIDI_PACKAGE_SOURCE.json) records the
 staging baseline, source reconciliation and optional synth decision. This
 package adds Follow gravity and the latest committed Loopback fixes to the
@@ -19,6 +19,8 @@ the stale-import case.
 Current upstream #741 already preserves the shared MIDI octave stack push;
 the old QUANTIZER MIDI DRAWER workaround is no longer selected. Both model
 panel paths are checked by upstream's quantizer gate.
+Its selection name remains accepted as a code-free compatibility declaration,
+with a dedicated test remix; the original implementation is archived intact.
 
 KITS uses the existing owned acceptance fixture: bank 3, rotating Parts,
 enabled MIDI transport reception and pattern 14 as the first empty pattern.

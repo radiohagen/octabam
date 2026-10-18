@@ -4,7 +4,7 @@
   "upstream_repository": "https://github.com/sambanks/octabam",
   "upstream_commit": "c3f37e531f6b072b8197d93f173e063b55249363",
   "author_repository": "https://github.com/radiohagen/octatrack-modules",
-  "author_commit": "e7efb6b5c30acd691028963225085941d5e1beab",
+  "author_commit": "550c63785d5f76e72364692dd5b4dc4c1913754d",
   "staging_baseline": "cb80d067b43c462332c9146a52f55c4104e3ec30",
   "staging_command": "python3 scripts/stage_octabam.py --octabam /absolute/isolated/worktree --apply",
   "selection": "harmony-track-bus",
