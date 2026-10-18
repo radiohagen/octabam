@@ -61,9 +61,21 @@ def main():
         # A pool rebuild after output still uses this trig's captured offset.
         assert m.c('ha_shift_c',48,0,0)==value
         return value
+    # UI and saved bounds share the same three-octave limits.
+    setting(0,7)
+    assert m.c('ha_setting_c',0,0,0)==0
+    assert m.c('ha_setting_c',0,1,0)==7
+    assert m.c('ha_setting_c',0,0,-1000)&255==235
+    assert m.c('ha_setting_c',0,1,1000)==21
+    assert m.c('ha_setting_c',0,0,1000)==0
+    assert m.c('ha_setting_c',0,1,-1000)==0
+    for low,high,valid in ((-21,21,1),(-22,21,0),(-21,22,0)):
+        setting(low,high)
+        assert m.c('ha_valid_c',s['ha_lanes'])==valid,(low,high)
+    print('[ok] three-octave UI/storage caps and unchanged defaults',flush=True)
     counts=0
     for mode in range(4):
-        for lo,hi in ((0,0),(0,1),(-1,0),(-1,1),(-7,7),(-63,63)):
+        for lo,hi in ((0,0),(0,1),(-1,0),(-1,1),(-7,7),(-21,21)):
             for amount in (*range(-7,0),*range(1,8)):
                 setting(lo,hi,mode)
                 m.c('ha_set_c',0,0,0,0,amount+9 if amount<0 else amount+8)
@@ -139,9 +151,9 @@ def main():
     expected=bytearray()
     for lane in range(128):
         row=bytes(((2*i+lane)%16<<4)|((2*i+lane+1)%16) for i in range(32))
-        row+=bytes(((-lane%64)&255, lane%64, lane%4, (lane//4)%4,1+lane%15))
+        row+=bytes(((-lane%22)&255, lane%22, lane%4, (lane//4)%4,1+lane%15))
         # lower is a signed non-positive byte, independently from upper.
-        row=row[:32]+bytes(((-(lane%64))&255,))+row[33:]
+        row=row[:32]+bytes(((-(lane%22))&255,))+row[33:]
         expected.extend(row)
     u.mem_write(s['ha_lanes'],bytes(expected))
     m.c('hd_nv_save_c',0)
@@ -153,7 +165,7 @@ def main():
     assert m.c('hd_nv_restore_c',0)==1
     assert bytes(u.mem_read(s['ha_lanes'],4736))==expected
     # Valid checksums cannot admit malformed settings, even in the last lane.
-    for offset,value in ((32,1),(32,192),(33,64),(34,4),(35,4),(36,0)):
+    for offset,value in ((32,1),(32,234),(33,22),(34,4),(35,4),(36,0)):
         corrupt=bytearray(payload);corrupt[10368+127*37+offset]=value
         retained.install(m,encode(corrupt))
         assert m.c('hd_nv_restore_c',0)==0

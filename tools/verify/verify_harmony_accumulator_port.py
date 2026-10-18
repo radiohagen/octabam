@@ -137,6 +137,31 @@ def main():
 ''')
         cfg=(work/'accum-page-acc.bin').read_bytes()
         assert cfg[32:37]==bytes((249,14,1,1,1)),list(cfg[:37])
+        # Real encoder edits cover every switch position and longest signed
+        # limits. No configuration or LCD pixels are injected.
+        for mode,(low,high) in enumerate(((-21,21),(-1,0),(0,7),(-21,21))):
+            script=setup+'2100 key 0x20 down\n2200 key 0x20 up\n'
+            at=2500
+            # Space physical reports so redraws cannot coalesce a long sweep.
+            # Deliberately overshoot both limits to verify the three-octave cap.
+            for knob,delta in enumerate((low-2 if low==-21 else low,
+                                         high-7+2 if high==21 else high-7,mode,mode-3)):
+                for _ in range(abs(delta)):
+                    script+=f'{at} enc {knob} {4 if delta>0 else -4}\n'
+                    at+=100
+            run(f'accum-state-{mode}',script+f'{at+600} quit\n',physical_panel=True)
+            cfg=(work/f'accum-state-{mode}-acc.bin').read_bytes()
+            assert cfg[32:37]==bytes((low&255,high,mode,mode,1)),list(cfg[:37])
+        run('chord-page-return',setup+'''2100 key 0x20 down
+2200 key 0x20 up
+2600 key 0x33 down
+2700 key 0x33 up
+3300 quit
+''')
+        from verify_harmony_accumulator_ui import lcd_view
+        # Navigation back must clear the taller ACCUM grid and restore CHORD.
+        assert lcd_view.screen(lcd_view.read_plane(work/'chord-page-return.lcd'))==lcd_view.screen(
+            lcd_view.read_plane(work/'harmony-page.lcd')),'CHORD pixels changed after ACCUM'
         results['setup_navigation']='passed'
         from verify_harmony_accumulator_ui import measure
         results['pixel_layout']=measure(work)

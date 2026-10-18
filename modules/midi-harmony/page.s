@@ -1,6 +1,7 @@
 /* Harmony window: native window/input-layer pattern from the Tuner module.
  * NOTE SETUP F press opens it. CHORD A-D=VOIC/SPRD/ROOT/SIZE,
- * ACCUM A-D=LOW/HIGH/BOUND/RESET; HARM stays on the parent NOTE SETUP page.
+ * ACCUM A/B=LOW/HIGH dials, C/D=BOUND/RESET four-way switches
+ * on an A--F grid beside the section menu; HARM stays on the parent NOTE SETUP page.
  * Track is fixed while open. Track/page keys close the window; a subsequent
  * press selects the track/page. Transport and chromatic keys pass through.
  * Grid: VOIC/SPRD/ROOT above SIZE; track in footer.
@@ -304,64 +305,72 @@ mh_page_draw:
     bsr.w .page_label
     bra.w .page_draw_footer
 .page_draw_accum:
-    moveq #0,%d3
-.page_accum_loop:
-    clr.l -(%sp)
-    move.l %d3,-(%sp)
-    move.l mh_page_track,-(%sp)
-    jsr ha_setting_c
-    lea 12(%sp),%sp
+    /* Six encoder positions beside the native section menu. Dropping only
+     * the footer gives each title, widget and value a separate pixel band.
+     * Native y coordinates grow upwards; the composed LCD grows downwards.
+     */
+    moveq #0,%d0
+    bsr.w .page_accum_setting
+    addi.l #21,%d0
+    moveq #127,%d1
+    mulu.l %d1,%d0
+    moveq #21,%d1
+    divu.l %d1,%d0
     move.l %d0,%d1
-    lea .page_accum_formats,%a0
-    tst.l %d3
-    bne.s .page_accum_unsigned
-    addi.l #63,%d1 /* native value widget hides negative inputs */
-.page_accum_unsigned:
-    move.l (%a0,%d3.l*4),%a0
-    lea 0x400467a4,%a1
     moveq #PAGE_A,%d0
-    tst.l %d3
-    beq.s .page_accum_top
-    cmpi.l #1,%d3
-    bne.s .page_accum_other
+    lea .page_dial_low_format,%a0
+    bsr.w .page_dial
+    moveq #1,%d0
+    bsr.w .page_accum_setting
+    moveq #127,%d1
+    mulu.l %d1,%d0
+    moveq #21,%d1
+    divu.l %d1,%d0
+    move.l %d0,%d1
     moveq #PAGE_B,%d0
-    bra.s .page_accum_top
-.page_accum_other:
-    cmpi.l #2,%d3
-    bne.s .page_accum_bottom
+    lea .page_dial_high_format,%a0
+    bsr.w .page_dial
+    moveq #2,%d0
+    bsr.w .page_accum_setting
+    move.l %d0,%d1
     moveq #PAGE_C,%d0
-.page_accum_top:
-    moveq #33,%d2 /* 14-pixel text group centred in the 22-pixel interior. */
+    lea .page_boundary_format,%a0
+    lea 0x40046c28,%a1
+    moveq #34,%d2
     bsr.w .page_selector_y
-    bra.s .page_accum_label
-.page_accum_bottom:
-    moveq #10,%d2
+    moveq #3,%d0
+    bsr.w .page_accum_setting
+    move.l %d0,%d1
+    moveq #PAGE_A,%d0
+    lea .page_reset_format,%a0
+    lea 0x40046c28,%a1
+    moveq #6,%d2
     bsr.w .page_selector_y
-.page_accum_label:
-    lea .page_accum_labels,%a0
-    move.l (%a0,%d3.l*4),%a0
     moveq #PAGE_A+9,%d0
-    moveq #49,%d1
-    tst.l %d3
-    beq.s .page_accum_text
-    cmpi.l #1,%d3
-    bne.s .page_accum_label_other
-    moveq #PAGE_B+9,%d0
-    bra.s .page_accum_text
-.page_accum_label_other:
-    cmpi.l #2,%d3
-    bne.s .page_accum_label_bottom
-    moveq #PAGE_C+9,%d0
-    bra.s .page_accum_text
-.page_accum_label_bottom:
-    moveq #26,%d1
-.page_accum_text:
+    moveq #52,%d1
+    lea .page_lower,%a0
     bsr.w .page_label
-    addq.l #1,%d3
-    cmpi.l #4,%d3
-    bne.w .page_accum_loop
+    moveq #PAGE_B+9,%d0
+    moveq #52,%d1
+    lea .page_upper,%a0
+    bsr.w .page_label
+    moveq #PAGE_C+9,%d0
+    moveq #52,%d1
+    lea .page_boundary,%a0
+    bsr.w .page_label
+    moveq #PAGE_A+9,%d0
+    moveq #24,%d1
+    lea .page_reset,%a0
+    bsr.w .page_label
 .page_draw_footer:
+    tst.l mh_page_tab
+    bne.w .page_draw_accum_grid
     bsr.w .page_grid
+    bra.s .page_grid_done
+.page_draw_accum_grid:
+    bsr.w .page_grid_accum
+    bra.w .page_draw_menu
+.page_grid_done:
     move.l mh_page_track,%d0
     addq.l #1,%d0
     move.l %d0,-(%sp)
@@ -373,6 +382,7 @@ mh_page_draw:
     moveq #4,%d1
     move.l %a2,%a0
     bsr.w .page_text
+.page_draw_menu:
     moveq #5,%d0
     moveq #49,%d1
     lea .page_tab_harm,%a0
@@ -397,10 +407,13 @@ mh_page_draw:
     move.l %a5,-(%sp)
     jsr 0x40012254
     lea 24(%sp),%sp
+    tst.l mh_page_tab
+    bne.s .page_draw_finish
     moveq #85,%d0
     moveq #4,%d1
     lea .page_back,%a0
     bsr.w .page_text
+.page_draw_finish:
     moveq #1,%d0
     move.l %d0,0x46c7c72c
 .page_draw_done:
@@ -434,6 +447,32 @@ mh_page_draw:
     movem.l (%sp),%d2/%a2
     lea 8(%sp),%sp
     rts
+.page_grid_accum: /* Six cells beside the left menu, without a footer. */
+    lea -8(%sp),%sp
+    movem.l %d2/%a2,(%sp)
+    moveq #4,%d2
+    lea .page_accum_grid_lines,%a2
+.page_accum_grid_line:
+    pea 1
+    move.l 12(%a2),-(%sp)
+    move.l 8(%a2),-(%sp)
+    move.l 4(%a2),-(%sp)
+    move.l (%a2),-(%sp)
+    move.l %a5,-(%sp)
+    cmpi.l #1,%d2
+    beq.s .page_accum_grid_solid
+    jsr 0x40012004
+    bra.s .page_accum_grid_next
+.page_accum_grid_solid:
+    jsr 0x40012254
+.page_accum_grid_next:
+    lea 24(%sp),%sp
+    lea 16(%a2),%a2
+    subq.l #1,%d2
+    bne.s .page_accum_grid_line
+    movem.l (%sp),%d2/%a2
+    lea 8(%sp),%sp
+    rts
 .page_selector_bottom:
     moveq #13,%d2
     bra.s .page_selector_y
@@ -449,6 +488,38 @@ mh_page_draw:
     move.l %d0,-(%sp)
     jsr (%a1)
     lea 28(%sp),%sp
+    rts
+.page_dial:
+    move.l %a5,-(%sp)
+    move.l %a0,-(%sp)
+    pea 8
+    move.l %d1,-(%sp)
+    clr.l -(%sp)
+    pea 33
+    move.l %d0,-(%sp)
+    jsr 0x400479b4
+    lea 28(%sp),%sp
+    rts
+.page_dial_low_format:
+    moveq #0,%d0
+    bsr.w .page_accum_setting
+    bra.s .page_dial_limit_text
+.page_dial_high_format:
+    moveq #1,%d0
+    bsr.w .page_accum_setting
+.page_dial_limit_text:
+    move.l %d0,-(%sp)
+    pea .page_integer
+    move.l 12(%sp),-(%sp)
+    jsr 0x40013a08
+    lea 12(%sp),%sp
+    rts
+.page_accum_setting: /* d0=setting 0..3, returns current value in d0. */
+    clr.l -(%sp) /* read-only delta */
+    move.l %d0,-(%sp)
+    move.l mh_page_track,-(%sp)
+    jsr ha_setting_c
+    lea 12(%sp),%sp
     rts
     .global mh_page_voic_format,mh_page_sprd_format,mh_page_size_format
 mh_page_size_format:
@@ -615,5 +686,8 @@ mh_page_down:
     .balign 4
 .page_boundaries: .long .page_wrap,.page_bounce,.page_hold,.page_zero
 .page_resets: .long .page_none,.page_start,.page_pattern,.page_both
-.page_accum_formats: .long .page_lower_format,.page_limit_format,.page_boundary_format,.page_reset_format
-.page_accum_labels: .long .page_lower,.page_upper,.page_boundary,.page_reset
+.page_accum_grid_lines:
+    .long 60,2,60,58
+    .long 88,2,88,58
+    .long 32,30,116,30 /* stop before the frame: native clear excludes its edge */
+    .long 32,2,32,58

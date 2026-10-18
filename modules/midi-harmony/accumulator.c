@@ -127,7 +127,7 @@ void ha_sounded_c(unsigned track) {
 }
 int ha_valid_c(const volatile uint8_t *p) {
     for (unsigned lane=0;lane<128;++lane,p+=37)
-        if ((int8_t)p[32]<-63 || (int8_t)p[32]>0 || p[33]>63 ||
+        if ((int8_t)p[32]<-21 || (int8_t)p[32]>0 || p[33]>21 ||
             p[34]>3 || p[35]>3 || p[36]<1 || p[36]>15) return 0;
     return 1;
 }
@@ -192,9 +192,9 @@ int ha_setting_c(unsigned track, unsigned knob, int delta) {
     HaLane *c=&ha_lanes[bank][pattern*8+track];
     int old=knob==0 ? c->lower : knob==1 ? c->upper : knob==2 ? c->boundary : c->reset;
     if (!delta) return old;
-    if (delta>63) delta=63;
-    if (delta<-63) delta=-63;
-    int value=old+delta, lo=knob==0 ? -63 : 0, hi=knob==0 ? 0 : knob==1 ? 63 : 3;
+    if (delta>21) delta=21;
+    if (delta<-21) delta=-21;
+    int value=old+delta, lo=knob==0 ? -21 : 0, hi=knob==0 ? 0 : knob==1 ? 21 : 3;
     if (value<lo) value=lo;
     if (value>hi) value=hi;
     if (value==old) return old;

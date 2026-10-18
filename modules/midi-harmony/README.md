@@ -53,12 +53,20 @@ Live keyboard notes do not accumulate.
 
 Select ACCUM in the Harmony window:
 
+The left CHORD/ACCUM menu remains visible. Controls use the native six-position
+encoder grid: A/B/C across the top and D/E/F below, with E/F empty and inactive.
+Each title sits above its native dial (LOW/HIGH) or four-way switch
+(BOUND/RESET), followed by the value. ACCUM omits the footer to keep those
+three bands separate; CHORD retains its existing footer.
+
 | Encoder | Setting | Values; default |
 | --- | --- | --- |
-| A | LOW | −63…0 degrees; 0 |
-| B | HIGH | 0…63 degrees; 7 |
+| A | LOW | −21…0 degrees; 0 |
+| B | HIGH | 0…21 degrees; 7 |
 | C | BOUND | WRAP / BOUNC / HOLD / ZERO; WRAP |
 | D | RESET | NONE / START / PAT / BOTH; BOTH |
+
+Seven scale degrees are one octave, so each limit allows up to three octaves.
 
 These settings cannot be step-locked. Limits include both endpoints. WRAP
 wraps the overshoot, BOUNC reflects it and reverses direction, HOLD clamps,

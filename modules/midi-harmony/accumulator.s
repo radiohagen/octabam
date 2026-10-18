@@ -1123,13 +1123,13 @@ ha_valid_c:
 	add.l #4736,%d1
 .L158:
 	mvs.b 32(%a0),%d0
-	moveq #-63,%d2
+	moveq #-21,%d2
 	cmp.l %d0,%d2
 	jgt .L157
 	tst.b 32(%a0)
 	jgt .L157
 	mvz.b 33(%a0),%d0
-	moveq #63,%d2
+	moveq #21,%d2
 	cmp.l %d0,%d2
 	jcs .L157
 	mvz.b 34(%a0),%d0
@@ -1627,13 +1627,13 @@ ha_setting_c:
 	tst.l 52(%sp)
 	jeq .L245
 	move.l 52(%sp),%d1
-	moveq #-63,%d2
+	moveq #-21,%d2
 	cmp.l %d1,%d2
 	jgt .L292
-	moveq #63,%d2
+	moveq #21,%d2
 	cmp.l %d1,%d2
 	jlt .L293
-	move.w #-63,%a1
+	move.w #-21,%a1
 	add.l %d0,%d1
 	clr.l 24(%sp)
 .L252:
@@ -1738,10 +1738,10 @@ ha_setting_c:
 	jeq .L245
 .L286:
 	move.l 52(%sp),%d1
-	moveq #-63,%d2
+	moveq #-21,%d2
 	cmp.l %d1,%d2
 	jle .L261
-	moveq #-63,%d1
+	moveq #-21,%d1
 .L262:
 	moveq #3,%d2
 	add.l %d0,%d1
@@ -1767,14 +1767,14 @@ ha_setting_c:
 	jne .L270
 	jra .L298
 .L293:
-	moveq #63,%d1
-	move.w #-63,%a1
+	moveq #21,%d1
+	move.w #-21,%a1
 	add.l %d0,%d1
 	clr.l 24(%sp)
 	jra .L252
 .L292:
-	moveq #-63,%d1
-	move.w #-63,%a1
+	moveq #-21,%d1
+	move.w #-21,%a1
 	add.l %d0,%d1
 	clr.l 24(%sp)
 	jra .L252
@@ -1825,10 +1825,10 @@ ha_setting_c:
 	lea (32,%sp),%sp
 	rts
 .L261:
-	moveq #63,%d2
+	moveq #21,%d2
 	cmp.l %d1,%d2
 	jge .L262
-	moveq #63,%d1
+	moveq #21,%d1
 	moveq #3,%d2
 	add.l %d0,%d1
 	sub.l %a1,%a1
@@ -1850,22 +1850,22 @@ ha_setting_c:
 	tst.l 52(%sp)
 	jeq .L245
 	move.l 52(%sp),%d1
-	moveq #-63,%d2
+	moveq #-21,%d2
 	cmp.l %d1,%d2
 	jle .L259
-	moveq #-63,%d1
+	moveq #-21,%d1
 .L260:
-	moveq #63,%d2
+	moveq #21,%d2
 	add.l %d0,%d1
 	sub.l %a1,%a1
 	move.l %d2,24(%sp)
 	jra .L252
 .L259:
-	moveq #63,%d2
+	moveq #21,%d2
 	cmp.l %d1,%d2
 	jge .L260
-	moveq #63,%d1
-	moveq #63,%d2
+	moveq #21,%d1
+	moveq #21,%d2
 	add.l %d0,%d1
 	sub.l %a1,%a1
 	move.l %d2,24(%sp)
