@@ -11,6 +11,12 @@ def resolve(unit, runtime_tables):
     return values
 
 
+def own_exports(exports, imports):
+    """Linker --defsym imports must never republish earlier placement values."""
+    names = {name for name, _value in imports}
+    return {name: value for name, value in exports.items() if name not in names}
+
+
 def check_layout(label, before, before_exports, after, after_exports):
     """Later units may already reference these exports or occupy adjacent space."""
     if len(before) != len(after):

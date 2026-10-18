@@ -130,6 +130,16 @@ class ResidentReferenceTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'does not define'):
                 resident_link.resolve(self.unit(), tables)
 
+    def test_relink_does_not_republish_stale_runtime_imports(self):
+        published = {'CLONE_SPECTRUM': 0x40ad8280, 'entry': 0x400d6b80}
+        relinked = {'CLONE_SPECTRUM': 0x401104e0, 'entry': 0x400d6b80,
+                    'CALLBACK': 0x40a9582e}
+        published.update(resident_link.own_exports(
+            relinked, (('CLONE_SPECTRUM', 0x401104e0), ('CALLBACK', 0x40a9582e))))
+        self.assertEqual(published['CLONE_SPECTRUM'], 0x40ad8280)
+        self.assertEqual(published['entry'], 0x400d6b80)
+        self.assertNotIn('CALLBACK', published)
+
     @unittest.skipUnless(TOOLS, 'needs the m68k-elf toolchain')
     def test_real_relink_preserves_entries_and_rejects_changed_layout(self):
         with tempfile.TemporaryDirectory(prefix='resident-link-', dir=ROOT/'out') as temp:
