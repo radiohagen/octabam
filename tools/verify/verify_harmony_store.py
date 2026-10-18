@@ -35,7 +35,7 @@ def main():
         assert result==expected&0xffffffff,(returns,result)
         assert u.reg_read(UC_M68K_REG_A7)==m.stack+4
         cases+=1
-    # Actual native-copy failure must reach the caller and never copy HDP3.
+    # Actual native-copy failure must reach the caller and never copy HDP4.
     dst,src=m.scratch+0x300,m.scratch+0x400
     u.mem_write(dst,b'/SET/PROJECT/bank01.strd\0');u.mem_write(src,b'/SET/PROJECT/bank01.work\0')
     m.files['/SET/PROJECT/hdeg01.work']=b'companion that must not be copied'

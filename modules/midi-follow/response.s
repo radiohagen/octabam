@@ -221,6 +221,12 @@ bf_response_tick:
     moveq #0,%d7
 .tick_track:
     move.l %d7,%d0
+    jsr bf_register_sync
+    move.l 56(%sp),%d1
+    btst %d7,%d1
+    beq.s .tick_register_ready
+    jsr bf_register_begin
+.tick_register_ready:
     bsr.w bf_response_sync
     jsr bf_response_play
     tst.l %d0
@@ -338,7 +344,7 @@ bf_response_tick:
     add.l %d4,%d3
     move.b %d3,(%a5,%d5.l)
     move.l (%a3),%d0
-    bsr.s .send
+    bsr.w .send
 .on_next:
     addq.l #1,%d4
     addq.l #8,%a3
@@ -372,7 +378,16 @@ bf_response_tick:
     .else
     jsr 0x40010bc8
     .endif
-    lea 12(%sp),%sp
+    addq.l #8,%sp
+    /* The LIVE path owns its sends; only an actual note-on commits GRAV. */
+    tst.b 2(%sp)
+    beq.s .send_done
+    move.l %d0,-(%sp)
+    move.l %d7,%d0
+    jsr bf_register_sent
+    move.l (%sp)+,%d0
+.send_done:
+    addq.l #4,%sp
     rts
     .balign 4
 bf_response_anchor: .space 32,0xff

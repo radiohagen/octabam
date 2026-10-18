@@ -30,7 +30,7 @@ REGS = [UC_M68K_REG_D0, UC_M68K_REG_D1, UC_M68K_REG_D2, UC_M68K_REG_D3,
 
 def symbols():
     nm = subprocess.check_output(['m68k-elf-nm', str(ROOT/'out/platform/runtime/runtime.elf')], text=True)
-    return {name: int(addr, 16) for addr, name in re.findall(r'^([0-9a-f]+) [Tt] (bf_\w+)$', nm, re.M)}
+    return {name: int(addr, 16) for addr, name in re.findall(r'^([0-9a-f]+) [TtBb] (bf_\w+)$', nm, re.M)}
 
 
 def machine_gate(image):
@@ -48,7 +48,9 @@ def machine_gate(image):
     uc = m.uc
     m.stops = set()  # This gate observes native detour continuation addresses.
     pitch, stack = 0x47001000, 0x47008000
-    stack_budget = 192
+    # Measured deepest call is pre-capture -> register sync -> native Part
+    # reader, 224 bytes including return addresses (previous graph: 192).
+    stack_budget = 224
     arrivals = []
     unexpected_writes = []
     written_addresses = set()
@@ -57,7 +59,7 @@ def machine_gate(image):
         written_addresses.add(address)
         # Only module state, scratch output, the displaced stock write and
         # a bounded stack frame may change during these machine-code calls.
-        allowed = tuple((sym[name],sym[name]+size) for name,size in (('bf_response_context',64),('bf_response_anchor',32),('bf_response_seen',32),('bf_response_pool',32))) + ((root, root + 8), (sym["bf_pitches"], sym["bf_pitches"] + 8), *tuple((m.part_address(t,3),m.part_address(t,3)+1) for t in range(8)),
+        allowed = tuple((sym[name],sym[name]+size) for name,size in (('bf_history',128),('bf_response_context',64),('bf_response_anchor',32),('bf_response_seen',32),('bf_response_pool',32))) + ((root, root + 8), (sym["bf_pitches"], sym["bf_pitches"] + 8), *tuple((m.part_address(t,3),m.part_address(t,3)+1) for t in range(8)),
                    *tuple((0x100a4ece+0x4e2+t*36+3,0x100a4ece+0x4e2+t*36+4) for t in range(8)),
                    (0x400e21e0+0x95048,0x400e21e0+0x95049),
                    (0x400e21e0+0x9b332,0x400e21e0+0x9b336),
@@ -224,6 +226,7 @@ def machine_gate(image):
         arrivals.clear()
         before = [uc.reg_read(r) for r in REGS]
         uc.emu_start(0x4009f986, 0, count=4000)
+        assert arrivals == [0x4009f98c], ('pre-capture did not finish',hex(uc.reg_read(UC_M68K_REG_PC)))
         before[8] = 0x80006676  # displaced lea
         assert [uc.reg_read(r) for r in REGS] == before
         assert arrivals == [0x4009f98c]

@@ -1,5 +1,21 @@
 # Harmony MIDI bus
 
+## Current upstream package, 18 October 2026
+
+OCTABAMN1 follows upstream `c3f37e531f6b072b8197d93f173e063b55249363`
+and author source `16aa9a942fafc9453629a979d66673bf92bb1e15`.
+The [source lock](../../docs/guide/MIDI_PACKAGE_SOURCE.json) records the
+staging baseline, source reconciliation and optional synth decision. This
+package adds Follow gravity and the latest committed Loopback fixes to the
+consolidated Harmony accumulator. The full combined-image checks and package
+receipt determine its qualification; earlier results below are historical.
+
+The resident callback linker must exclude imported symbols from its published
+exports. Otherwise a resident relink can replace the final DRAM descriptor
+addresses with stale placement addresses; the combined Spectrum formatter
+identity check detects that corruption. The linked-defsyms regression covers
+the stale-import case.
+
 The complete MIDI integration is on `codex/integrate/midi` in
 [radiohagen/octabam](https://github.com/radiohagen/octabam), extracted onto
 upstream `2d1cbcf471cf8b63e2279b3c372a6ebb47456a99`. The original completed

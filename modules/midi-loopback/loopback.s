@@ -7,6 +7,7 @@
     .global lb_routes, lb_set_route, lb_flush, lb_channels, lb_applied
     .global lb_head, lb_tail, lb_accepted, lb_delivered, lb_dropped, lb_highwater
     .global lb_owned, lb_internal_held, lb_ring, lb_current
+    .global lb_owned_counts
     .global lb_wake, lb_wake_pending, lb_external_turn, lb_rx_internal
 .set MIDI_Q, 0x46c7e974
 .set POST, 0x40000c3c
@@ -172,11 +173,23 @@ lb_capture:
     bcc.s .drop_note
     addql #1,lb_internal_held
 .save_note:
+    /* Count live destinations, including EXT, never drop tombstones.
+     * d7 is (track+1)<<4; divide by eight for a word-table offset. */
+    tstl %d4
+    beq.s .save_owner
+    movel %d7,%d0
+    lsrl #3,%d0
+    lea lb_owned_counts-2,%a4
+    addal %d0,%a4
+    mvzw %a4@,%d0
+    addql #1,%d0
+    movew %d0,%a4@
+.save_owner:
     movel %d7,%d0
     orl %d4,%d0
     moveb %d0,%a1@
     btst #0,%d4
-    bne.s .append
+    bne.w .append
     bra.w .unlock
 .drop_note:
     bclr #0,%d4                 /* BOTH still sends externally */
@@ -203,6 +216,14 @@ lb_capture:
     movel %d0,%d4
     andil #3,%d4
     clrb %a1@
+    tstl %d4
+    beq.w .unlock              /* late/drop tombstone has no live count */
+    lsrl #3,%d0               /* original owner, not the releasing track */
+    lea lb_owned_counts-2,%a4
+    addal %d0,%a4
+    mvzw %a4@,%d0
+    subql #1,%d0
+    movew %d0,%a4@
     btst #0,%d4
     beq.w .unlock
     subql #1,lb_internal_held
@@ -257,11 +278,14 @@ lb_flush:
     movel %sp@(48),%d7
     cmpil #7,%d7
     bhi.w .flush_done
-    addql #1,%d7
-    lsll #4,%d7
     movew %sr,%d2
     movew %d2,%sp@(40)
     movew #0x2700,%sr
+    lea lb_owned_counts,%a3
+    tstw %a3@(0,%d7:l:2)
+    beq.w .flush_unlock
+    addql #1,%d7
+    lsll #4,%d7
     lea lb_owned,%a3
     subal %a4,%a4
 .flush_loop:
@@ -294,6 +318,7 @@ lb_flush:
     addql #1,%a4
     cmpal #2048,%a4
     bne.s .flush_loop
+.flush_unlock:
     movew %sp@(40),%d2
     movew %d2,%sr
 .flush_done:
@@ -455,3 +480,6 @@ lb_current: .long 0
 lb_wake: .long 0
 lb_owned: .space 2048,0
 lb_ring: .space 1024,0
+/* 0..2048 live channel/pitch owners per track; zero skips cleanup.
+ * Updated with lb_owned under the same interrupt mask. Not persisted. */
+lb_owned_counts: .space 16,0

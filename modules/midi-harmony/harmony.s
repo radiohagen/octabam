@@ -501,18 +501,8 @@ mh_output:
 /* The two successful sequencer note-on continuations, after native ownership
  * arbitration and the composed MIDI sender. A rejected duplicate never gets
  * here. Live arp pools and zero-velocity note-offs do not advance ACC. */
-    .global ha_sent_a,ha_sent_b
-ha_sent_a:
-    bsr.s .accum_sent
-    move.b 0x400d807c,%d1
-    extb.l %d1
-    jmp 0x4009fbb8
-ha_sent_b:
-    bsr.s .accum_sent
-    move.b 0x400d807c,%d0
-    extb.l %d0
-    jmp 0x4009fd00
-.accum_sent:
+    .global ha_note_sent
+ha_note_sent:
     lea -16(%sp),%sp
     movem.l %d0-%d1/%a0-%a1,(%sp)
     tst.b 0x400d807e

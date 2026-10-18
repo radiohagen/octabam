@@ -76,7 +76,7 @@ def machine():
     assert m.change()==[(0x91,36,0),(0x91,41,91)],'ultimate source chain'
     m=fixture();assert m.change(72)==[],'FIXED ignores source octaves'
     m=fixture(pitches=(60,));s=m.sym
-    m.follow_write('mode',b'\x01',1)
+    m.follow_write('mode',b'\x02',1)
     m.call('bf_response_observe',regs={UC_M68K_REG_D7:1,UC_M68K_REG_D4:0,UC_M68K_REG_A2:m.scratch})
     assert m.change(72)==[(0x91,60,0),(0x91,72,91)]
     m=fixture();m.uc.mem_write(0x46c76fe0+32+12,b'\x47')

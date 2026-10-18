@@ -1,5 +1,5 @@
     .text
-    .global ha_shift,ha_sounded,ha_start_a,ha_start_b
+    .global ha_shift,ha_sounded
 /* d0 root pitch, d1 track, d2 context. Preserve all except result d0. */
 ha_shift:
     lea -12(%sp),%sp
@@ -19,21 +19,6 @@ ha_sounded:
     move.l %d0,-(%sp)
     jsr ha_sounded_c
     addq.l #4,%sp
-    movem.l (%sp),%d0-%d1/%a0-%a1
-    lea 16(%sp),%sp
-    rts
-ha_start_a:
-    bsr.s .ha_transport
-    move.l %d0,0x800065b8
-    jmp 0x4009c3da
-ha_start_b:
-    bsr.s .ha_transport
-    move.l %d0,0x800065b8
-    jmp 0x4009c4da
-.ha_transport:
-    lea -16(%sp),%sp
-    movem.l %d0-%d1/%a0-%a1,(%sp)
-    jsr ha_transport_c
     movem.l (%sp),%d0-%d1/%a0-%a1
     lea 16(%sp),%sp
     rts

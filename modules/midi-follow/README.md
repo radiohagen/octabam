@@ -9,19 +9,32 @@ rhythm, velocity and note length. Use it for a bassline that follows a chord pro
 2. Turn **D: RFOL** from OFF to the source track, for example T1.
 3. Program the source's notes and the follower's rhythm. Give them separate
    output channels; start with the follower's arp off.
-4. Press D to open **FOLLOW**. Set MODE, OCT and UPDT.
+4. Press D to open **FOLLOW**. A/B/C are **RFOL**, **REG**, **OCT/OFFS**;
+   D is **UPDT**. E/F do nothing. Stock dials and switches show the values.
 
 | Control | Behavior |
 | --- | --- |
-| MODE: FIXED | Uses the source pitch class in OCT 0–10; default octave 3. |
-| MODE: SOURCE | Uses the source's full root pitch, shifted by OCT -2 to +2. |
+| REG: FIXED | Uses the source pitch class in OCT 0–10; default octave 3. |
+| REG: GRAV | Ignores source octave; balances small movements with a preference for OCT 0–10. Default octave 3. |
+| REG: SOURCE | Uses the source's full root pitch, shifted by OFFS −2 to +2. Default 0. |
 | UPDT: TRIG | Takes the latest root at the follower's next programmed note. |
 | UPDT: LIVE | Also updates a held follower note when the source root changes. |
 
-Each mode remembers its own OCT setting. Octave names use C0 = MIDI 0.
+Each mode remembers its own value in the same C control. FIXED is the default;
+RFOL starts OFF and UPDT starts TRIG. Octave names use C0 = MIDI 0.
 Use the follower's native **TRAN**, including parameter locks, for a semitone
 offset after register selection. TRAN +7 is always seven semitones, not a scale degree.
 Out-of-range roots are silent.
+
+GRAV prefers the twelve notes C–B in the selected octave without a hard
+register boundary. At OCT2, B2 → C can become B2 → C3 instead of jumping to
+C2; a following F returns to F2. It can still make larger return jumps.
+Its reference is the previous successfully played Follow root, before Harmony
+ACC and TRAN. Chord voices, repeated arp output and display reads do not
+advance that reference. The first root starts in the preferred octave (or
+the closest valid octave for the partial OCT10). Transport start/resume,
+Part replacement/change and source/register/home edits reset the reference;
+ordinary pattern changes alone retain it.
 
 ## Musical behavior
 
@@ -40,9 +53,11 @@ Out-of-range roots are silent.
 
 ## Storage and stock firmware
 
-RFOL, MODE, both OCT choices and UPDT are native Part settings per track.
+RFOL, REG, all three remembered values and UPDT are native Part settings per track.
 Runtime roots and held notes are not saved. Requires **MIDI Part State**;
-Harmony, Scales and KITS are optional.
+Harmony, Scales and KITS are optional. The greenfield packed format reuses
+the existing Follow fields; no additional persistent bytes or step data.
+Re-enter register settings from an earlier Follow build; there is no migration.
 
 Stock 1.40C preserves the source-track number but resets the mode, response
 and octave fields. After saving that bank on stock, Follow returns as **FIXED,

@@ -25,3 +25,17 @@ mp_init_entry:
     .balign 4
 mp_copy_target: .long 0
 mp_init_target: .long 0
+
+/* Boot activation stays in the OS entry unit. Callback symbols are resolved
+ * from the final runtime link; the native continuation and stores are unchanged.
+ * Keep the unused original runtime body for now to preserve runtime layout.
+ */
+.global mp_resident_activate
+mp_resident_activate:
+    move.l %d0,-(%sp)
+    move.l #mp_native_copy,%d0
+    move.l %d0,mp_copy_target
+    move.l #mp_native_init,%d0
+    move.l %d0,mp_init_target
+    move.l (%sp)+,%d0
+    jmp 0x4000f938

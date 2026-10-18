@@ -15,17 +15,22 @@ roots change only at your programmed rhythm, then try LIVE for sustained bass.
 ## Register choice
 
 On the receiving track, press **knob D (RFOL) on NOTE SETUP** to open FOLLOW.
-Knob **B: MODE** selects FIXED or SOURCE. Knob **C: OCT** sets the register:
+Knob **B: REG** selects FIXED, GRAV or SOURCE. Knob **C: OCT/OFFS** sets the register:
 
-| MODE | OCT | Effect |
+| REG | C control | Effect |
 | --- | --- | --- |
 | FIXED (default) | 0–10; default 3 | Keep the source pitch class in this octave, regardless of its original octave |
-| SOURCE | -2, -1, 0, +1, +2; default 0 | Follow the source's complete root pitch, shifted by this many octaves |
+| GRAV | OCT 0–10; default 3 | Prefer this octave while minimizing root movement |
+| SOURCE | OFFS -2, -1, 0, +1, +2; default 0 | Follow the source's complete root pitch, shifted by this many octaves |
 
 For source notes C3 then C5 (MIDI 36 then 60): FIXED 3 produces C3 then C3;
 SOURCE 0 produces C3 then C5; SOURCE -1 produces C2 then C4.
 Octave names here use C0 = MIDI 0. Octave 10 is partial: only C–G fit MIDI.
-Each mode remembers its own OCT value when switching modes.
+Each mode remembers its own value when switching modes. A/B/C follow the
+top row; D is lower-left UPDT. All six encoder cells remain visible;
+the unused E/F cells are empty. Full native dials use fixed
+layout flag 8 and range-scaled needle positions, with independent real-value
+formatters. REG uses the native three-position widget; UPDT uses two.
 
 The receiver applies register choice first, then its native TRAN/P-lock offset.
 With Harmony active, root snapping and chord generation follow those steps.
@@ -38,7 +43,7 @@ Source register refers to the harmonic root before inversion, spread and root
 omission/placement, not whichever generated or arpeggiated note is lowest.
 Source sequence TRAN/scale and live key root selection still happen before capture.
 
-RFOL, MODE, both remembered octave choices and TRIG/LIVE response are native
+RFOL, REG, three remembered register values and TRIG/LIVE response are native
 Part settings per MIDI track. They are not parameter locked. UI edits use the
 selected working Part; playback uses each track's playing Part. KITS carries
 these native bytes but is not required. Existing stock controls and the source
@@ -87,7 +92,7 @@ Chains resolve to their final source: T3 → T2 → T1 follows T1's root.
 - Roots latch through rests and transport stops and remain runtime state.
   Configuration belongs to the native Part; roots and held-note ownership are
   not copied or persisted with it. This greenfield format has no migration
-  from the previous volatile settings. Native Part operations own persistence.
+  from the previous Follow packed format. Native Part operations own persistence.
 - **Muting a source silences its sequenced MIDI output but keeps its root
   progression available to followers**, including when playback starts muted.
   Muting a follower independently silences that follower. Mute/unmute does not
@@ -123,8 +128,13 @@ stock NOTE descriptor, drawer and encoder dispatch. No DSP code is added.
   at `0x400bc64e` points to the module; its formatter prints OFF/T1–T8.
   The drawer detour at `0x40036674` reads RFOL from the selected native Part.
 
-Native MIDI SETUP stores RFOL at offset 3, MODE/response flags at 12, fixed
-octave at 13 and relative octave at 15. UI reads use the selected Part;
+Native MIDI SETUP stores RFOL at offset 3 and response in offset 12 bit 1.
+Offset 13 packs FIXED octave in bits 0–3 and SOURCE offset+2 in bits 4–6.
+Offset 15 packs GRAV home octave in bits 0–3 and REG (FIXED=0, GRAV=1,
+SOURCE=2) in bits 4–5. Native ranges are 80 and 48; each getter also
+validates its own subfield. Defaults are 0x23 and 0x03. Offset 12 bit 0
+is reserved; response and Loopback bits are untouched. This is greenfield,
+without legacy migration. UI reads use the selected Part;
 playback uses each MIDI track's playing Part through MIDI PART STATE.
 `bf_roots[8]` holds the source's bass pitch or 0xff (unknown), and
 `bf_pitches[8]` retains full MIDI root pitches. These histories are runtime-only.
@@ -134,10 +144,36 @@ Native Part operations own persistence, with or without KITS. The generic
 MIDI sender is not hooked. The existing DRAM platform reserves about 10 MB of sample RAM;
 this small module shares that reserve when composed with other DRAM modules.
 
+## GRAV calculation and lifecycle
+
+For every valid MIDI pitch of the source root's pitch class, calculate
+`(candidate - previous)^2 + distance_outside_home_octave^2`. Choose the
+lowest score, then the smallest outside distance, then the lower pitch.
+Without a previous root, movement is zero. This also gives a valid start
+for A–B in partial OCT10. All arithmetic is integer; at most 11 candidates.
+There is no PULL, hard range, per-step setting, heap allocation or saved history.
+
+`gravity.c` owns eight 16-byte records (128 runtime bytes). Each records
+context/Part epoch, configuration, previous root and a cached proposal.
+`bf_register_begin` invalidates the proposal at an ordinary receiver trig;
+source pitch-class changes invalidate it for LIVE response. Queries and arp
+repeats reuse the proposal, including after it has sounded. The shared
+MIDI Part State successful-note continuations commit it only for nonzero
+velocity sequenced output; the LIVE sender commits only actual note-ons.
+The remembered root precedes ACC, TRAN, quantization and chord voicing.
+Native transport start/resume resets all history. Playing Part/epoch and
+source/mode/home changes invalidate the affected receiver; unrelated UI
+Parts and ordinary pattern changes do not.
+
+Run `python3 modules/midi-follow/generate.py --check` for generated assembly,
+`verify_midi_follow_gravity.py` for linked policy/lifecycle/packing, and
+`verify_midi_follow_gravity_port.py --project DIR` for physical panel events
+and full-firmware MIDI output. These are emulator proofs, not hardware tests.
+
 ## Root update timing: TRIG / LIVE
 
 Press D on MIDI NOTE SETUP to open RFOL, then turn D inside the window
-(**UPDT**, lower left). A/B/C remain RFOL, MODE and OCT.
+(**UPDT**, lower left). A/B/C are RFOL, REG and OCT/OFFS.
 
 - **TRIG** is the fresh-Part default and keeps the original behavior: the receiver
   uses the latest source root on its next scheduled note.

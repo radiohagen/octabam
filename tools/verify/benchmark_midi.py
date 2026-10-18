@@ -37,7 +37,7 @@ class CpuMachine(Machine):
             self.uc.mem_write(base+0x1712,bytes(288))
             for t in range(8):
                 self.put(base+0x3e2+t*32,60)
-                for field,value in ((3,0),(5,0),(12,0),(13,3),(15,2),(16,0),(17,1),(18,0),(19,42)):
+                for field,value in ((3,0),(5,0),(12,0),(13,35),(15,3),(16,0),(17,1),(18,0),(19,42)):
                     self.put(base+0x4e2+t*36+field,value)
         for t in range(8):
             self.put(0x46c76df1+68*t,1)

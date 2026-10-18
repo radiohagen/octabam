@@ -25,7 +25,7 @@ def main():
     for bank in range(2):
         for part in range(4):
             for track in range(8):
-                byte(at(bank,part,track,13),3);byte(at(bank,part,track,15),2)
+                byte(at(bank,part,track,13),35);byte(at(bank,part,track,15),3)
                 byte(at(bank,part,track,17),1)
     ui(0,0)
     for t in range(8):play(t,1,2)
@@ -82,12 +82,12 @@ def main():
         assert m.call('bf_source_play',1)==0
         m.call('bf_reg_change',1,1,regs={UC_M68K_REG_D2:2})
         assert m.call('bf_oct_get',1)==5
-        m.call('bf_reg_change',1,0,regs={UC_M68K_REG_D2:1})
+        m.call('bf_reg_change',1,0,regs={UC_M68K_REG_D2:2})
         m.call('bf_reg_change',1,1,regs={UC_M68K_REG_D2:-1 & 0xffffffff})
         assert m.call('bf_oct_get',1)==0xffffffff
         m.call('bf_response_set',1,1)
-        assert m.call('bf_mode_get',1)==1 and m.call('bf_response_get',1)==1
-        m.call('bf_reg_change',1,0,regs={UC_M68K_REG_D2:-1 & 0xffffffff})
+        assert m.call('bf_mode_get',1)==2 and m.call('bf_response_get',1)==1
+        m.call('bf_reg_change',1,0,regs={UC_M68K_REG_D2:-2 & 0xffffffff})
         assert m.call('bf_oct_get',1)==5 and m.call('bf_response_get',1)==1
         assert m.call('bf_response_play',1)==0
         # Receiver T2 reads its playing Part; T1 supplies its own context.

@@ -18,7 +18,7 @@ bf_register:
     move.l %d0,%d4
     move.l %d1,%d0
     jsr bf_mode_play
-    cmpi.l #1,%d0
+    cmpi.l #2,%d0
     beq.s .reg_source
     lea bf_roots,%a0
     moveq #0,%d2
@@ -26,6 +26,14 @@ bf_register:
     cmpi.l #127,%d2
     bhi.w .reg_unknown
     subi.l #36,%d2
+    move.l %d1,%d0
+    jsr bf_mode_play
+    cmpi.l #1,%d0
+    bne.s .reg_fixed
+    move.l %d2,%d0
+    jsr bf_gravity
+    bra.s .reg_return
+.reg_fixed:
     move.l %d1,%d0
     jsr bf_fixed_play
     bra.s .reg_octave
@@ -49,15 +57,21 @@ bf_register:
     lea 20(%sp),%sp
     rts
 
-/* UI octave follows MODE but retains both independent values in the Part. */
+/* UI register control retains three independent values in the Part. */
 bf_oct_get:
     move.l %d1,-(%sp)
     move.l %d0,%d1
     jsr bf_mode_get
-    tst.l %d0
-    bne.s .oct_relative
+    cmpi.l #2,%d0
+    beq.s .oct_relative
+    cmpi.l #1,%d0
+    beq.s .oct_home
     move.l %d1,%d0
     jsr bf_fixed_get
+    bra.s .oct_done
+.oct_home:
+    move.l %d1,%d0
+    jsr bf_home_get
     bra.s .oct_done
 .oct_relative:
     move.l %d1,%d0
@@ -76,7 +90,7 @@ bf_reg_change:
     bhi.w .change_done
     move.l %d0,%d3
     moveq #0,%d4
-    moveq #1,%d5
+    moveq #2,%d5
     tst.l %d1
     bne.s .change_octave
     jsr bf_mode_get
@@ -84,12 +98,20 @@ bf_reg_change:
     bra.s .change_clamp
 .change_octave:
     jsr bf_mode_get
-    tst.l %d0
-    bne.s .change_relative
+    cmpi.l #2,%d0
+    beq.s .change_relative
+    cmpi.l #1,%d0
+    beq.s .change_home
     move.l %d3,%d0
     jsr bf_fixed_get
     moveq #10,%d5
     lea bf_fixed_set,%a0
+    bra.s .change_clamp
+.change_home:
+    move.l %d3,%d0
+    jsr bf_home_get
+    moveq #10,%d5
+    lea bf_home_set,%a0
     bra.s .change_clamp
 .change_relative:
     move.l %d3,%d0

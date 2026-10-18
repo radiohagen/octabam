@@ -64,6 +64,8 @@ class Machine:
         self.base=layout['base']
         u.mem_write(self.base,(out/'platform/runtime/runtime.bin').read_bytes())
         self.stack=0x47008000;self.done=0x4700fff0;self.scratch=0x47001000
+        self.sr_probe=self.done-16
+        u.mem_write(self.sr_probe, bytes.fromhex('40c7'))
         self.stops={self.done}; self.arrival=None;self.writes=[]
         u.hook_add(UC_HOOK_CODE,self.stop)
         u.hook_add(UC_HOOK_MEM_WRITE,lambda u,a,p,n,v,x:self.writes.append((p,n)))
@@ -72,30 +74,45 @@ class Machine:
         u.mem_write(0x46c82456,(0x400e21e0).to_bytes(4,'big'))
         for p in range(4):
             for t in range(8):
-                u.mem_write(0x400e21e0+0x8ed80+p*0x18b2+0x4e2+t*36+13,b'\x03')
-                u.mem_write(0x400e21e0+0x8ed80+p*0x18b2+0x4e2+t*36+15,b'\x02')
+                u.mem_write(0x400e21e0+0x8ed80+p*0x18b2+0x4e2+t*36+13,b'\x23')
+                u.mem_write(0x400e21e0+0x8ed80+p*0x18b2+0x4e2+t*36+15,b'\x03')
         if 'mh_defaults' in self.sym:self.call('mh_defaults',stop=0x40025ace)
+    def read_sr(self):
+        """Materialize lazy flags in guest code without altering the stopped CPU."""
+        u=self.uc
+        saved=u.context_save()
+        try:
+            u.emu_start(self.sr_probe,self.sr_probe+2,count=1)
+            assert u.reg_read(UC_M68K_REG_PC)==self.sr_probe+2
+            return u.reg_read(UC_M68K_REG_D7)&0xffff
+        finally:
+            u.context_restore(saved)
+
     def part_address(self,track,field):
         bank=int.from_bytes(self.uc.mem_read(0x46c82456,4),'big')
         part=self.uc.mem_read(0x100b14cf,1)[0]
         return bank+0x8ed80+part*0x18b2+0x4e2+track*36+field
     def follow_write(self,field,data,track=0):
         """Seed native Part bytes, including deliberately corrupt routing data."""
-        slots={'source':3,'mode':12,'fixed':13,'offset':15,'response':12}
+        slots={'source':3,'mode':15,'fixed':13,'offset':13,'home':15,'response':12}
         for t,v in enumerate(data,track):
             a=self.part_address(t,slots[field])
-            if field=='mode':v=(self.uc.mem_read(a,1)[0]&2)|(v&1)
-            if field=='response':v=(self.uc.mem_read(a,1)[0]&1)|((v&1)<<1)
-            if field=='offset':v=(v+2)&255
+            old=self.uc.mem_read(a,1)[0]
+            if field=='mode':v=(old&15)|((v&3)<<4)
+            if field=='response':v=(old&125)|((v&1)<<1)
+            if field=='offset':v=(old&15)|(((v+2)&7)<<4)
+            if field=='fixed':v=(old&112)|(v&15)
+            if field=='home':v=(old&48)|(v&15)
             self.uc.mem_write(a,bytes((v,)))
     def follow_read(self,field,count=8,track=0):
-        slots={'source':3,'mode':12,'fixed':13,'offset':15,'response':12}
+        slots={'source':3,'mode':15,'fixed':13,'offset':13,'home':15,'response':12}
         values=[]
         for t in range(track,track+count):
             v=self.uc.mem_read(self.part_address(t,slots[field]),1)[0]
-            if field=='mode':v&=1
+            if field=='mode':v=(v>>4)&3
             if field=='response':v=(v>>1)&1
-            if field=='offset':v=(v-2)&255
+            if field=='offset':v=((v>>4)-2)&255
+            if field in ('fixed','home'):v&=15
             values.append(v)
         return bytes(values)
     def harmony_state(self):

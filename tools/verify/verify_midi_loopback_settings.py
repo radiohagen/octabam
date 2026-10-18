@@ -45,14 +45,16 @@ def main():
     print('[ok] every track/Part, first/last bank, packed flags, native mirror, bounds and invalid-data EXT fallback')
     m.put(0x46c82456,B);m.put(0x100b14cf,0,1)
     if 'bf_mode_set' in m.sym:
+        reserved=m.get(field(0,0,0),1)&1
         for route in range(3):
             call('lb_dest_set',0,route)
-            for mode in range(2):
+            for mode in range(3):
                 for response in range(2):
                     call('bf_mode_set',0,mode);call('bf_response_value_set',0,response)
                     assert call('lb_dest_get',0)==route
-                    assert m.get(field(0,0,0),1)==route*4+mode+response*2
-        print('[ok] Follow MODE/UPDT edits preserve DEST; DEST preserves both Follow flags')
+                    assert m.get(field(0,0,0),1)==route*4+reserved+response*2
+                    assert call('bf_mode_get',0)==mode
+        print('[ok] All three Follow register modes and UPDT preserve DEST and reserved flag; DEST preserves Follow')
     # Sounding Part is independent of the UI. Changes release the old route.
     m.put(0x80001832,1,1)
     m.put(field(0,1,0),4,1)

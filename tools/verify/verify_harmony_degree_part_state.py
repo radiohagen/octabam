@@ -30,7 +30,7 @@ def main():
             po=0x8ed80+part*PS if part<4 else 0x9504a+(part-4)*PS
             for track in range(8):
                 put(B+bank*BS+po+0x3e2+track*32,48)
-                for f,v in ((3,0),(5,0),(12,0),(13,3),(15,2),(16,0),(17,2),(18,0),(19,35)):
+                for f,v in ((3,0),(5,0),(12,0),(13,35),(15,3),(16,0),(17,2),(18,0),(19,35)):
                     put(B+bank*BS+po+0x4e2+track*36+f,v)
     put(0x46c82456,B,4);put(0x100b14cf,0);put(0x100b14d0,0)
     source=m.scratch+0x2000

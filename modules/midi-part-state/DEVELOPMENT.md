@@ -44,11 +44,18 @@ copy/initialization byte and ABI equivalence, and interruption while settings
 are partially replaced. Full firmware checks below cover native Part and
 project persistence separately. Neither layer establishes hardware acceptance.
 
-SETUP offset 12 is a shared flags byte: bit 0 Follow MODE, bit 1 Follow
+SETUP offset 12 is a shared flags byte: bit 0 reserved, bit 1 Follow
 TRIG/LIVE response, bits 2–3 Loopback DEST (EXT/INT/BOTH; 3 reads as EXT).
 This module owns the native range (0..15) and byte claim. Each writer preserves
-the other settings. Fresh Parts initialize all flags to zero. Existing Follow
-values 0..3 retain their meaning and select EXT.
+the other settings. Fresh Parts initialize all flags to zero. Follow's REG
+now occupies its own packed field at offset 15, not the shared flag byte.
+
+This module also owns the shared transport start/resume and successful MIDI
+note-on continuations. It dispatches only selected consumers: Follow resets
+or commits its register history, and Harmony resets or advances ACC. These
+hooks preserve native registers/replay; absent consumers compile out. This
+keeps standalone Follow, standalone Harmony and their combination on the
+same event boundaries without overlapping hook claims.
 
 For full firmware checks on a copied project, run
 `tools/verify/verify_midi_part_port.py --project DIR` for native Part

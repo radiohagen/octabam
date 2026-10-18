@@ -72,6 +72,15 @@ nav:
       - MIDI Scenes: reference/modules/midi-scenes.md
       - Page 2 Scene Locks: reference/modules/scenes-p2.md
   - MIDI and USB:
+      - MIDI Modules: midi-modules.md
+      - MIDI Scales: reference/modules/midi-scales.md
+      - MIDI Follow: reference/modules/midi-follow.md
+      - MIDI Harmony: reference/modules/midi-harmony.md
+      - MIDI Loopback: reference/modules/midi-loopback.md
+      - MIDI Loopback Scenes: reference/modules/midi-loopback-scenes.md
+      - MIDI Part State: reference/modules/midi-part-state.md
+      - MIDI Sram: reference/modules/midi-sram.md
+      - Harmony Plocks: reference/modules/harmony-plocks.md
       - USB: reference/modules/usb.md
       - CC Map: reference/modules/cc-map.md
       - CC Feedback: reference/modules/cc-feedback.md
@@ -84,6 +93,8 @@ nav:
       - Reload from Project: reference/modules/reload-from-project.md
       - Remix Switch: reference/modules/remix-switch.md
   - Fixes:
+      - Pio Write Fix: reference/modules/pio-write-fix.md
+      - Quantizer MIDI Drawer: reference/modules/quantizer-midi-drawer.md
       - ATA Write Guard: reference/modules/ata-write-guard.md
       - Batch Bugfixes: reference/modules/batch-bugfixes.md
       - Erase Empty Trigless Locks: reference/modules/erase-empty-trigless-locks.md

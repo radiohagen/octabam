@@ -112,7 +112,7 @@ def main():
         assert event()==(48 if policy&2 else 53)
         m.c('ha_transport_c')
         assert event()==(48 if policy&1 else 50 if policy&2 else 55)
-    for hook,continuation in (('ha_start_a',0x4009c3da),('ha_start_b',0x4009c4da)):
+    for hook,continuation in (('mp_start_a',0x4009c3da),('mp_start_b',0x4009c4da)):
         setting(0,7,reset=1,base=9)
         assert event()==48 and event()==50
         saved={UC_M68K_REG_D1:0x12345678,UC_M68K_REG_A0:m.scratch,UC_M68K_REG_A1:m.scratch+32}
@@ -126,13 +126,13 @@ def main():
     setting(0,7,base=9)
     m.c('ha_fire_c',0,0,0,0)
     u.mem_write(0x46c77b1e,b'\0');u.mem_write(0x400d807c,b'\x90\x30\0')
-    m.call('ha_sent_a',stop=0x4009fbb8,regs={UC_M68K_REG_D7:0})
+    m.call('mp_sent_a',stop=0x4009fbb8,regs={UC_M68K_REG_D7:0})
     assert event(sound=False)==48
     u.mem_write(0x400d807e,b'\x64');u.mem_write(0x46c77b1e,b'\1')
-    m.call('ha_sent_b',stop=0x4009fd00,regs={UC_M68K_REG_D7:0})
+    m.call('mp_sent_b',stop=0x4009fd00,regs={UC_M68K_REG_D7:0})
     assert event(sound=False)==48
     u.mem_write(0x46c77b1e,b'\0')
-    m.call('ha_sent_a',stop=0x4009fbb8,regs={UC_M68K_REG_D7:0})
+    m.call('mp_sent_a',stop=0x4009fbb8,regs={UC_M68K_REG_D7:0})
     assert event(sound=False)==50
     print('[ok] inherited/OFF, silent occurrences, reset policies and successful-send guards',flush=True)
     # All 16 states survive a dense same-step checkpoint, including OFF.

@@ -46,7 +46,7 @@ def main():
         offset=(0x8ed80+part*0x18b2) if part<4 else (0x9504a+(part-4)*0x18b2)
         for t in range(8):
             put(bank+offset+0x3e2+t*32,48)
-            for field,value in ((3,0),(5,0),(12,0),(13,3),(15,2),(16,0),(17,2),(18,0),(19,35)):
+            for field,value in ((3,0),(5,0),(12,0),(13,35),(15,3),(16,0),(17,2),(18,0),(19,35)):
                 put(bank+offset+0x4e2+t*36+field,value)
     put(bank+0x4900,48)
     put(0x46c82456,bank,4)
@@ -226,10 +226,10 @@ def main():
         assert m.call('mh_generate',0,7,a0=m.scratch)==0xffffffff
         m.follow_write('source',bytes((2,)))
         put(s['bf_roots']+1,38);put(s['bf_pitches']+1,50)
-        m.follow_write('mode',bytes((1,)))
+        m.follow_write('mode',bytes((2,)))
         u.mem_write(m.scratch,b'\xff'*4)
         assert m.call('mh_generate',0,0,a0=m.scratch)==1
-        assert get(m.scratch)==50
+        assert get(m.scratch)==50, (get(m.scratch), m.call('bf_offset_get',0))
     # Clear/place must invalidate metadata immediately. A later native NOTE
     # with the same byte must never resurrect the pre-clear scale identity.
     put(bank+0x8e57,0)

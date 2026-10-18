@@ -7,7 +7,7 @@ import pathlib
 import subprocess
 import sys
 import re
-import midi_fixture as follow
+import midi_fixture
 import midi_machine
 ROOT=midi_machine.ROOT
 sys.path.insert(0,str(ROOT/'tools'))
@@ -18,7 +18,7 @@ OUT=ROOT/'out/midi-loopback-port'
 
 def fixture(source, name, records=None, arp=False):
     work=OUT/name;work.mkdir(parents=True,exist_ok=True)
-    follow.fixture(source,work/'project',arp=arp)
+    midi_fixture.fixture(source,work/'project',arp=arp)
     card,_=emu_card.stage_project(work/'project','OCTABAM','BASS',tree=work/'tree')
     (work/'card.img').write_bytes(card)
     return work
@@ -82,7 +82,7 @@ def run(work, name, extra=(), image=None, card=None, physical_panel=False):
     with (work/f'{name}.log').open('w') as f:p=subprocess.run(cmd,cwd=ROOT,stdout=f,stderr=subprocess.STDOUT)
     log=(work/f'{name}.log').read_text()
     assert p.returncode==0 and ('run ended REACHED' in log or 'ended on quit' in log),(name,work/f'{name}.log')
-    events=follow.notes((work/f'{name}.midi').read_bytes())
+    events=midi_fixture.notes((work/f'{name}.midi').read_bytes())
     (work/f'{name}-notes.json').write_text(json.dumps(events,indent=2)+'\n')
     return events
 

@@ -12,10 +12,10 @@ def main():
     for track in range(8):
         assert m.call('bf_mode_get',track)==0
         assert m.call('bf_oct_get',track)==3
-    edit(1,1,1);edit(1,0,1);edit(1,1,-1)
+    edit(1,1,1);edit(1,0,2);edit(1,1,-1)
     assert m.call('bf_oct_get',1)==0xffffffff
-    edit(1,0,-1);assert m.call('bf_oct_get',1)==4
-    edit(1,0,0x7fffffff);assert m.call('bf_mode_get',1)==1
+    edit(1,0,-2);assert m.call('bf_oct_get',1)==4
+    edit(1,0,0x7fffffff);assert m.call('bf_mode_get',1)==2
     edit(1,1,0x7fffffff);assert m.call('bf_oct_get',1)==2
     edit(1,1,-0x80000000);assert m.call('bf_oct_get',1)==0xfffffffe
     edit(1,0,-0x80000000);assert m.call('bf_mode_get',1)==0
@@ -37,9 +37,9 @@ def main():
     assert m.call('bf_oct_get',3)==4
     assert bytes(m.follow_read('mode',8,0))==modes
     assert bytes(m.follow_read('source',8,0))==sources
-    knob(1,4);assert m.call('bf_oct_get',3)==0 # recall relative offset
+    knob(1,4);knob(1,4);assert m.call('bf_oct_get',3)==0 # recall relative offset
     knob(2,-4);assert m.call('bf_oct_get',3)==0xffffffff
-    knob(1,-4);assert m.call('bf_oct_get',3)==4 # fixed value retained
+    knob(1,-4);knob(1,-4);assert m.call('bf_oct_get',3)==4 # fixed value retained
     settings=bytes((m.follow_read('mode')+m.follow_read('fixed')+m.follow_read('offset')))
     knob(0,4)
     assert bytes((m.follow_read('mode')+m.follow_read('fixed')+m.follow_read('offset')))==settings
@@ -58,7 +58,7 @@ def main():
         m.call('bf_latch',d1=0,regs={UC_M68K_REG_D7:0,UC_M68K_REG_A5:lane})
         assert u.mem_read(s['bf_pitches'],1)==bytes((root,))
         assert u.mem_read(s['bf_roots'],1)==bytes((36+root%12,))
-        for mode,octaves in ((0,range(11)),(1,range(-2,3))):
+        for mode,octaves in ((0,range(11)),(2,range(-2,3))):
             for octave in octaves:
                 for receiver in (1,2): # direct and chained receiver use ultimate source
                     m.follow_write('mode',bytes((mode,)),receiver)
@@ -80,7 +80,7 @@ def main():
         for root in range(128):
             m.call('mh_latch_key_root',root,regs={UC_M68K_REG_D2:0})
             assert u.mem_read(s['bf_pitches'],1)==bytes((root,))
-            for mode,octaves in ((0,range(11)),(1,range(-2,3))):
+            for mode,octaves in ((0,range(11)),(2,range(-2,3))):
                 for octave in octaves:
                     m.follow_write('mode',bytes((mode,)),1)
                     m.follow_write('offset' if mode else 'fixed',bytes((octave&255,)),1)
@@ -110,13 +110,16 @@ def ui():
     assert bytes(m.follow_read('response',8,0))==bytes(8),'TRIG must default on all tracks'
     out=Path(__file__).resolve().parents[2]/'out/follow-ui';out.mkdir(exist_ok=True)
     icons={}
-    for mode,octaves in ((0,range(11)),(1,range(-2,3))):
+    register_icons={};dials={0:set(),1:set(),2:set()};labels={}
+    for mode,octaves in ((0,range(11)),(1,range(11)),(2,range(-2,3))):
         for octave in octaves:
             for response in (0,1):
                 m.follow_write('mode',bytes((mode,)),0)
-                m.follow_write('offset' if mode else 'fixed',bytes((octave&255,)),0)
+                m.follow_write(('fixed','home','offset')[mode],bytes((octave&255,)),0)
                 m.call('bf_response_set',0,response)
-                for formatter,value,want in (('bf_oct_format',octave+2,str(octave)),
+                octtext=f'+{octave}' if mode==2 and octave>0 else str(octave)
+                for formatter,value,want in (('bf_dial_oct_format',0,octtext),
+                                             ('bf_mode_format',mode,('FIXED','GRAV','SOURCE')[mode]),
                                              ('bf_response_format',response,('TRIG','LIVE')[response])):
                     u.mem_write(m.stack+4,struct.pack('>II',win+512,value))
                     m.call(formatter)
@@ -125,26 +128,42 @@ def ui():
                 data=bytes(u.mem_read(plane,960))
                 def pixel(x,y): return (data[x*8+y//8]>>(7-y%8))&1
                 def crop(x,y,w,h): return tuple(pixel(i,j) for j in range(y,y+h) for i in range(x,x+w))
-                # RFOL and OCT must share the stock field baseline. Negative
-                # offsets must draw too, and two-digit values stay centered.
-                rfol=[(x,y) for x in range(1,38) for y in range(36,51) if pixel(x,y)]
-                octink=[(x,y) for x in range(78,115) for y in range(36,51) if pixel(x,y)]
+                # Full stock dials share their text and artwork baselines.
+                # Measure actual value ink, excluding the dial beneath it.
+                rfol=[(x,y) for x in range(1,39) for y in range(32,38) if pixel(x,y)]
+                octink=[(x,y) for x in range(79,117) for y in range(32,38) if pixel(x,y)]
                 assert octink,(mode,octave,'missing octave')
                 assert {y for x,y in octink}=={y for x,y in rfol},(mode,octave,'baseline')
-                assert abs(min(x for x,y in octink)+max(x for x,y in octink)-192)<=2,(mode,octave,'center')
-                # Both switches use the same 17x7 stock artwork, translated
-                # by one column and one row; both positions must be distinct.
-                icon=crop(11,22,17,7)
-                if mode==response: assert icon==crop(50,45,17,7),'stock switch icon'
+                assert abs(min(x for x,y in octink)+max(x for x,y in octink)-194)<=2,(mode,octave,'center')
+                assert any(crop(92,38,11,13)), 'octave dial missing'
+                assert any(crop(14,38,11,13)), 'source dial missing'
+                dials[mode].add(crop(92,38,11,13))
+                register_icons[mode]=crop(50,43,17,7)
+                labels[mode]=crop(79,52,38,6)
+                assert not any(crop(1,31,37,1)), 'source touches divider'
+                assert not any(crop(79,31,38,1)), 'octave touches divider'
+                assert not any(crop(1,29,37,1)), 'UPDT touches divider'
+                assert not any(crop(1,58,37,2)), 'source label clips top'
+                assert not any(crop(79,58,38,2)), 'octave label clips top'
+                assert not any(crop(40,0,38,30)), 'unused E cell must be empty'
+                assert not any(crop(79,0,38,30)), 'unused F cell must be empty'
+                for x in (39,78):
+                    assert any(crop(x,1,1,28)), 'six-cell grid needs both lower dividers'
+                    assert any(crop(x,32,1,26)), 'six-cell grid needs both upper dividers'
+                # Three-position REG and two-position UPDT remain separate.
+                icon=crop(11,12,17,7)
                 assert any(icon),'switch missing'
                 icons[response]=icon
-                name=f'{"fixed" if mode==0 else "source"}-{octave}-{"trig" if response==0 else "live"}'
+                name=f'{("fixed","grav","source")[mode]}-{octave}-{"trig" if response==0 else "live"}'
                 rows=[[0]*128 for _ in range(64)]
                 for y in range(60):
                     for x in range(120): rows[y+2][x+4]=pixel(x,59-y)
                 png(rows,out/(name+'.png'))
     assert icons[0]!=icons[1],'switch must show selected position'
-    print('[ok] 32 native FOLLOW renders: all octaves aligned/centered, signed values visible, both stock switch icons; TRIG default on eight tracks')
+    assert len(set(register_icons.values()))==3,'REG must show three distinct positions'
+    assert [len(dials[i]) for i in range(3)]==[11,11,5],'dial needles must reflect each value'
+    assert labels[0]==labels[1] and labels[1]!=labels[2],'OCT/OFFS label follows REG'
+    print('[ok] 54 native FOLLOW renders: stock dials, centered signed values, three-position REG and two-position UPDT; TRIG default on eight tracks')
 
 if __name__=='__main__':
     main()

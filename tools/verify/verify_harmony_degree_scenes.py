@@ -34,7 +34,7 @@ def machine():
             m.uc.mem_write(base+0x17a2,bytes(144))
             for t in range(8):
                 put(base+0x3e2+t*32,48)
-                for field,value in ((3,0),(5,2),(12,0),(13,3),(15,2),(16,0),(17,2),(18,0),(19,35)):
+                for field,value in ((3,0),(5,2),(12,0),(13,35),(15,3),(16,0),(17,2),(18,0),(19,35)):
                     put(base+0x4e2+t*36+field,value)
     put(0x46c82456,B,4);put(0x80000012,1,4)
     put(0x800065b8,1,4);put(0x80001828,0);put(0x80001829,0)

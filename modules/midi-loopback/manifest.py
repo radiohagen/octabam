@@ -42,6 +42,7 @@ MODULE = Module(
         SymbolRef(0x400d3f20, 0x4003c770, "loopbackpage", "lb_channel_format", "CHAN internal/both marker"),),
     gates=(Gate("tools/verify/verify_midi_loopback_producers.py", venv=True, stage="image"),
            Gate('tools/verify/verify_midi_loopback_settings.py', venv=True, stage='image'),
+           Gate('tools/verify/verify_midi_loopback_context.py', venv=True, stage='image'),
            Gate('tools/verify/verify_midi_loopback_stress.py', venv=True, stage='image'),
            Gate("tools/verify/verify_midi_loopback.py", venv=True, stage="image"),),
 )

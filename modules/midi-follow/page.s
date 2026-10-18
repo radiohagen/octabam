@@ -1,4 +1,4 @@
-/* RFOL D press: RFOL, MODE, OCT and UPDT. Native modal/input layer.
+/* RFOL D press: RFOL, REG, OCT/OFFS and UPDT. Native modal/input layer.
  * Transport/chromatic keys pass through; UPDT arms at the next ordinary trig. */
     .text
     .global bf_page_open,bf_page_close,bf_page_noop,bf_page_encoder
@@ -86,9 +86,8 @@ bf_page_encoder:
     rts
 
 bf_page_draw:
-    lea -44(%sp),%sp
+    lea -16(%sp),%sp
     movem.l %d2-%d3/%a2/%a5,(%sp)
-    lea 16(%sp),%a2
     move.l bf_page_win,%d0
     beq.w .page_done
     move.l %d0,%a5
@@ -101,23 +100,42 @@ bf_page_draw:
     move.l %d0,%d1
     moveq #49,%d0
     lea bf_mode_format,%a0
-    lea 0x40046f10,%a1 /* native two-position selector */
+    lea 0x40046d9c,%a1 /* native three-position selector */
     bsr.w .page_selector
     move.l bf_page_track,%d0
     jsr bf_oct_get
-    addq.l #2,%d0 /* Stock field hides negative values; format index back to OCT. */
+    move.l %d0,%d3
+    move.l bf_page_track,%d0
+    jsr bf_mode_get
+    cmpi.l #2,%d0
+    beq.s .page_offset_dial
+    move.l %d3,%d0
+    moveq #127,%d1
+    mulu.l %d1,%d0
+    moveq #10,%d1
+    divu.l %d1,%d0
+    bra.s .page_oct_dial
+.page_offset_dial:
+    move.l %d3,%d0
+    addq.l #2,%d0
+    lsl.l #5,%d0
+    cmpi.l #128,%d0
+    bne.s .page_oct_dial
+    moveq #127,%d0
+.page_oct_dial:
     move.l %d0,%d1
-    moveq #87,%d0
-    lea bf_oct_format,%a0
-    lea 0x400467a4,%a1 /* same stock field and value baseline as RFOL */
-    bsr.w .page_selector
+    moveq #88,%d0
+    lea bf_dial_oct_format,%a0
+    bsr.w .page_dial
     move.l bf_page_track,%d0
     jsr bf_source_get
+    moveq #127,%d1
+    mulu.l %d1,%d0
+    lsr.l #3,%d0
     move.l %d0,%d1
     moveq #10,%d0
-    lea bf_format,%a0
-    lea 0x400467a4,%a1 /* stock numeric/text field, like NOTE SETUP RFOL */
-    bsr.w .page_selector
+    lea bf_dial_source_format,%a0
+    bsr.w .page_dial
     move.l bf_page_track,%d0
     jsr bf_response_get
     move.l %d0,%d1
@@ -126,35 +144,38 @@ bf_page_draw:
     lea 0x40046f10,%a1 /* native two-position switch, like MODE */
     bsr.w .page_selector_bottom
     bsr.w .page_grid
-    moveq #12,%d0
-    moveq #29,%d1
+    moveq #19,%d0
+    moveq #19,%d1
     lea .response_label,%a0
-    bsr.w .page_text
-    moveq #51,%d0
-    moveq #52,%d1
+    bsr.w .page_label
+    moveq #58,%d0
+    moveq #50,%d1
     lea .mode_label,%a0
-    bsr.w .page_text
-    moveq #52,%d1
+    bsr.w .page_label
+    move.l bf_page_track,%d0
+    jsr bf_mode_get
     lea .oct_label,%a0
-    bsr.w .page_oct_center
-    moveq #12,%d0
-    moveq #52,%d1
+    cmpi.l #2,%d0
+    bne.s .page_oct_label
+    lea .offs_label,%a0
+.page_oct_label:
+    moveq #97,%d0
+    moveq #50,%d1
+    bsr.w .page_label
+    moveq #19,%d0
+    moveq #50,%d1
     lea .source_label,%a0
-    bsr.w .page_text
-    moveq #85,%d0
-    moveq #4,%d1
-    lea .back,%a0
-    bsr.w .page_text
+    bsr.w .page_label
     moveq #1,%d0
     move.l %d0,0x46c7c72c
 .page_done:
     movem.l (%sp),%d2-%d3/%a2/%a5
-    lea 44(%sp),%sp
+    lea 16(%sp),%sp
     rts
-.page_grid: /* Stock line/box primitive; six cells above a shared footer. */
+.page_grid: /* Six native dotted cells map to A-F; unused E/F stay empty. */
     lea -8(%sp),%sp
     movem.l %d2/%a2,(%sp)
-    moveq #4,%d2
+    moveq #3,%d2
     lea .page_grid_lines,%a2
 .page_grid_line:
     pea 1
@@ -163,7 +184,7 @@ bf_page_draw:
     move.l 4(%a2),-(%sp)
     move.l (%a2),-(%sp)
     move.l %a5,-(%sp)
-    jsr 0x40012254
+    jsr 0x40012004
     lea 24(%sp),%sp
     lea 16(%a2),%a2
     subq.l #1,%d2
@@ -172,10 +193,10 @@ bf_page_draw:
     lea 8(%sp),%sp
     rts
 .page_selector_bottom:
-    moveq #13,%d2
+    moveq #3,%d2
     bra.s .page_selector_y
 .page_selector: /* d0=x,d1=value,a0=formatter,a1=stock widget,a5=surface */
-    moveq #36,%d2
+    moveq #34,%d2
 .page_selector_y:
     move.l %a5,-(%sp)
     move.l %a0,-(%sp)
@@ -187,13 +208,40 @@ bf_page_draw:
     jsr (%a1)
     lea 28(%sp),%sp
     rts
-bf_oct_format: /* Stock formatter ABI: destination, octave + 2. */
-    move.l 4(%sp),%a0
-    move.l 8(%sp),%d0
-    subq.l #2,%d0
-    move.l %d0,-(%sp)
-    pea .number
+.page_dial: /* Stock full dial: fixed layout, independent of native page state. */
+    move.l %a5,-(%sp)
     move.l %a0,-(%sp)
+    pea 8
+    move.l %d1,-(%sp)
+    clr.l -(%sp)
+    pea 31
+    move.l %d0,-(%sp)
+    jsr 0x400479b4
+    lea 28(%sp),%sp
+    rts
+bf_dial_source_format:
+    move.l bf_page_track,%d0
+    jsr bf_source_get
+    move.l %d0,-(%sp)
+    move.l 8(%sp),-(%sp)
+    jsr bf_format
+    addq.l #8,%sp
+    rts
+bf_dial_oct_format:
+    move.l bf_page_track,%d0
+    jsr bf_oct_get
+    move.l %d0,-(%sp)
+    move.l bf_page_track,%d0
+    jsr bf_mode_get
+    lea .number,%a0
+    cmpi.l #2,%d0
+    bne.s .dial_number
+    tst.l (%sp)
+    ble.s .dial_number
+    lea .positive,%a0
+.dial_number:
+    move.l %a0,-(%sp)
+    move.l 12(%sp),-(%sp)
     jsr 0x40013a08
     lea 12(%sp),%sp
     rts
@@ -207,33 +255,29 @@ bf_response_format:
 bf_mode_format:
     move.l 4(%sp),%a0
     lea .fixed,%a1
-    tst.l 8(%sp)
+    move.l 8(%sp),%d0
+    tst.l %d0
+    beq.s .mode_copy
+    lea .gravity,%a1
+    cmpi.l #1,%d0
     beq.s .mode_copy
     lea .source,%a1
 .mode_copy:
     move.b (%a1)+,(%a0)+
     bne.s .mode_copy
     rts
-.page_oct_center: /* Center OCT label in cell bounded by x=77 and x=115. */
-    lea -8(%sp),%sp
-    movem.l %d2/%a2,(%sp)
-    move.l %d1,%d2
-    move.l %a0,%a2
+.page_label: /* Native font metrics; d0 is the centre of the encoder cell. */
+    lea -12(%sp),%sp
+    movem.l %d0-%d1/%a0,(%sp)
     move.l %a0,-(%sp)
     pea -1
     pea 0x400ba876
     jsr 0x40012f30
     lea 12(%sp),%sp
     lsr.l #1,%d0
-    moveq #96,%d1
-    sub.l %d0,%d1
-    move.l %d1,%d0
-    move.l %d2,%d1
-    move.l %a2,%a0
-    bsr.s .page_text
-    movem.l (%sp),%d2/%a2
-    lea 8(%sp),%sp
-    rts
+    sub.l %d0,(%sp)
+    movem.l (%sp),%d0-%d1/%a0
+    lea 12(%sp),%sp
 .page_text: /* d0=x,d1=y,a0=string,a5=surface; native C ABI */
     move.l %a0,-(%sp)
     pea -1
@@ -248,18 +292,19 @@ bf_mode_format:
 .trig: .asciz "TRIG"
 .live: .asciz "LIVE"
 .source_label: .asciz "RFOL"
-.mode_label: .asciz "MODE"
+.mode_label: .asciz "REG"
 .oct_label: .asciz "OCT"
+.offs_label: .asciz "OFFS"
 .fixed: .asciz "FIXED"
+.gravity: .asciz "GRAV"
 .source: .asciz "SOURCE"
 .number: .asciz "%d"
-.back: .asciz "NO:BACK"
+.positive: .asciz "+%d"
     .balign 4
 .page_grid_lines:
-    .long 38,12,38,58
-    .long 77,12,77,58
-    .long 0,35,115,35
-    .long 0,12,115,12
+    .long 39,0,39,59
+    .long 78,0,78,59
+    .long 0,30,119,30
 bf_page_layer:
     .long 0,bf_page_keys,bf_page_encs,0,0,-1,-1
 bf_page_keys:

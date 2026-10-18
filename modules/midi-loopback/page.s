@@ -233,13 +233,14 @@ lb_channel_format:
 .page_grid_lines:
     .long 38,12,38,58
     .long 77,12,77,58
-    .long 0,35,115,35
-    .long 0,12,115,12
+    .long 1,35,117,35
+    .long 1,12,117,12
 lb_page_layer:
     .long 0,lb_page_keys,lb_page_encs,0,0,-1,-1
 lb_page_keys:
+    /* Track keys inherit stock dispatch: close the modal and select in one press. */
     /* The opening A key's release is consumed; only a new press closes. */
-    .irp key,0x31,0x32,0x38,0x22,0x23,0x24,0x25,0x26,0x35,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17
+    .irp key,0x31,0x32,0x38,0x22,0x23,0x24,0x25,0x26,0x35
     .byte \key,0
     .long lb_page_close,0x4004ae08,0,0,0
     .word 0,0

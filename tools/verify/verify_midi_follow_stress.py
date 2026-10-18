@@ -59,7 +59,7 @@ def machine(seed=20261008, steps=12000):
         m.follow_write('source',bytes(graph),0)
         u.mem_write(s['bf_pitches'],bytes(roots))
         u.mem_write(s['bf_roots'],bytes(36+n%12 if n<128 else 255 for n in roots))
-        modes = [rng.randrange(2) for _ in range(8)]
+        modes = [rng.choice((0,2)) for _ in range(8)]
         fixed = [rng.randrange(11) for _ in range(8)]
         offsets = [rng.randrange(-2,3) for _ in range(8)]
         for name,values in [('mode',modes),('fixed',fixed),('offset',offsets)]:

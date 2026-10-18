@@ -1,0 +1,32 @@
+{
+  "package": "OCTABAMN1",
+  "recorded_on": "2026-10-18",
+  "upstream_repository": "https://github.com/sambanks/octabam",
+  "upstream_commit": "c3f37e531f6b072b8197d93f173e063b55249363",
+  "author_repository": "https://github.com/radiohagen/octatrack-modules",
+  "author_commit": "16aa9a942fafc9453629a979d66673bf92bb1e15",
+  "staging_baseline": "cb80d067b43c462332c9146a52f55c4104e3ec30",
+  "staging_command": "python3 scripts/stage_octabam.py --octabam /absolute/isolated/worktree --apply",
+  "selection": "harmony-track-bus",
+  "build": "N1",
+  "pgo": false,
+  "included_author_features": ["MIDI Scales", "MIDI Follow with gravity", "MIDI Harmony with accumulator", "MIDI Loopback"],
+  "reconciliation": [
+    "Loopback playback context, ownership cleanup and native modal geometry from author branch 3b1fda3",
+    "Resident Part activation with resolved final-runtime callbacks",
+    "Follow/Harmony transport, setup and successful-note lifecycle hooks retained",
+    "Loopback/Scenes bridge audited against current Scenes and combined USB",
+    "Historical shared verifiers retain provenance but are excluded from source staging"
+  ],
+  "optional_synths": {
+    "included": false,
+    "source_repository": "https://github.com/mattiaswolff/octatrack-modules",
+    "source_commit": "e789014597e80114e971d16374e20f105594ab37",
+    "synth_upstream_commit": "525f4b19b04dc3ba3f3bae3b25abbf48df34a10a",
+    "synth_poly_sha256": "2b1feb174f228dddfca028afe53b885261209d1f22d2e77f93ee883a07efeef8",
+    "reason": "Sophie/Supersaw mixed-engine latency and three-engine task starvation remain unresolved in the unchanged prototypes. Current bus package qualification excludes both.",
+    "limits": "Historical emulator failures establish an unresolved release gate, not a measured hardware voice limit."
+  },
+  "excluded": ["Sophie", "Supersaw", "Synth Machine", "MIDI Arp Presets", "POST FADER"],
+  "hardware_tested": false
+}

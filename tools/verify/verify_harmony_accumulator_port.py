@@ -23,7 +23,7 @@ def main():
     ap.add_argument('--project',required=True,type=Path)
     ap.add_argument('--output',type=Path,default=p.ROOT/'out/harmony-accumulator-port')
     ap.add_argument('--candidate',type=Path,help='frozen directory containing candidate.bin and candidate-symbols.json')
-    ap.add_argument('--case',choices=('ui','play','reset','settings','controls','resume','save','chord','arp','follow'),action='append')
+    ap.add_argument('--case',choices=('ui','play','reset','settings','controls','resume','save','chord','arp','follow','gravity'),action='append')
     args=ap.parse_args()
     if not (args.project/'project.work').is_file() or not any(args.project.glob('bank*.work')):
         ap.error('--project must contain project.work and at least one working bank')
@@ -62,7 +62,7 @@ def main():
         subprocess.run([sys.executable,str(p.ROOT/'tools/emu/lcd_view.py'),str(work/f'{name}.lcd'),
                         '--png',str(work/f'{name}.png')],check=True)
         return [e[2] for e in events if e[:2]==('on',1)]
-    cases=set(args.case or ('ui','play','reset','settings','controls','resume','save','chord','arp','follow'))
+    cases=set(args.case or ('ui','play','reset','settings','controls','resume','save','chord','arp','follow','gravity'))
     if cases & {'ui','play','resume'}:
         run('edit',edit+'4300 quit\n')
         cfg=(work/'edit-acc.bin').read_bytes()
@@ -204,28 +204,29 @@ def main():
         return octave*12+tones[degree]
     def quant(note):
         return min((n for n in range(128) if n%12 in tones),key=lambda n:(abs(n-note),n))
-    for case in ('chord','arp','follow'):
+    for case in ('chord','arp','follow','gravity'):
         if case not in cases:continue
         work=p.fixture(args.project,case,{0:2 if case!='arp' else 1,1:1},first_note=48,arp=case=='arp')
         for path in (work/'project').glob('bank*.work'):
             def seed(data):
                 for pattern in range(16):data[0x16+(pattern+1)*0x8eec-9]=16
-                for step,note in zip((2,4,8),((52,53,55) if case=='follow' else (48,48,48))):
+                for step,note in zip((2,4,8),((59,60,65) if case=='gravity' else (52,53,55) if case=='follow' else (48,48,48))):
                     data[0x492e+0x39+step*32]=note
-                if case=='follow':
+                if case in ('follow','gravity'):
                     at=0x492e+0x8b9
                     data[at+9:at+17]=sum(1<<i for i in (2,4,8)).to_bytes(8,'big')
                     for part in range(8):
                         base=p.otp.PART_BASE+part*p.otp.PART_STRIDE+9
                         data[base+0x4e2+36+3]=1 # RFOL T1
                         data[base+0x4e2+36+17]=1 # C major, independent own register
+                        if case=='gravity':data[base+0x4e2+36+15]=0x12 # GRAV OCT2
                         data[base+0x3e2+32+2]=1 # release before next source change
             p.otp._bank_write(work/'project',int(path.stem[4:]),seed,guard=False)
         card,_=p.emu_card.stage_project(work/'project','OCTABAM','BASS',tree=work/'accum-tree')
         (work/'card.img').write_bytes(card)
         play='1800 key 0x28 down\n1900 key 0x28 up\n10800 key 0x27 down\n10900 key 0x27 up\n12000 quit\n'
-        select='900 key 0x11 down\n1000 key 0x11 up\n' if case=='follow' else ''
-        if case=='follow':
+        select='900 key 0x11 down\n1000 key 0x11 up\n' if case in ('follow','gravity') else ''
+        if case in ('follow','gravity'):
             run('reference',PANEL+select+play)
             reference=[e[2] for e in json.loads((work/'reference-notes.json').read_text()) if e[:2]==['on',2]]
             assert len(reference)>=9 and reference[:3]*3==reference[:9],reference

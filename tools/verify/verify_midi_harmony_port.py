@@ -382,7 +382,8 @@ def persistence(source,voic=1,omit=0):
     work=fixture(source,name,{0:2,1:1})
     follow_settings={}
     if 'bf_source_get' in harmony.symbols():
-        follow_settings={t:{3:int(t!=0),12:(t&1)|(((t//2)&1)<<1),13:t+2,15:t%5} for t in range(8)}
+        follow_settings={t:{3:int(t!=0),12:((t//2)&1)<<1,
+                            13:(t+2)|((t%5)<<4),15:(t+1)|((t%3)<<4)} for t in range(8)}
         for path in (work/'project').glob('bank*.work'):
             def seed(data):
                 for part in range(8):
@@ -396,10 +397,12 @@ def persistence(source,voic=1,omit=0):
     def key(at,k,hold=100):lines.extend([f'{at} key {k:#x} down',f'{at+hold} key {k:#x} up'])
     key(100,0x31);key(600,0x35);key(1100,0x10)
     lines.extend(['1600 key 0x2d down','1700 key 0x22 down','1850 key 0x22 up','1950 key 0x2d up','2300 enc 5 4'])
-    # Open Harmony with the physical F press. Edit the controls and exercise
-    # an unused encoder; the NOTE/ARP native staged lanes must stay intact.
+    # Open Harmony with the physical F press. CHORD maps A-D to
+    # VOIC/SPRD/ROOT/SIZE; E/F are inactive. These are logical choice counts
+    # expanded by run() into four-count physical encoder reports.
     key(2400,0x3d,50)
-    lines.extend([f'2500 enc 1 {4 if voic==1 else voic-1}','2550 enc 0 -1','2600 enc 0 1','2630 enc 2 1',f'2640 enc 3 {omit}','2650 enc 4 3','2660 enc 5 4'])
+    lines.extend([f'2500 enc 0 {4 if voic==1 else voic-1}','2600 enc 1 1',
+                  f'2630 enc 2 {omit}','2640 enc 3 3','2650 enc 4 1','2660 enc 5 4'])
     key(2700,0x32,50)
     key(2800,0x32)
     lines.extend(['3300 key 0x2d down','3400 key 0x23 down','3550 key 0x23 up','3650 key 0x2d up',f'4000 enc 5 {4 if expected_key==25 else 1}'])
@@ -439,8 +442,8 @@ def persistence(source,voic=1,omit=0):
         at=0x4e2+36*track
         assert state[at+5]==state[at+16]==state[at+12]==state[at+18]==0
         if follow_settings:
-            assert (state[at+3],state[at+13],state[at+15])==(0,3,2)
-    print('  [ok] UART Harmony controls including SIZE and inactive F encoder, native bank SAVE, disk reload, CS1 warm boot and fresh-project defaults',flush=True)
+            assert (state[at+3],state[at+13],state[at+15])==(0,35,3)
+    print('  [ok] UART Harmony A-D controls and inactive E/F, native bank SAVE, disk reload, CS1 warm boot and fresh-project defaults',flush=True)
     return {work.name:'pass'}
 
 

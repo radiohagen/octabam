@@ -43,14 +43,15 @@ bf_\name\()_at:
     rts
     .endm
     FIELD source,3,0,255,8,-1,0
-    FIELD mode,12,0,1,1,0,0
+    FIELD mode,15,4,3,2,0,0
     FIELD response,12,1,1,1,0,0
-    FIELD fixed,13,0,255,10,3,0
-    FIELD offset,15,0,255,4,2,2
+    FIELD fixed,13,0,15,10,3,0
+    FIELD offset,13,4,7,4,2,2
+    FIELD home,15,0,15,10,3,0
 
 /* UI write helpers. d0 track,d1 value. Preserve all except d0/CC.
- * Packed mode and response preserve each other and the Loopback DEST bits. */
-    .macro STORE name,slot,mask,shift,maximum,bias
+ * Packed subfields preserve their neighbours, including Loopback DEST. */
+    .macro STORE name,slot,mask,shift,maximum,bias,invalidate=0
     .global bf_\name\()_set
 bf_\name\()_set:
     lea -24(%sp),%sp
@@ -69,14 +70,28 @@ bf_\name\()_set:
     jsr mp_read
     tst.l %d0
     bmi.s .L\name\()_bad
+    move.l %d0,%d3
     andi.l #\mask,%d0
     .if \shift
     lsl.l #\shift,%d5
     .endif
     or.l %d5,%d0
+    cmp.l %d3,%d0
+    beq.s .L\name\()_same
     move.l %d0,%d3
     move.l %d4,%d0
     jsr mp_write
+    .if \invalidate
+    tst.l %d0
+    beq.s .L\name\()_done
+    move.l %d0,-(%sp)
+    move.l %d4,%d0
+    jsr bf_register_edited
+    move.l (%sp)+,%d0
+    .endif
+    bra.s .L\name\()_done
+.L\name\()_same:
+    moveq #1,%d0
     bra.s .L\name\()_done
 .L\name\()_bad:
     moveq #0,%d0
@@ -85,11 +100,12 @@ bf_\name\()_set:
     lea 24(%sp),%sp
     rts
     .endm
-    STORE source,3,0,0,8,0
-    STORE mode,12,126,0,1,0
+    STORE source,3,0,0,8,0,1
+    STORE mode,15,15,4,2,0,1
     STORE response_value,12,125,1,1,0
-    STORE fixed,13,0,0,10,0
-    STORE offset,15,0,0,4,2
+    STORE fixed,13,112,0,10,0
+    STORE offset,13,15,4,4,2
+    STORE home,15,48,0,10,0,1
 
 /* d0 track -> ultimate playback source; invalid/cyclic routes fall back to
  * the original receiver. Every hop uses that source track's own context. */

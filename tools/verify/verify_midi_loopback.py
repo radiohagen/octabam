@@ -14,7 +14,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 import toolpath  # noqa: E402,F401
-from unicorn import Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN, UC_HOOK_CODE
+from unicorn import Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN, UC_HOOK_CODE, UC_HOOK_MEM_READ
 from unicorn.m68k_const import *
 from midi_machine import dram_map_size
 
@@ -33,8 +33,8 @@ def symbols():
 
 
 class Machine:
-    def __init__(self):
-        self.sym = symbols()
+    def __init__(self, *, symbol_table=None):
+        self.sym = symbols() if symbol_table is None else dict(symbol_table)
         u = self.u = Uc(UC_ARCH_M68K, UC_MODE_BIG_ENDIAN)
         u.ctl_set_cpu_model(UC_CPU_M68K_CFV4E)
         layout = json.loads((ROOT / "out/platform/layout.json").read_text())
@@ -368,7 +368,7 @@ def fixture(source, dest, length=6, control=None, all_tracks=False):
                     data[at+2] = length
                     setup = base + 0x4e2 + 36 * t
                     data[setup] = t + 1 if all_tracks else (1 if t == 0 else 0)
-                    data[setup + 12] = 0  # EXT, Follow flags off
+                    data[setup + 12] = 0  # EXT, unrelated flags clear
                     data[setup + 2] = 128  # PROG OFF
                     data[setup + 20] = 46  # CTRL1 CC1 setup, runtime +0x34
                     if control:
@@ -568,11 +568,10 @@ def routing_port_gate(source, remix):
     assert result.returncode == 0 and "run ended REACHED" in text
     assert "load run ended: LOAD PROJECT handled" in text
     midi = transport_midi(out / "wire.midi", text)
-    has_scenes = b'scn_ccnote' in subprocess.check_output(['m68k-elf-nm', str(ROOT/'out/platform/runtime/runtime.elf')])
     for track, route in enumerate(routes):
         events = [msg for msg in midi if msg[0] & 15 == track]
         note_on, cc, note_off = [0x90 | track, 84, 100], [0xb0 | track, 46, 70], [0x90 | track, 84, 0]
-        # MIDI Scenes deliberately sends the CC loop before note-on.
+        has_scenes = b'scn_ccnote' in subprocess.check_output(['m68k-elf-nm', str(ROOT/'out/platform/runtime/runtime.elf')])
         expected = [cc, note_on, note_off] if has_scenes else [note_on, cc, note_off]
         assert events == ([] if route == 1 else expected), (track, route, events)
         assert dumps["level"].read_bytes()[track * 2] == (70 if route else 127), (track, route)
@@ -683,6 +682,93 @@ def controls_gate(source, remix, only=None):
     print(f"  [ok] filter control scenarios passed: {', '.join(kinds)}")
 
 
+def owned_counts(m):
+    """Audit the cleanup shortcut against actual ownership, including EXT."""
+    expected = [0] * 8
+    for owner in m.u.mem_read(m.sym['lb_owned'], 2048):
+        if owner & 3:
+            expected[(owner >> 4) - 1] += 1
+    actual = [m.get(m.sym['lb_owned_counts'] + 2*t, 2) for t in range(8)]
+    assert actual == expected, (actual, expected)
+    return actual
+
+
+def cleanup_machine_gate():
+    for track in range(8):
+        for route in range(3):
+            m = Machine()
+            m.put(m.sym['lb_routes'] + track, route, 1)
+            assert owned_counts(m) == [0]*8
+            m.capture((0x93, 60, 100), track=track)
+            assert owned_counts(m)[track] == 1
+            # Duplicate ownership does not add a count or change the owner.
+            other = (track + 1) % 8
+            m.capture((0x93, 60, 100), track=other)
+            assert owned_counts(m)[track] == 1
+            assert owned_counts(m)[other] == 0
+            m.capture((0xb3, 34, 99), 0x4009fef2, track)
+            assert owned_counts(m)[track] == 1
+            # Release provenance can name a different track: use saved owner.
+            m.capture((0x83, 60, 0), 0x4009f8c2, other)
+            assert owned_counts(m) == [0]*8
+            while m.get('lb_tail') != m.get('lb_head'):
+                m.next()
+            m.capture((0x93, 61, 100), track=track)
+            assert owned_counts(m)[track] == 1
+            m.call('lb_flush', (track,))
+            assert owned_counts(m) == [0]*8
+            tombstones = bytes(m.u.mem_read(m.sym['lb_owned'], 2048))
+            accepted, external = m.get('lb_accepted'), m.get(0x400b967c)
+            # Repeated empty cleanup preserves late-release suppression.
+            reads = []
+            handle = m.u.hook_add(UC_HOOK_MEM_READ,
+                lambda u, access, addr, size, value, data: reads.append(addr),
+                begin=m.sym['lb_owned'], end=m.sym['lb_owned'] + 2047)
+            m.call('lb_flush', (track,))
+            m.u.hook_del(handle)
+            assert not reads, 'empty cleanup scanned the ownership table'
+            assert bytes(m.u.mem_read(m.sym['lb_owned'], 2048)) == tombstones
+            assert m.get('lb_accepted') == accepted
+            assert m.get(0x400b967c) == external == (3 if route != 1 else 0)
+            assert m.capture((0x83, 61, 0), 0x4009f8c2, track) == 0
+            assert owned_counts(m) == [0]*8
+            # A fresh owner can overwrite a tombstone before its late release.
+            m.capture((0x93, 61, 100), track=track)
+            m.call('lb_flush', (track,))
+            assert owned_counts(m) == [0]*8
+            m.capture((0x93, 61, 100), track=other)
+            assert owned_counts(m)[other] == 1
+            m.capture((0x93, 61, 0), 0x4009f8c2, other)
+            assert owned_counts(m) == [0]*8
+    print('  [ok] per-track cleanup counts: EXT/INT/BOTH, duplicates, controls, original owner, repeated cleanup and late releases')
+
+    for route in (1, 2):
+        m = Machine()
+        m.put('lb_routes', route, 1)
+        # Full non-release queue: INT leaves only a tombstone; BOTH owns EXT.
+        for n in range(127):
+            m.capture((0xb0, 34, n), 0x4009fef2)
+        m.capture((0x90, 60, 100))
+        assert owned_counts(m)[0] == (1 if route == 2 else 0)
+        m.call('lb_flush', (0,))
+        assert owned_counts(m) == [0]*8
+        assert m.get(0x400b967c) == (3 if route == 2 else 0)
+        assert m.capture((0x80, 60, 0), 0x4009f8c2) == 0
+        assert owned_counts(m) == [0]*8
+
+    m = Machine()
+    # External ownership can exceed 255; counters must not wrap at one byte.
+    for channel in range(16):
+        for pitch in range(128):
+            m.capture((0x90 | channel, pitch, 100), track=7)
+    assert owned_counts(m)[7] == 2048
+    for channel in range(16):
+        for pitch in range(128):
+            m.capture((0x80 | channel, pitch, 0), 0x4009f8c2, track=0)
+    assert owned_counts(m) == [0]*8
+    print('  [ok] dropped INT/BOTH ownership, release suppression, and 2048-entry external count/release')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("remix", nargs="?", default="midi-loopback")
@@ -699,6 +785,7 @@ def main():
         parser.error("--control-kind requires --controls")
     machine_gate()
     routing_machine_gate()
+    cleanup_machine_gate()
     if args.project:
         if args.routing:
             routing_port_gate(args.project, args.remix)

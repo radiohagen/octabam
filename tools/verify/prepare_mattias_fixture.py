@@ -45,7 +45,7 @@ def prepare(source, output):
 
     hosted = output / "hosted"
     shutil.copytree(base, hosted)
-    otp.host_rig(hosted, "mattias-bottleservice", guard=False)
+    otp.host_rig(hosted, "harmony-track-bus", guard=False)
     otp.thru_track(hosted, 1, guard=False)
 
     scenes = output / "midi-scenes"

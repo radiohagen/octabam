@@ -75,14 +75,6 @@ MODULE = Module(
         Poke(0x400d43aa, bytes.fromhex('00000080'), bytes.fromhex('00000054'), 'Native Part DEG range 0..83')),
     claims=Claims(part_window=tuple((0x4e2+36*t+f, 1, 'Harmony Part setting') for t in range(8) for f in (5,16,18,19))),
     detours=(
-        Detour(0x4009c3d4,bytes.fromhex('23c0800065b8'),'harmonyaccumaccess','ha_start_a',
-               'ACC reset policy on native transport cold start'),
-        Detour(0x4009c4d4,bytes.fromhex('23c0800065b8'),'harmonyaccumaccess','ha_start_b',
-               'ACC reset policy on native transport resume'),
-        Detour(0x4009fbb2,bytes.fromhex('7339400d807c'),'midiharmony','ha_sent_a',
-               'advance ACC after successful native note-on'),
-        Detour(0x4009fcfa,bytes.fromhex('7139400d807c'),'midiharmony','ha_sent_b',
-               'advance ACC after native note ownership replacement'),
         *(Detour(addr, bytes.fromhex('41f946c78d70'), 'harmonyownership', symbol,
                  'track-owned generated keyboard release slot') for addr,symbol in (
                      (0x4009eab4,'mh_key_slot_on'), (0x4009eaea,'mh_key_slot_arp'),
