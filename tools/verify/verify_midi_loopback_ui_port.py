@@ -76,7 +76,8 @@ def main():
     assert any(e[0]&0xf0==0x90 and e[2]>0 for e in events), 'transport did not play through window'
     if 'bf_mode_get' in p.harmony.symbols() and 'mh_get' in p.harmony.symbols():
         together=edit+key(4500,0x38)+key(4900,0x3b)+'5200 enc 1 4\n5400 enc 3 4\n'
-        together+=key(5600,0x31)+key(6000,0x3d)+'6300 enc 1 4\n'+key(6600,0x31)+'7000 quit\n'
+        # Current CHORD grid maps A to VOIC; B is now SPRD.
+        together+=key(5600,0x31)+key(6000,0x3d)+'6300 enc 0 4\n'+key(6600,0x31)+'7000 quit\n'
         both=run('follow-harmony',together)
         # Follow GRAV owns bit 1, Loopback INT bit 2; bit 0 is reserved.
         assert both[0x4e2+12]==6, ('Follow clobbered DEST',both[0x4e2+12])
