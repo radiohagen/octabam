@@ -95,7 +95,7 @@ MODULE = Module(
     kind=Kind.CF_PATCH,
     category=Category.PARTS, author="bkkbrls-del/midisc", author_url="https://github.com/bkkbrls-del/midisc",
     proof=Proof.PORT,
-    proof_note="verify_scenes: queued and direct Part changes, including CC-before-note timing; "
+    proof_note="verify_scenes: exact queued CC sequences and first-note timing; "
                "queued handoff guard is not hardware-tested. Earlier upstream received cursory MKII testing (16 Oct 2026).",
     doc="Scene locks for the MIDI tracks (hold-to-lock, readout, unlock, lock LEDs, XF morph, "
         "scene clear / copy / paste), kept per Part in scenes.work and CS1. Port of bkkbrls-del's midisc project.",
