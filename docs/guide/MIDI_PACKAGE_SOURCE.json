@@ -4,11 +4,12 @@
   "upstream_repository": "https://github.com/sambanks/octabam",
   "upstream_commit": "c3f37e531f6b072b8197d93f173e063b55249363",
   "author_repository": "https://github.com/radiohagen/octatrack-modules",
-  "author_commit": "550c63785d5f76e72364692dd5b4dc4c1913754d",
+  "author_commit": "3a692db74cb7fcf1532e19f28aed5742ef949205",
   "staging_baseline": "cb80d067b43c462332c9146a52f55c4104e3ec30",
   "staging_command": "python3 scripts/stage_octabam.py --octabam /absolute/isolated/worktree --apply",
   "selection": "harmony-track-bus",
   "build": "N1",
+  "image_name": "MATT MIDI N1",
   "pgo": false,
   "included_author_features": ["MIDI Scales", "MIDI Follow with gravity", "MIDI Harmony with accumulator", "MIDI Loopback"],
   "reconciliation": [
@@ -17,7 +18,8 @@
     "Follow/Harmony transport, setup and successful-note lifecycle hooks retained",
     "Loopback/Scenes bridge audited against current Scenes and combined USB",
     "Historical shared verifiers retain provenance but are excluded from source staging",
-    "The obsolete Quantizer MIDI Drawer workaround is unselected; current upstream #741 owns the fix"
+    "The obsolete Quantizer MIDI Drawer workaround is unselected; current upstream #741 owns the fix",
+    "Scenes queued MIDI commits are guarded against the old engine latch until it catches up; storage and producer boundaries are unchanged"
   ],
   "optional_synths": {
     "included": false,

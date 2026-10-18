@@ -7,9 +7,10 @@ from remix.schema import Category, Detour, Gate, Kind, Linked, Module, Override,
 # producer regions. Refuse source drift until those boundaries are re-audited.
 SCENES = Path(__file__).resolve().parents[1] / 'midi-scenes/scenes.s'
 def boundaries(_modules):
-    # Upstream c3f37e5 adds engine-latch tracking in scn_step only.
-    # scn_ccnote..scn_clear and scn_state+288/+292 retain their contracts.
-    assert hashlib.sha256(SCENES.read_bytes()).hexdigest() == '9f8e2305f8a0bcddf1a1bbcd1aad9bf910e67ef3f875b2b7f7113e97b1759eb7', 'MIDI Scenes bridge needs a source-boundary audit'
+    # c3f37e5 plus the queued handoff guard: only qcommit/step/follow and
+    # appended volatile words change. Producer spans scn_ccnote..scn_clear
+    # and public scn_state+288/+292 retain their contracts.
+    assert hashlib.sha256(SCENES.read_bytes()).hexdigest() == 'a3da3a495f33265912f3b35258d499cc3072b54af1c167a7a42a8da7caff93ef', 'MIDI Scenes bridge needs a source-boundary audit'
     return ''
 
 MODULE = Module(

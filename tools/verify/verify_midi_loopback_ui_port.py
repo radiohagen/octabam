@@ -67,7 +67,8 @@ def main():
         closed=run(name,edit+key(4500,k)+'4900 quit\n')
         assert closed==state,name
         assert (w/(name+'-window.bin')).read_bytes()==bytes(4),name
-        assert (w/(name+'-track.bin')).read_bytes()==b'\0',name
+        expected_track = b'\x01' if name == 'track' else b'\0'
+        assert (w/(name+'-track.bin')).read_bytes()==expected_track,name
     # Isolate transport from native received-note mappings that can select tracks.
     run('transport',edit+'4200 enc 0 -4\n'+key(4400,0x28)+key(6800,0x27)+'7300 quit\n',extra=('--internal-clock',))
     assert int.from_bytes((w/'transport-window.bin').read_bytes(),'big')!=0
@@ -77,7 +78,8 @@ def main():
         together=edit+key(4500,0x38)+key(4900,0x3b)+'5200 enc 1 4\n5400 enc 3 4\n'
         together+=key(5600,0x31)+key(6000,0x3d)+'6300 enc 1 4\n'+key(6600,0x31)+'7000 quit\n'
         both=run('follow-harmony',together)
-        assert both[0x4e2+12]==7, ('Follow clobbered DEST',both[0x4e2+12])
+        # Follow GRAV owns bit 1, Loopback INT bit 2; bit 0 is reserved.
+        assert both[0x4e2+12]==6, ('Follow clobbered DEST',both[0x4e2+12])
         assert both[0x4e2+16]==2, ('Harmony window did not edit VOIC',both[0x4e2+16])
         assert (w/'follow-harmony-window.bin').read_bytes()==bytes(4)
     # Fresh project has no route carried over from retained memory.

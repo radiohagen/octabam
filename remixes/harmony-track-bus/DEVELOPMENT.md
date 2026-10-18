@@ -3,7 +3,7 @@
 ## Current upstream package, 18 October 2026
 
 OCTABAMN1 follows upstream `c3f37e531f6b072b8197d93f173e063b55249363`
-and author source `550c63785d5f76e72364692dd5b4dc4c1913754d`.
+and author source `3a692db74cb7fcf1532e19f28aed5742ef949205`.
 The [source lock](../../docs/guide/MIDI_PACKAGE_SOURCE.json) records the
 staging baseline, source reconciliation and optional synth decision. This
 package adds Follow gravity and the latest committed Loopback fixes to the
@@ -33,6 +33,13 @@ examples, not author-produced files. `OCTABAM_KITS_OUT` isolates receipts;
 Scenes switch fixtures explicitly assign pattern 1 to Part 1 and pattern 2
 to Part 2.
 
+The queued Scenes handoff reproduced a duplicate new/old/new CC burst on
+untouched upstream. The MIDI commit now guards its target until the engine
+latch changes from the old context. The gate retains exact CC values and
+first-note timing, and also requires the queued-note CC sequence without
+duplicates. The extra three volatile words do not move public mix-state
+offsets or change persisted data or capacity. This fix is not hardware-tested.
+
 The complete MIDI integration is on `codex/integrate/midi` in
 [radiohagen/octabam](https://github.com/radiohagen/octabam), extracted onto
 upstream `2d1cbcf471cf8b63e2279b3c372a6ebb47456a99`. The original completed
@@ -60,10 +67,12 @@ compression or relocation. Its only runtime source difference from upstream
 is the separately committed trig-release editor fix (`12d34f68`): native
 edited/tap flags prevent releasing an edited trig from deleting its new lock.
 
-MIDI Scenes retains all 16,384 bytes and its runtime matches upstream.
+MIDI Scenes retains all 16,384 bytes; the current package adds only the
+queued-handoff guard described above to its upstream runtime.
 KITS retains its upstream reservation and the earlier two-line record-header
 initialization correction from OCTABAM85 (`44a7c6b9`). Shared copy/STORE
-integration, the PIO write fix and Quantizer MIDI drawer adapter remain selected.
+integration and the PIO write fix remain selected. The old Quantizer MIDI
+drawer adapter is superseded by current upstream.
 These are not removed by moving Harmony's retained data.
 
 Harmony writes HDP4/HMT2 with per-step ACC. P2LK is unchanged. There are no
