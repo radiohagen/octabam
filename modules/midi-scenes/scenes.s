@@ -722,6 +722,7 @@ follow:
         cmpil   #1,%d0
         beq.s   1f
         clrl    scn_pnd
+        clrl    scn_engine_wait
         mvzb    CUR_BANK,%d0
         andil   #15,%d0
         mvzb    PART_DISP,%d1
@@ -801,6 +802,11 @@ scn_qcommit:
         subl    %sp@(148),%d0           | the step time: 140, two pushes
         bpl.s   9f
         clrl    scn_pnd
+        mvzb    ENG_BANK,%d0
+        movel   %d0,scn_engine_bank
+        mvzb    ENG_PART,%d0
+        movel   %d0,scn_engine_part
+        mov3ql  #1,scn_engine_wait
         movel   scn_pnd_b,%d0
         movel   scn_pnd_p,%d1
         bsr.w   set_target
@@ -828,7 +834,8 @@ scn_switch:
         jmp     0x400a4500
 
 | 0x400a4ba0: lea 0x800065e4,%a2 in the playback step. While the sequencer
-| schedules, the target follows the engine latch, not the sequencer's bytes:
+| schedules, the target follows the engine latch, except while the unchanged
+| old latch is catching up with a MIDI first-step commit already applied:
 | the latch moves the moment the engine takes a switched pattern (a direct
 | jump lands here, not at a commit or a queued first step), and the mix below
 | runs in this same step -- engine_follow's timing, his B26..B28 while playing.
@@ -837,16 +844,25 @@ scn_step:
         movel   %d1,%sp@-
         movel   SCHED,%d0
         cmpil   #1,%d0
-        bne.s   1f
+        bne.s   8f
         moveq   #0,%d0
         mvzb    ENG_BANK,%d0
         cmpil   #15,%d0
-        bhi.s   1f
+        bhi.s   8f
         moveq   #0,%d1
         mvzb    ENG_PART,%d1
         cmpil   #3,%d1
-        bhi.s   1f
+        bhi.s   8f
+        tstl    scn_engine_wait
+        beq.s   2f
+        cmpl    scn_engine_bank,%d0
+        bne.s   2f
+        cmpl    scn_engine_part,%d1
+        beq.s   1f
+2:      clrl    scn_engine_wait
         bsr.w   set_target
+        bra.s   1f
+8:      clrl    scn_engine_wait
 1:      movel   %sp@+,%d1
         movel   %sp@+,%d0
         bsr.w   ensure
@@ -1911,6 +1927,12 @@ FMT_STRD:       .asciz  "%s/scenes.strd"
 FMT_BAK:        .asciz  "%s/scenes.bak"
 MODE_R:         .asciz  "r"
 MODE_W:         .asciz  "w"
+
+        .align  4
+| Volatile playback history only; no persisted layout or public state offset moves.
+scn_engine_wait:  .long 0
+scn_engine_bank:  .long 0
+scn_engine_part:  .long 0
 
         .section .bss
         .align  4

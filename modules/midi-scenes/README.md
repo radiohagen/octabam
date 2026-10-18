@@ -50,6 +50,13 @@ A end, 127 = B end). The result goes to the track record `0x46c76dc0 +
 
 ## Storage
 
+Playback normally follows the engine's bank/Part latch. A MIDI first-step
+commit briefly guards its new target against the unchanged old latch until
+the audio engine catches up. The three handoff words are volatile only:
+the public mix-state offsets, lock capacity and on-disk/CS1 layouts do not
+change. `verify_scenes` keeps exact CC sequences and first-note timing checks;
+this transition change has no physical-device acceptance yet.
+
 One 4,096-byte table per Part: `scn_lib`, 64 slots (bank × 4 + Part) in
 `.bss` (262,144 B), filled with `0xff` at first use. Every site reads the
 displayed Part's slot in the current bank (`msc_a0`). The scene clipboard

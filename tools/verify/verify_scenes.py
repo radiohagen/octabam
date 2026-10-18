@@ -297,7 +297,7 @@ swd.ours_only = True
 SEQ = dict(sw=sw, tg=tg, tg2=tg2, swn=swn, swd=swd)
 # CC 1 on the wire: the mix of Part 1 at XF 128 ((30 * 64 + 90 * 63) / 127 = 59), then of Part 2
 # ((50 * 64 + 110 * 63) / 127 = 79) when the pattern switch lands.
-SEQ_WIRE = dict(sw=[59, 79], tg=None, tg2=None, swn=None, swd=None)
+SEQ_WIRE = dict(sw=[59, 79], tg=None, tg2=None, swn=[59, 79], swd=None)
 
 
 def decode(raw, st=0):

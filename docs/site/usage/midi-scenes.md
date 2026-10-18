@@ -19,6 +19,9 @@ CLEAR, COPY and PASTE SCENE carry the MIDI locks with the audio ones.
 ## Notes
 
 - A track's locks affect that track only.
+- A queued Part change applies its scene CCs at the MIDI first step; an
+  unchanged older audio-engine snapshot must not briefly restore the old
+  values. This handoff fix is emulator-tested, not hardware-accepted.
 - The locks are saved in the project (`scenes.work`); SAVE PROJECT writes
   them, and the current bank's copy survives a power-off.
 - A Kit does not carry a Part's MIDI locks.
