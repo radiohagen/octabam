@@ -81,6 +81,10 @@ semitone TRAN, scale correction and chord/arp output.
 Press NOTE SETUP F to open HARMONY. UP/DOWN selects CHORD or ACCUM;
 HARM OFF/NOTE/CHORD remains on the parent page. In ACCUM, A/B/C edit
 LOW/HIGH/BOUND and D edits RESET, following their on-screen positions.
+LOW spans -21..0 and HIGH 0..21 scale degrees (three octaves per limit).
+The native CHORD/ACCUM menu remains visible; E/F are empty. Older experimental
+Harmony payloads with wider bounds are rejected, not migrated; preserve backups
+and use a disposable project for initial validation.
 These are pattern/track settings, not step locks. See
 [Harmony's controls](../../modules/midi-harmony/README.md) for boundary and reset policies.
 
