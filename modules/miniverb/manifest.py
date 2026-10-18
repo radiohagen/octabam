@@ -5,7 +5,7 @@ from remix.schema import (Gate, Category, Proof, BusRole, Claims, DspSection, Fo
 MODULE = Module(
     name="miniverb", key="MINIVERB", kind=Kind.DSP_EFFECT,
     category=Category.TRACK, author="repeat98", author_url="https://github.com/repeat98",
-    proof=Proof.RENDER, proof_note="`make verify-miniverb`; not flashed",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "`make verify-miniverb`",
     doc="Modulated diffused FDN reverb; independent FX2 buffers, smoothed controls.",
     menu=MenuEntry(fx2_id=0x16, replaces="DARK REV", donor_desc=0x400d58b8,
                    abbr=b"MINI", fullname=b"Mini Verb", build_tag=False),

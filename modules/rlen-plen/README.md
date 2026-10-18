@@ -66,7 +66,7 @@ The watches are `docs/firmware/RECORDER.md` section 2a's.
 
 ## On the unit
 
-Not flashed.
+Cursory testing on Sam's MKII (owner report, 16 Oct 2026).
 
 ## Open
 

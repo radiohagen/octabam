@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""USB AUDIO OUT TRACKS POST's arithmetic in Python: core 0's per-track MAIN
+"""USB LAYOUT TRACKS POST's arithmetic in Python: core 0's per-track MAIN
 gain and its 16-sample ramp (payload A P:0xfa-0x165, P:0x203-0x237) with
 MAIN_LEVEL fixed at 64.
 

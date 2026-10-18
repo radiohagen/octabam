@@ -1,4 +1,7 @@
-/* Keep the first sidebar section label clear of the theme's top fade. */
+/* Start the sidebar at the page title's height; the theme's top fade moves up with it. */
 [data-slot="sidebar"] > .h-9 {
-  height: 3.25rem;
+  height: 2rem;
+}
+[data-slot="sidebar"] > .absolute.top-8 {
+  top: 1.5rem;
 }

@@ -21,7 +21,7 @@ MODULE = Module(
     name="gateverb", key="GATE VERB", kind=Kind.DSP_EFFECT,
     category=Category.TRACK, author="Emilie Gillet (Mutable Instruments), ported here",
     author_url="https://github.com/pichenettes/eurorack",
-    proof=Proof.RENDER, proof_note="`verify_gateverb` (dsp_host, against a float model of Clouds' reverb); not on a unit",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "`verify_gateverb` (dsp_host, against a float model of Clouds' reverb)",
     doc="A gated plate reverb (Griesinger topology, after the reverb stage of Mutable Instruments Clouds): amount, input gain, time, diffusion, tone, gate. One FX2 slot per instance.",
     menu=MenuEntry(fx2_id=0x14, replaces="PLATE REV", donor_desc=0x400d5594,
                    abbr=b"GVRB", fullname=b"Gate Verb", build_tag=False),

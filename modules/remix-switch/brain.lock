@@ -1,0 +1,18 @@
+{
+ "params": {},
+ "retired": {
+  "params": [],
+  "settings": []
+ },
+ "settings": {
+  "1": {
+   "max_bytes": 24,
+   "name": "BOOT REMIX",
+   "type": "blob"
+  }
+ },
+ "store": {
+  "id": "octabam.remix-switch",
+  "major": 1
+ }
+}

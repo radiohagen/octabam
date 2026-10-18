@@ -95,7 +95,7 @@ start of the second free gap.
 
 `tempo-bus` also uses the second free gap, so the ledger refuses that pair.
 The engine shares the platform reserve with the other DRAM modules (USB
-MIDI, USB AUDIO, MIDI SCENES) inside one runtime.
+MIDI, USB, MIDI SCENES) inside one runtime.
 
 ## Updating
 

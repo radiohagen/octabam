@@ -9,7 +9,7 @@ MODULE=Module(
     requires=("MEMORY",),
     category=Category.MACHINES, author="repeat98", author_url="https://github.com/repeat98",
     doc="Analog BD track machine: switchable 808/909 circuit-informed synthesis.",
-    proof=Proof.PORT, proof_note="source/AMP/main on both cores and engine-browser/hidden-control gates; hardware matching pending",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "source/AMP/main on both cores and engine-browser/hidden-control gates",
     pressure_blocker="DSP source engines are outside the FX pressure pricer; "
                      "see modules/analog-bassdrum/CPU.md and benchmark_analog_bd.py",
     linked=(

@@ -30,6 +30,8 @@ MODULE = Module(
         "then FUNC+BANK); each pattern plays its Kit through the stock Part slots. Replaces the earlier Octakit implementation.",
     linked=(Linked("kits", "modules/kits/kits.s", dram=True, include=kits_inc),),
     detours=(
+        Detour(0x4001FB80, H("4eb940025848"), "kits", "kits_bootblank",
+               "the early boot's blank path (invalid CS1, EMPTY RESET, demo mode): the stock blank project becomes a KITS project"),
         Detour(0x400A0570, H("4fefffec48d7007c"), "kits", "kits_sched",
                "the pattern schedule (every request): the pattern's Kit into a free slot",
                pad_to=8),

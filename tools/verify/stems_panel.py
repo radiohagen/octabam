@@ -40,15 +40,19 @@ def diff_box(a, b):
 
 
 class MenuPort:
-    def __init__(self, image, card, set_name, project, mkii, log_path=None, extra=()):
+    def __init__(self, image, card, set_name, project, mkii, log_path=None, extra=(), dsp=False):
         self.mkii = mkii
         # --mount makes the port's boot post the card mount and LOAD PROJECT
         # (panel_server.py's _port_argv): without it --set/--project load
         # nothing, the set path stays empty, and a take fails on its folder
         # (29 Sep 2026: PATH FAILED in the gate's first key-driven take).
+        # No --dsp by default: with the cores, run's wall budget is checked on
+        # ColdFire instruction counts, so a DSP wait never trips it and a menu
+        # settle can burn minutes of wall looking wedged. The menu gate's take
+        # still writes the card from the CF side; audio DSP gates use verify_stems.
         argv = [str(PORT_BIN), "--image", str(image), "--card", str(card), "--mount", "--set", set_name,
-                "--project", project, "--internal-clock", "--load-ms", "20000", "--dsp", "--card-rw",
-                "--interactive", *(["--mkii"] if mkii else []), *extra]
+                "--project", project, "--internal-clock", "--load-ms", "20000", "--card-rw",
+                "--interactive", *(["--dsp"] if dsp else []), *(["--mkii"] if mkii else []), *extra]
         self.proc = PortProc(argv, log_path=log_path)
         self.proc.wait_ready(900)
         self.rt = PortRt(self.proc)
@@ -65,8 +69,11 @@ class MenuPort:
         except Exception:
             self.proc.kill()
 
-    def run(self, ms):
-        self.rt.run(ms=ms)
+    def run(self, ms, wall=None):
+        # Soft wall cap so a stuck interactive run cannot outlast the gate.
+        if wall is None:
+            wall = max(5.0, float(ms) / 50.0)
+        self.rt.run(ms=ms, wall=wall)
         self.rt.poll_tx()
         tx = self.rt.uart64.tx
         self.link.feed(bytes(tx[self.pos:]))
@@ -79,7 +86,7 @@ class MenuPort:
         self.held[row] = m
         self.proc.command(f"key {row:#x} {m:#x}", "ok")
 
-    def press(self, name, hold=60, settle=200):
+    def press(self, name, hold=40, settle=80):
         self.key(name, True)
         self.run(hold)
         self.key(name, False)

@@ -73,7 +73,7 @@ id×44`), armed by opcode `0x25`, length floored at 64, LOOP at state
 | converter that feeds `arm()`, `0x40006dfc–10`: `#31752000 / mulsl / macl / movclrl / addql #1 / asrl #1` | exact |
 | one `andil #-16` in the image, `0x40003646` | exact |
 | settings keys `RECORD_24BIT`, `DYNAMIC_RECORDERS`, `RESERVED_RECORDER_COUNT/LENGTH`; metadata `BPMx24`, `LOOP_BARSx100`, `TSMODE`, `LOOPMODE` | `0x400b7d49–0x400b7d80`, `0x400b79fc–0x400b7a26` |
-| `0x40A955E0` literal | 23 sites |
+| `0x40A955E0` literal | 23 sites (22 the arena base; `0x400254f8` is the end of the 16 banks, `tools/remix/arena.py`) |
 | per-frame dispatcher `0x4000d2a0–86`: 8 × { `0x400068e4(track, page e4, 0, nibble)`; if `word & 0xd0`: `0x40005ff0(track, word)`; `0x400068e4(track, page e0, nibble, 16)` } | exact |
 
 Recorder buffers are chains of 6144-byte blocks from one pool of 14,602

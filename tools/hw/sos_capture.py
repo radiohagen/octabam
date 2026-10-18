@@ -2,7 +2,7 @@
 """The sound-on-sound loop, captured sample-exact on a unit and compared with
 the port running the same project on the same input.
 
-The remix `sos-capture` (or any image with USB AUDIO IN AB and USB AUDIO OUT
+The remix `sos-capture` (or any image with USB INPUTS AB and LAYOUT
 TRACKS) takes the host's stereo stream on inputs A/B and sends the sixteen
 track channels back, both 24-bit and digital end to end. The signal:
 
@@ -25,7 +25,7 @@ passes are the same audio except where the loop is wrong.
       the signal above (stereo, 24-bit) and OUT.json beside it.
   sos_capture.py capture SIGNAL.wav OUT.wav [--device Octatrack]
       plays SIGNAL into A/B and records the sixteen track channels for its
-      length; reads USB AUDIO's and USB AUDIO IN's counters 1 s into the
+      length; reads the audio-out's and audio-in's counters 1 s into the
       stream and 1 s before its end when pyusb is there (a changed
       underrun/overrun count is a capture that dropped or repeated frames of
       its own; the stream's open and close fall outside). Stops on a
@@ -257,7 +257,7 @@ def capture(a):
         sys.exit("every channel is digital zero for the whole capture: on macOS, Terminal needs Microphone access "
                  "(System Settings > Privacy & Security > Microphone), then a restart of Terminal")
     if before is None:
-        print("counters: pyusb/libusb not available -- check USB AUDIO's underruns/overruns with tools/hw/usb_counters.py")
+        print("counters: pyusb/libusb not available -- check the audio-out's underruns/overruns with tools/hw/usb_counters.py")
         return
     for tag, keys in (("out", ("overruns", "underruns", "bankdup")), ("in", ("underruns", "overruns", "bad"))):
         b, f = before[tag], after[tag]
@@ -273,7 +273,7 @@ def capture(a):
 
 def readback_tracks(dump):
     """The read-back arena under the port: every track's post-FX, pre-fader
-    block (what USB AUDIO OUT TRACKS sends) -> (samples, 16) in 24-bit units."""
+    block (what USB LAYOUT TRACKS sends) -> (samples, 16) in 24-bit units."""
     import blockdump as bd
     c = bd.classes(bd.read(dump))
     out = []

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """REC THRESHOLD under the port: TRIG THR set through RECORDING SETUP, then
-TRACK 1 + REC AB, in ten scenarios.
+TRACK 1 + REC AB, in twelve scenarios.
 
 Each scenario boots the built image (out/mainos_bus.bin) on a private empty
 card, opens RECORDING SETUP 1 with FUNC + REC AB, turns encoder D three
@@ -9,14 +9,21 @@ TRACK 1 + REC AB. "Started" means the recorder's arm wrote LIMIT
 (0x46c7fe24[0]) at 0x400069d6, as it does after a stock press.
 
   tones   the port's tones on every input   armed, then started at once
-  silent  a silent WAV from the DSP boot    armed, never started
+  silent  a silent WAV from the DSP boot    armed, never started; track 1's
+                                            status icon blinks (its drawn state
+                                            alternates with 0x10 + state)
   late    silent 10 s, then numbered samples
                                             armed, started only after a wait; the
                                             take's first sample within one frame
                                             (16 samples) of the onset
-  cancel  as late, a second press at once   armed, cancelled, never started
-  untrig  as late, TRIG THR -> HOLD in      armed; the crossing finds TRIG not
-          RECORDING SETUP 1 while armed     THR: the arm spent, never started
+  cancel  as late, a second press at once   armed, cancelled, never started;
+                                            the icon ends on its own state
+  untrig  as late, TRIG THR -> HOLD in      armed; the icon renderer drops
+          RECORDING SETUP 1 while armed     the arm after the edit, before the
+                                            input, the icon stops blinking, and
+                                            the input starts nothing
+  inpage  tones, RECORDING SETUP 1 left     TRIG ONE: started at once by stock;
+          open, TRACK 1 + REC AB inside it  THR: armed, then started
   stock   silent, TRIG left at ONE          RECORDING SETUP 2 shows QREC and
                                             QPL and both edit (QREC back to
                                             OFF); started at once by stock
@@ -58,6 +65,7 @@ ELF = ROOT / "out/platform/runtime/runtime.elf"
 STAGE_CARD = ROOT / "tools/emu/ot_emu/stage_card.py"
 MAILBOX = 0x46C7E9FA
 LIMIT = 0x46C7FE24
+ICON = 0x400C0CB8                    # the status icons' drawn states, track 1 first
 TRIG_PUBLISHED = 0x80000C97          # 0x80000c94 + slot 3
 QREC_PUBLISHED = 0x80000C9D          # slot 9: LEV under THR
 QPL_PUBLISHED = 0x80000C9E           # slot 10: IN under THR, not edited
@@ -67,11 +75,11 @@ ARM_PC = 0x400069D6
 
 # Panel key codes (tools/panel/key_map.json: row 0x20+r, bit b -> r*8+b).
 NO, FUNC, REC_AB, REC_CD, T1 = 0x32, 0x2D, 0x2B, 0x2C, 0x10
-SETUP = [f"500 key {NO:#x} down", f"560 key {NO:#x} up",
+OPEN1 = [f"500 key {NO:#x} down", f"560 key {NO:#x} up",
          f"800 key {FUNC:#x} down", f"860 key {REC_AB:#x} down",
-         f"920 key {REC_AB:#x} up", f"960 key {FUNC:#x} up",
-         "1300 enc 3 12",                       # TRIG ONE -> THR
-         f"1600 key {NO:#x} down", f"1660 key {NO:#x} up"]
+         f"920 key {REC_AB:#x} up", f"960 key {FUNC:#x} up"]
+SETUP = OPEN1 + ["1300 enc 3 12",                  # TRIG ONE -> THR
+                 f"1600 key {NO:#x} down", f"1660 key {NO:#x} up"]
 
 
 def trig_away():
@@ -196,7 +204,7 @@ def run(work, card, armed, name, audio, script, quit_ms):
             "--set", "OCTABAM", "--project", "THRESHOLD", "--load-ms", "90000",
             "--mkii", "--dsp", "--main-level", "64",
             "--watch-mem", f"{MAILBOX:#x},32;{LIMIT:#x},32;{armed:#x},32;{TRIG_PUBLISHED:#x},1;"
-                           f"{QREC_PUBLISHED:#x},2",
+                           f"{QREC_PUBLISHED:#x},2;{ICON:#x},4",
             "--live-script", str(path)]
     if name == "late":
         start, length = arena_span()
@@ -243,7 +251,11 @@ def main():
                 ("late", late, SETUP + press(2000), 14000),
                 ("cancel", late, SETUP + press(2000) + press(3000), 14000),
                 ("untrig", late, SETUP + press(2000) + trig_away(), 14000),
-                ("stock", silent, SETUP[:2] + page2_stock() + press(2000), 5000)]
+                ("stock", silent, SETUP[:2] + page2_stock() + press(2000), 5000),
+                # REC keys with RECORDING SETUP open (GRID RECORDING off; with
+                # it on, stock's REC keys do nothing there, 0x400836e4)
+                ("inpage_one", "tones", OPEN1 + press(2000), 5000),
+                ("inpage_thr", "tones", OPEN1 + ["1300 enc 3 12"] + press(2000), 5000)]
         tone20, tone46, tone50 = work / "tone20.wav", work / "tone46.wav", work / "tone50.wav"
         write_wav(tone20, 10, 20, dbfs=-20)
         write_wav(tone46, 10, 20, dbfs=-46)
@@ -283,6 +295,10 @@ def main():
     _, arm, mail, starts, out = facts("silent")
     if starts or len(arm) != 1:
         return fail(f"silent: wanted armed and no start, saw starts {starts}, armed {arm}", out)
+    icon = [(t, v) for t, v, _ in writes(out, ICON) if t > arm[0][0]]
+    blinks = sum(1 for _, v in icon if v & 0x10)
+    if blinks < 3 or sum(1 for _, v in icon if not v & 0x10) < 3:
+        return fail(f"silent: track 1's icon did not blink while armed: {icon[:12]}", out)
     _, arm, mail, starts, out = facts("late")
     if len(starts) != 1:
         return fail(f"late: wanted one start, saw {len(starts)}", out)
@@ -297,6 +313,9 @@ def main():
     _, arm, mail, starts, out = facts("cancel")
     if starts or [v for _, v, _ in arm] != [0x9010, 0]:
         return fail(f"cancel: wanted armed then cleared and no start, saw armed {arm}, starts {starts}", out)
+    icon = [v for t, v, _ in writes(out, ICON) if t > arm[1][0]]
+    if icon and icon[-1] & 0x10:
+        return fail(f"cancel: track 1's icon still blanked after the cancel: {icon[-4:]}", out)
     for name, want in (("high", 0), ("quiet", 0), ("low", 1)):
         _, arm, mail, starts, out = facts(name)
         if len(starts) != want:
@@ -326,9 +345,14 @@ def main():
     trig, arm, mail, starts, out = facts("untrig")
     if not trig or trig[-1][1] != 2:
         return fail(f"untrig: RECORDING SETUP did not move TRIG from THR to HOLD: {trig}", out)
-    if starts or [v for _, v, _ in arm] != [0x9010, 0] or arm[1][0] <= trig[-1][0]:
-        return fail(f"untrig: wanted the arm spent at the crossing after TRIG left THR, no start; "
-                    f"saw armed {arm}, starts {starts}", out)
+    bg = (sym["blink_gate"], sym[".bg_out"])
+    if (starts or [v for _, v, _ in arm] != [0x9010, 0] or arm[1][0] < trig[-1][0]
+            or not bg[0] <= arm[1][2] < bg[1]):
+        return fail(f"untrig: wanted the arm dropped by the icon renderer after the TRIG edit, "
+                    f"no start; saw armed {arm}, TRIG {trig}, starts {starts}", out)
+    icon = [v for t, v, _ in writes(out, ICON) if t > arm[1][0]]
+    if icon and icon[-1] & 0x10:
+        return fail(f"untrig: track 1's icon still blanked after TRIG left THR: {icon[-4:]}", out)
     _, arm, mail, starts, out = facts("stock")
     if arm or len(starts) != 1 or not any(v == 0x9010 and pc == 0x400051F4 for _, v, pc in mail):
         return fail("stock: TRIG ONE did not start at once through stock's path", out)
@@ -336,12 +360,22 @@ def main():
     if qrec != [0, 0xFF] or not writes(out, QPL_PUBLISHED):
         return fail(f"stock: RECORDING SETUP 2 on a TRIG ONE track did not edit QREC (0 then OFF) "
                     f"and QPL as stock: QREC {qrec}, QPL {writes(out, QPL_PUBLISHED)}", out)
+    _, arm, mail, starts, out = facts("inpage_one")
+    if arm or len(starts) != 1 or not any(v == 0x9010 and pc == 0x400051F4 for _, v, pc in mail):
+        return fail("inpage_one: TRIG ONE, TRACK 1 + REC AB inside RECORDING SETUP 1 did not start "
+                    "at once through stock's path", out)
+    trig, arm, mail, starts, out = facts("inpage_thr")
+    if not trig or trig[-1][1] != 3 or not arm or arm[0][1] != 0x9010 or len(starts) != 1:
+        return fail(f"inpage_thr: TRIG THR, TRACK 1 + REC AB inside RECORDING SETUP 1 did not arm "
+                    f"and start: TRIG {trig}, armed {arm}, starts {starts}", out)
 
     print("  [PASS] verify_rec_threshold: TRIG THR through RECORDING SETUP; TRACK 1 + REC AB "
           "arms with 0x9010; tones start at once, silence never, silence-then-loud only after "
           f"the wait ({wait:.0f} vs {quick:.0f}) with the take from input sample {first} of the onset, "
-          "a second press cancels, TRIG moved off THR while armed spends the arm; TRIG ONE starts "
-          "at once and RECORDING SETUP 2 edits QREC and QPL as stock; LEV through RECORDING SETUP 2: "
+          "a second press cancels, TRIG moved off THR while armed drops the arm and the blink; TRIG ONE starts "
+          "at once and RECORDING SETUP 2 edits QREC and QPL as stock; from inside RECORDING SETUP 1 "
+          "TRIG ONE starts and THR arms and starts; an armed track's icon blinks; "
+          "LEV through RECORDING SETUP 2: "
           f"THR sets LEV -40 dB; -20 dBFS stays under {high_lev} dB, -46 dBFS under -40 dB, -50 dBFS starts at -60 dB, positive full scale starts at 0 dB; IN leaves QPL")
     return 0
 

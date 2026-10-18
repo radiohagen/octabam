@@ -46,7 +46,7 @@ MODULE = Module(
     key="LOFI AMF FIX",
     kind=Kind.CF_PATCH,
     category=Category.FIXES, author="bryantysinger/octa-bt-pt", author_url="https://github.com/bryantysinger/octa-bt-pt",
-    proof=Proof.CHECK, proof_note="both words disassembled against stock",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "both words disassembled against stock",
     doc="Fixes stock LO-FI's AMF knob: mpysu -> mpyuu, both payloads. "
         "Ported from bryantysinger/octa-bt-pt.",
     cf_patches=(

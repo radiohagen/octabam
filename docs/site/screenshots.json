@@ -1,0 +1,610 @@
+{
+  "rec-trig-mute": {
+    "muted": {
+      "image": "rec-trig-mute/muted.png",
+      "caption": "Recorder trigs muted on track 1.",
+      "remix": "octabam-core",
+      "source": "emulator panel UART",
+      "firmware_sha256": "f87679c92ddc36c09728279a8940f51f0c6d86cbce5b1c42b3c6dc39da1c0ca0"
+    }
+  },
+  "quantize-live-rec-toggle": {
+    "setting": {
+      "image": "mute-modes/personalize.png",
+      "caption": "QUANTIZE LIVE REC in PERSONALIZE; REC + PLAY is the module shortcut.",
+      "remix": "octabam-core",
+      "source": "emulator panel UART",
+      "firmware_sha256": "f87679c92ddc36c09728279a8940f51f0c6d86cbce5b1c42b3c6dc39da1c0ca0"
+    }
+  },
+  "mute-modes": {
+    "personalize": {
+      "image": "mute-modes/personalize.png",
+      "caption": "MUTE MODE in the PERSONALIZE settings.",
+      "remix": "octabam-core",
+      "source": "emulator panel UART",
+      "firmware_sha256": "f87679c92ddc36c09728279a8940f51f0c6d86cbce5b1c42b3c6dc39da1c0ca0"
+    }
+  },
+  "quantizer": {
+    "settings": {
+      "image": "quantizer/settings.png",
+      "caption": "SCALE, ROOT, and GLIDE in sequencer settings.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    }
+  },
+  "rlen-plen": {
+    "setup": {
+      "image": "rlen-plen/setup.png",
+      "caption": "RLEN set to PLEN in RECORDING SETUP 1.",
+      "remix": "octabam-core",
+      "source": "emulator panel UART",
+      "firmware_sha256": "f87679c92ddc36c09728279a8940f51f0c6d86cbce5b1c42b3c6dc39da1c0ca0"
+    }
+  },
+  "midi-scenes": {
+    "lock": {
+      "image": "midi-scenes/lock.png",
+      "caption": "MIDI track NOTE page while scene A is held.",
+      "remix": "octabam-core",
+      "source": "emulator panel UART",
+      "firmware_sha256": "f87679c92ddc36c09728279a8940f51f0c6d86cbce5b1c42b3c6dc39da1c0ca0"
+    }
+  },
+  "scenes-p2": {
+    "lock": {
+      "image": "scenes-p2/lock.png",
+      "caption": "FX2 setup page with scene A held.",
+      "remix": "octabam-core",
+      "source": "emulator panel UART",
+      "firmware_sha256": "f87679c92ddc36c09728279a8940f51f0c6d86cbce5b1c42b3c6dc39da1c0ca0"
+    }
+  },
+  "plocks-p2": {
+    "lock": {
+      "image": "plocks-p2/lock.png",
+      "caption": "FX2 setup page with trig 1 held for parameter locking.",
+      "remix": "octabam-core",
+      "source": "emulator panel UART",
+      "firmware_sha256": "f87679c92ddc36c09728279a8940f51f0c6d86cbce5b1c42b3c6dc39da1c0ca0"
+    }
+  },
+  "direct-jump-kyoti": {
+    "status": {
+      "image": "direct-jump-kyoti/status.png",
+      "caption": "DIRECT JUMP toggled with PTN + YES.",
+      "remix": "octabam-core",
+      "source": "emulator panel UART",
+      "firmware_sha256": "f87679c92ddc36c09728279a8940f51f0c6d86cbce5b1c42b3c6dc39da1c0ca0"
+    }
+  },
+  "reload-from-project": {
+    "status": {
+      "image": "reload-from-project/status.png",
+      "caption": "Track view after invoking the sequence reload shortcut. There is no separate editor.",
+      "remix": "octabam-core",
+      "source": "emulator panel UART",
+      "firmware_sha256": "f87679c92ddc36c09728279a8940f51f0c6d86cbce5b1c42b3c6dc39da1c0ca0"
+    }
+  },
+  "euclid-fill": {
+    "fill": {
+      "image": "euclid-fill/fill.png",
+      "caption": "Euclidean trig fill: pattern length, pulses, and rotation.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    }
+  },
+  "rec-threshold": {
+    "trigger": {
+      "image": "rec-threshold/trigger.png",
+      "caption": "TRIG set to THR in RECORDING SETUP 1.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    },
+    "level": {
+      "image": "rec-threshold/level.png",
+      "caption": "Threshold LEV and live IN meter in RECORDING SETUP 2.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    }
+  },
+  "stems": {
+    "recorder": {
+      "image": "stems/recorder.png",
+      "caption": "The STEM REC recording window.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    }
+  },
+  "rnd-name": {
+    "name": {
+      "image": "rnd-name/name.png",
+      "caption": "Random project name filled with FUNC + CUE.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    }
+  },
+  "spectrum": {
+    "main": {
+      "image": "spectrum/main.png",
+      "caption": "Spectrum: main parameter page.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    },
+    "setup": {
+      "image": "spectrum/setup.png",
+      "caption": "Spectrum: effect selection and setup parameters.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    }
+  },
+  "character": {
+    "main": {
+      "image": "character/main.png",
+      "caption": "Character: main parameter page.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    },
+    "setup": {
+      "image": "character/setup.png",
+      "caption": "Character: effect selection and setup parameters.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    }
+  },
+  "modulation": {
+    "main": {
+      "image": "modulation/main.png",
+      "caption": "Modulation: main parameter page.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    },
+    "setup": {
+      "image": "modulation/setup.png",
+      "caption": "Modulation: effect selection and setup parameters.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    }
+  },
+  "transient": {
+    "main": {
+      "image": "transient/main.png",
+      "caption": "Transient: main parameter page.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    },
+    "setup": {
+      "image": "transient/setup.png",
+      "caption": "Transient: effect selection and setup parameters.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    }
+  },
+  "euclid": {
+    "main": {
+      "image": "euclid/main.png",
+      "caption": "Euclid: main parameter page.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    },
+    "setup": {
+      "image": "euclid/setup.png",
+      "caption": "Euclid: effect selection and setup parameters.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    }
+  },
+  "lofi2": {
+    "main": {
+      "image": "lofi2/main.png",
+      "caption": "Lofi2: main parameter page.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    },
+    "setup": {
+      "image": "lofi2/setup.png",
+      "caption": "Lofi2: effect selection and setup parameters.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    }
+  },
+  "gateverb": {
+    "main": {
+      "image": "gateverb/main.png",
+      "caption": "Gate verb: main parameter page.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    },
+    "setup": {
+      "image": "gateverb/setup.png",
+      "caption": "Gateverb: effect selection and setup parameters.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    }
+  },
+  "delay": {
+    "main": {
+      "image": "delay/main.png",
+      "caption": "Delay: main parameter page.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    },
+    "setup": {
+      "image": "delay/setup.png",
+      "caption": "Delay: effect selection and setup parameters.",
+      "remix": "octabam-inserts",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ef2f2ccb670c7f2f09f48d2e07e46a394d791f1458f3eaa5e6d8807d51903482"
+    }
+  },
+  "busdelay": {
+    "main": {
+      "image": "busdelay/main.png",
+      "caption": "Delay server: main parameter page.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    },
+    "setup": {
+      "image": "busdelay/setup.png",
+      "caption": "DELAY SERVER: effect selection and setup parameters.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    }
+  },
+  "send": {
+    "main": {
+      "image": "send/main.png",
+      "caption": "Send: main parameter page.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    },
+    "setup": {
+      "image": "send/setup.png",
+      "caption": "SEND: effect selection and setup parameters.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    }
+  },
+  "busverb": {
+    "main": {
+      "image": "busverb/main.png",
+      "caption": "Reverb server: main parameter page.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    },
+    "setup": {
+      "image": "busverb/setup.png",
+      "caption": "REVERB SERVER: effect selection and setup parameters.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    }
+  },
+  "fx2-lock": {
+    "chooser": {
+      "image": "fx2-lock/chooser.png",
+      "caption": "Locked FX2 selection on the delay host.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    }
+  },
+  "tempo-bus": {
+    "tempo": {
+      "image": "tempo-bus/tempo.png",
+      "caption": "Delay and reverb controls in the TEMPO window.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    }
+  },
+  "load-meter": {
+    "load": {
+      "image": "load-meter/load.png",
+      "caption": "BRAIN performance: load display.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    },
+    "dsp": {
+      "image": "load-meter/dsp.png",
+      "caption": "BRAIN performance: DSP display.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    }
+  },
+  "memory": {
+    "memory": {
+      "image": "memory/memory.png",
+      "caption": "BRAIN performance: sample and recorder memory.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    }
+  },
+  "usb": {
+    "performance": {
+      "image": "usb/performance.png",
+      "caption": "BRAIN performance: USB counters.",
+      "remix": "octabam-bus",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4bc3318b76dae9399a48bfda9a792ac0fc77d6e968b97256b2e36c852e2b9af3"
+    }
+  },
+  "character-txtr": {
+    "main": {
+      "image": "character-txtr/main.png",
+      "caption": "Character txtr: main parameter page.",
+      "remix": "character-txtr",
+      "source": "emulator panel UART",
+      "firmware_sha256": "927e1acffab7c3be667b5115351b95635a0d64e85ae0e72cd34276f5203fc972"
+    },
+    "setup": {
+      "image": "character-txtr/setup.png",
+      "caption": "Character txtr: effect selection and setup parameters.",
+      "remix": "character-txtr",
+      "source": "emulator panel UART",
+      "firmware_sha256": "927e1acffab7c3be667b5115351b95635a0d64e85ae0e72cd34276f5203fc972"
+    }
+  },
+  "testgen": {
+    "main": {
+      "image": "testgen/main.png",
+      "caption": "Testgen: main parameter page.",
+      "remix": "testgen",
+      "source": "emulator panel UART",
+      "firmware_sha256": "34054214aa2d77f30a6c713da989ec662594712c43c78cb8d37a3f7fe7ebf4a2"
+    },
+    "setup": {
+      "image": "testgen/setup.png",
+      "caption": "Testgen: effect selection and setup parameters.",
+      "remix": "testgen",
+      "source": "emulator panel UART",
+      "firmware_sha256": "34054214aa2d77f30a6c713da989ec662594712c43c78cb8d37a3f7fe7ebf4a2"
+    }
+  },
+  "sidechain-compressor": {
+    "main": {
+      "image": "sidechain-compressor/main.png",
+      "caption": "Sidechain compressor: main parameter page.",
+      "remix": "sidechain-compressor",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4484abfc29d90904e459ed3fa22c352616987445899be108482a2a1af4e20611"
+    },
+    "setup": {
+      "image": "sidechain-compressor/setup.png",
+      "caption": "Sidechain compressor: effect selection and setup parameters.",
+      "remix": "sidechain-compressor",
+      "source": "emulator panel UART",
+      "firmware_sha256": "4484abfc29d90904e459ed3fa22c352616987445899be108482a2a1af4e20611"
+    }
+  },
+  "miniverb": {
+    "main": {
+      "image": "miniverb/main.png",
+      "caption": "Miniverb: main parameter page.",
+      "remix": "miniverb",
+      "source": "emulator panel UART",
+      "firmware_sha256": "73f172cab8597d587262ddcb5635c7160ec0f48933293df2c09957fc9dae860b"
+    },
+    "setup": {
+      "image": "miniverb/setup.png",
+      "caption": "Miniverb: effect selection and setup parameters.",
+      "remix": "miniverb",
+      "source": "emulator panel UART",
+      "firmware_sha256": "73f172cab8597d587262ddcb5635c7160ec0f48933293df2c09957fc9dae860b"
+    }
+  },
+  "tapeecho": {
+    "main": {
+      "image": "tapeecho/main.png",
+      "caption": "Tape echo: main parameter page.",
+      "remix": "tapeecho",
+      "source": "emulator panel UART",
+      "firmware_sha256": "a5a72fe47fda32f691648338184fad1e265ddee9e880e3293e810ec04580984b"
+    },
+    "setup": {
+      "image": "tapeecho/setup.png",
+      "caption": "Tapeecho: effect selection and setup parameters.",
+      "remix": "tapeecho",
+      "source": "emulator panel UART",
+      "firmware_sha256": "a5a72fe47fda32f691648338184fad1e265ddee9e880e3293e810ec04580984b"
+    }
+  },
+  "vocoder": {
+    "main": {
+      "image": "vocoder/main.png",
+      "caption": "Vocoder: main parameter page.",
+      "remix": "vocoder",
+      "source": "emulator panel UART",
+      "firmware_sha256": "b986795e0719c94680cfdcc3f8f4371bf844fd9fe6719863a10fb1b74f8778b5"
+    },
+    "setup": {
+      "image": "vocoder/setup.png",
+      "caption": "Vocoder: effect selection and setup parameters.",
+      "remix": "vocoder",
+      "source": "emulator panel UART",
+      "firmware_sha256": "b986795e0719c94680cfdcc3f8f4371bf844fd9fe6719863a10fb1b74f8778b5"
+    }
+  },
+  "wave": {
+    "main": {
+      "image": "wave/main.png",
+      "caption": "Wave: main parameter page.",
+      "remix": "wave",
+      "source": "emulator panel UART",
+      "firmware_sha256": "08105e38c1b2eff697d6251b74f477875d9e7d2855ad964d22861d16f54dba38"
+    },
+    "setup": {
+      "image": "wave/setup.png",
+      "caption": "Wave: effect selection and setup parameters.",
+      "remix": "wave",
+      "source": "emulator panel UART",
+      "firmware_sha256": "08105e38c1b2eff697d6251b74f477875d9e7d2855ad964d22861d16f54dba38"
+    }
+  },
+  "analog-bassdrum": {
+    "source": {
+      "image": "analog-bassdrum/source.png",
+      "caption": "Analog BD source controls.",
+      "remix": "analog-bassdrum",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ece7075f34a00eac694700f4cf85b95e5f5a1e006d89f7840fa372b446f53e72"
+    },
+    "setup": {
+      "image": "analog-bassdrum/setup.png",
+      "caption": "Analog BD source setup.",
+      "remix": "analog-bassdrum",
+      "source": "emulator panel UART",
+      "firmware_sha256": "ece7075f34a00eac694700f4cf85b95e5f5a1e006d89f7840fa372b446f53e72"
+    }
+  },
+  "synth": {
+    "source": {
+      "image": "synth/source.png",
+      "caption": "FM synth source page on a FLEX track assigned FMSYNTH.WAV.",
+      "remix": "octatrick",
+      "source": "emulator panel UART",
+      "firmware_sha256": "88da050427abd551645a00500f38f067e40e93bd7fe7f739608fe40abaefb0ff"
+    },
+    "voices": {
+      "image": "synth/voices.png",
+      "caption": "Synth voice and chord controls on the LFO page.",
+      "remix": "octatrick",
+      "source": "emulator panel UART",
+      "firmware_sha256": "88da050427abd551645a00500f38f067e40e93bd7fe7f739608fe40abaefb0ff"
+    }
+  },
+  "direct-jump": {
+    "settings": {
+      "image": "direct-jump/settings.png",
+      "caption": "CHAIN AFTER set to DIRECT in sequencer settings.",
+      "remix": "octatrick",
+      "source": "emulator panel UART",
+      "firmware_sha256": "88da050427abd551645a00500f38f067e40e93bd7fe7f739608fe40abaefb0ff"
+    }
+  },
+  "brain": {
+    "pane": {
+      "image": "brain/pane.png",
+      "caption": "BRAIN in the MAIN MENU.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    },
+    "templates": {
+      "image": "brain/templates.png",
+      "caption": "BRAIN templates: PART tab.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    },
+    "remixes": {
+      "image": "brain/remixes.png",
+      "caption": "Remix selection from the CF card.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    },
+    "settings": {
+      "image": "brain/settings.png",
+      "caption": "BRAIN module settings.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    },
+    "performance": {
+      "image": "brain/performance.png",
+      "caption": "BRAIN performance overview.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    },
+    "log": {
+      "image": "brain/log.png",
+      "caption": "BRAIN event log.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    },
+    "about": {
+      "image": "brain/about.png",
+      "caption": "About the running image.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    }
+  },
+  "kits": {
+    "list": {
+      "image": "kits/list.png",
+      "caption": "Kit selection for the current pattern.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    }
+  },
+  "tuner": {
+    "tuner": {
+      "image": "tuner/tuner.png",
+      "caption": "Tuner open on the current track; no stable input note.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    }
+  },
+  "remix-switch": {
+    "remixes": {
+      "image": "brain/remixes.png",
+      "caption": "The remix switch uses BRAIN \u2192 REMIXES.",
+      "remix": "manual-features",
+      "source": "emulator panel UART",
+      "firmware_sha256": "64122fb623b81885b532e646b06ea81ab72ecab3db0a0130c1cf640bfabae750"
+    }
+  },
+  "cfmeter": {
+    "setup": {
+      "image": "cfmeter/setup.png",
+      "caption": "CF METER: effect selection and setup parameters.",
+      "remix": "cfmeter",
+      "source": "emulator panel UART",
+      "firmware_sha256": "a9f09d312cdb9d74f00fb000cc28442b6621e9523936de425960de6339eb7e1a"
+    },
+    "main": {
+      "image": "cfmeter/main.png",
+      "caption": "CF METER: main parameter page.",
+      "remix": "cfmeter",
+      "source": "emulator panel UART",
+      "firmware_sha256": "a9f09d312cdb9d74f00fb000cc28442b6621e9523936de425960de6339eb7e1a"
+    }
+  }
+}

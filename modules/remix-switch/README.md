@@ -4,7 +4,7 @@ Switch the unit to another remix's image from the card, without writing
 the flash. An image (`.RMX`) is a whole OS: stock 1.40C with one remix's
 modules built in. **MAIN MENU > BRAIN > REMIXES** lists the `.RMX` files
 in `/BRAIN/REMIXES/`; [YES] on one asks `SWITCH TO <NAME>?` and boots it.
-A power-cycle always comes back to the image in the flash (FLASHED). Every
+The choice is saved in BRAIN/card.work and restored after a reboot. Every
 image that carries BRAIN carries REMIX SWITCH (`tools/remix/registry.py`
 appends it), and `make image` writes the `.RMX` beside the `.bin`, so any
 build can be tried by switching to it instead of flashing it.
@@ -35,16 +35,32 @@ the same name.
 1. Copy the `.RMX` files to `/BRAIN/REMIXES/` on the card. A Mac writes a
    `._<name>` file beside each copy; delete those, or they are listed too.
 2. MAIN MENU > BRAIN > REMIXES: `◄ REMIXES`, then every `.RMX`, sorted,
-   without the extension; after a switch, a `FLASHED` separator and the
-   name of the image a power-cycle returns to (carried in the mailbox
-   across the switch); a line if the last switch was refused. The list is read again each time MAIN
+   without the extension; a `FLASHED` separator and the
+   name of the image in flash (carried in the mailbox
+   across the switch), selectable to return to it and clear the saved choice;
+   a line if the last switch was refused. The list is read again each time MAIN
    MENU opens, without disturbing the stock browsers' listing (the scan's
    global name pool and cache are saved and restored around it,
    `docs/contributing/FAILURE_MODES.md`).
 3. [YES] on an image: `SWITCH TO <NAME>?` / `PLAYBACK WILL STOP` /
-   `OFF/ON: BACK TO FLASHED`. [YES] stops playback, syncs the project (as
+   `REMEMBER AFTER REBOOT`. [YES] stops playback, syncs the project (as
    OS UPGRADE does), loads the file and resets the unit.
-4. A power-cycle boots the flashed image again.
+4. A later reboot starts the flashed image, which reads the saved filename
+   and switches before loading the project. The selected image then loads
+   the project normally. The automatic path does not sync an unloaded project.
+5. To return permanently, select the name under FLASHED. To bypass a saved
+   selection for one boot, hold FUNC at power-on and choose EXIT in the
+   stock STARTUP MENU. Removing the card also leaves the flashed image running.
+
+The persistence path and startup-menu byte are covered under the port;
+they still need an MKII hardware retest (#743). The filename is a CARD
+Blob (`octabam.remix-switch`, key 1, 24 bytes) in BRAIN/card.work, with
+the usual card.strd recovery copy at SAVE PROJECT. An absent, malformed or
+missing target leaves the flashed image running. The selected image's
+boot sees the one-shot mailbox's RUN state and does not switch recursively.
+The flashed image must contain this fix: it is the image that reads the
+saved selection after power-on. Update the remixes used to change that
+selection as well, since older switchers do not save a new choice.
 
 ### Not taken: the power-on picker
 
@@ -61,7 +77,9 @@ machine and your card. `make rmx` makes the same three checks the unit
 makes: the OS entry's first instruction, a length that fits the stage
 (2,706,400 B), and the bootstrap version (below). A target does not need
 this module: stock 1.40C, or any image without BRAIN, is a valid target,
-but has no list, so from it you power-cycle to come back.
+but has no list. To return from such an image, use the startup-menu bypass
+or remove the card at power-on; the flashed image's list can then clear
+the selection through its FLASHED row.
 
 The version string on the boot screen is the FLASHED image's, whichever OS
 runs. ✅ Measured on an MKII, 29 Sep 2026: a switch to `DSPRESET.OBI` came
@@ -211,6 +229,6 @@ is sent nothing (untested on an MKI).
 3. **The version string** after a switch to stock (which the flash header
    probably keeps; see Use).
 4. **An MKI.**
-Every failure above ends in the flashed image after a power-cycle: the
-flash is never written, and the mailbox is spent before the staged image
-runs.
+The flash is never written, and the mailbox is spent before the staged image
+runs. A saved target can be bypassed through STARTUP MENU > EXIT or by
+removing the card at power-on.

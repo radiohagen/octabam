@@ -27,7 +27,7 @@ MODULE = Module(
     key="MEMORY",
     kind=Kind.CF_PATCH,
     category=Category.SETTINGS, author="Sam Banks", author_url="https://github.com/sambanks",
-    proof=Proof.PORT, proof_note="the reserve's size per remix in the build report; `verify_dram_boot` under the port",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "the reserve's size per remix in the build report; `verify_dram_boot` under the port",
     doc="Platform: the DRAM reserve in stock's audio page arena, sized from what the remix's modules claim.",
     # nothing but stock writes the pages the reserve gave back, under the
     # gate project, on bottleservice and bus (gate.py)

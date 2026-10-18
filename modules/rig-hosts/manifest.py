@@ -41,7 +41,7 @@ MODULE = Module(
     key="RIG HOSTS",
     kind=Kind.CF_PATCH,
     category=Category.BUS, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.PORT, proof_note="a new project born hosted under the port",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "a new project born hosted under the port",
     doc="A new part is born hosted: T1 FX2 = BusDelay, T5 = BusVerb, T8 = the stock DELAY, the rest SEND.",
     linked=(Linked("righosts", "modules/rig-hosts/righosts.s", include=ids_inc, dram=True),),
     detours=(

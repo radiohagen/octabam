@@ -91,13 +91,21 @@ A client that cannot use a file (unknown version, bad length or CRC) calls
 written over. STORE lists up to 16 refusals (`store_pend`, `store_npend`,
 cleared at a load of every bank). At the first encoder turn after the load
 (the only UI-task site STORE holds; a list cannot be opened from the engine
-task) a three-row list opens, each row naming the file:
+task) a dialog names the file and explains which saved data could not be
+loaded: FX page 2 locks, saved Kits or MIDI scenes. It says UNREADABLE OR
+INCOMPATIBLE and offers NO: KEEP FILE / YES: OPTIONS.
+YES opens the three recovery choices. NO keeps the
+file protected and dismisses the prompt until the next project load:
 
 | row | answer | what the client does |
 |---|---|---|
-| IGNORE | `ANS_IGNORE` | nothing: the client stays off for the session |
-| OVERWRITE | `ANS_OVERWRITE` | starts empty (KITS: as a missing file, the stock Parts become Kits); the next save writes |
-| BACKUP | `ANS_BACKUP` | as OVERWRITE, and that save first copies the file to `.bak` |
+| KEEP FILE / SKIP SAVED DATA | `ANS_IGNORE` | keeps the file protected and does not load its saved data |
+| START FRESH / REPLACE FILE | `ANS_OVERWRITE` | starts empty (KITS: as a missing file, the stock Parts become Kits); the next save replaces the original file |
+| BACKUP FILE THEN START FRESH | `ANS_BACKUP` | starts fresh, and the next save first copies the original file to `.bak` |
+
+This is recovery, not a format upgrade: the old saved data is not converted.
+The prompt can also appear for damaged or incomplete files, not just files
+from development builds. The exact cause needs the refused file to be examined.
 
 LEVEL scrolls the list; YES answers; NO closes it without an answer, leaving the
 entries listed and asking no more until the next load. No answer touches the
@@ -113,6 +121,11 @@ and BACKUP read it as a missing file; the list opens at an encoder turn, LEVEL +
 answers OVERWRITE, YES on row 0 answers IGNORE), `verify_plocksp2` (a bad `p2lk` header is
 listed and survives SAVE PROJECT), `verify_scenes --persist` (a bad `scenes.work` stays byte
 for byte under IGNORE; OVERWRITE and BACKUP give a good file, BACKUP also `scenes.bak`).
-Not covered: the rows' text on the LCD, a list opened over another window, the prompt on a unit.
+15 Oct 2026 (#742): `verify_kits` also checks the initial information
+dialog, YES opening the choices, and NO keeping the file protected without
+reopening on another encoder turn. `verify_plocksp2` exercises the same
+information, choices and cancellation with a refused lock file, capturing
+the LCD for review. Not covered: a list opened over another window, the
+new prompt on a unit.
 
 [Contribution verification](DEVELOPMENT.md).

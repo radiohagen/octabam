@@ -13,9 +13,10 @@ REMIX = Remix(
     name="usb-midi",
     family="mods", proof=Proof.CHECK, proof_note="",
     doc="stock + USB MIDI (class-compliant, mirrors DIN).",
-    modules=("USB MIDI",
+    modules=("USB",
              "FILTER", "EQUALIZER", "DJ EQ", "PHASER", "FLANGER", "CHORUS",
              "SPATIALIZER", "COMB FILTER", "COMPRESSOR", "LO-FI", "DELAY",
              "PLATE REV", "SPRING REV", "DARK REV"),
     fallback="NONE",
+    settings={("octabam.usb", "LAYOUT"): "OFF", ("octabam.usb", "INPUTS"): "OFF"},
 )

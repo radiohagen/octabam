@@ -25,7 +25,7 @@ MODULE = Module(
     key="PLOCKS P2",
     kind=Kind.CF_PATCH,
     category=Category.MACHINES, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.PORT, proof_note="",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026)",
     doc="Parameter locks on FX1/FX2 page 2 (hold trigs, turn a knob on the SETUP page).",
     linked=(Linked("p2locks", "modules/plocks-p2/p2locks.s", dram=True),),
     detours=(

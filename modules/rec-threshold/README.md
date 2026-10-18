@@ -14,21 +14,26 @@ track's threshold. The Digitakt 2's threshold recording, on an Octatrack.
    | stock | on a THR track | what it is |
    |---|---|---|
    | QREC | **LEV** | the threshold: −60, −56 … −8 (4 dB steps), −6, −4, −2, 0 dB. Saved with the Part, per track. Setting TRIG to THR makes it −40 if it was never set. |
-   | QPL | **IN** | the live input level in dB: the loudest of inputs A–D, held ~0.5 s, then falling ~12 dB/s; `---` below −60. Its knob does nothing; QPL is left as it was. |
+   | QPL | **IN** | the live input level in dB: the loudest of inputs A–D, held ~0.5 s, then falling ~29 dB/s; `---` below −60. Its knob does nothing; QPL is left as it was. |
 
    Play the source, read IN, set LEV a few dB below it.
 3. Arm: hold **TRACK** and press **REC** (or REC alone for the active
-   track), with RECORDING SETUP open or closed: stock 1.40C records from
-   either page too. Nothing shows that it is armed.
+   track), with RECORDING SETUP open or closed; as on stock, the REC keys
+   do nothing inside it while GRID RECORDING is on. While it waits, the
+   track's status icon at the screen edge blinks (about 0.37 s on, 0.37 s
+   off), whatever it shows.
 4. The take starts when the input reaches LEV, and ends at RLEN as usual
    (with RLEN MAX, a press stops it). Arm again for the next one.
 5. An arm is dropped, without a take, if the track's TRIG is no longer THR
-   when the input arrives (edited, or another Part loaded), or if the
-   recorder is already recording by then.
+   (edited, or another Part loaded): at the next draw of the status icons,
+   and in any case when the input arrives. It is also dropped if the
+   recorder is already recording when the input arrives.
 
 - A second press while armed cancels.
 - A press while recording stops the take (THR behaves as ONE2 there).
-- The start is immediate: QREC is not applied (its byte is LEV).
+- The start is immediate: QREC is not applied, by design. Its byte is
+  LEV, and a start quantised to the next beat would cut off the attack
+  the threshold just caught.
 - On a track not set to THR, nothing changes: RECORDING SETUP 2 shows QREC
   and QPL, and both edit as stock.
 - A Part saved with THR loads on stock 1.40C as TRIG HOLD, with its LEV as
@@ -36,7 +41,7 @@ track's threshold. The Digitakt 2's threshold recording, on an Octatrack.
 
 ## How it works
 
-One DRAM unit (`thresh.s`), nine detours, three pokes. The manifest's
+One DRAM unit (`thresh.s`), ten detours, three pokes. The manifest's
 docstring lists them with their addresses.
 
 - **The keys.** TRACK + REC reaches `0x400836d8` (a loop over the held
@@ -60,6 +65,19 @@ docstring lists them with their addresses.
   on every bank load). RECORDING SETUP 1 draws THR through its own
   formatter; RECORDING SETUP 2's cell loop and editor are hooked for LEV
   and IN; after the editor's store, TRIG becoming THR sets an unset LEV.
+- **The blink.** The status icon renderer draws a track's icon only when
+  its state differs from the one it drew last (`0x400c0cb8`), clearing the
+  box first and drawing nothing for a state it has no glyph for. While a
+  track is armed, every other blink phase hands it `0x10` + the state: the
+  box is cleared and left empty, and the next phase draws the icon again.
+  The phase is bit 10 of a frame count kept while something is armed. A
+  track whose TRIG is no longer THR loses its arm there and shows its icon
+  as stock. (THR7 dropped the arm in the setup editor instead, on the TRIG
+  edit. Its failure on the unit to record from inside RECORDING SETUP was
+  GRID RECORDING, not that code: stock's REC keys do nothing there while
+  GRID RECORDING is on, `0x460d1736` with `0x460d5db4 == 3`, tested at
+  `0x400836e4` and `0x40030ed0`; confirmed on the unit, 13 Oct.)
+  REC TRIG MUTE hooks the same load (`0x4004bee2`); the two conflict.
 
 ## Measured
 
@@ -85,12 +103,14 @@ Under the ColdFire port (`ot_emu`), 11 Oct 2026, on an empty project:
   input sample 10, a second press cancels, TRIG moved off THR while armed
   spends the arm with no take, TRIG ONE starts at once through stock's
   path and RECORDING SETUP 2 edits QREC and QPL as stock on that track;
+  armed in silence, track 1's drawn icon state alternates with `0x10` + it
+  every 1,024 frames, and ends on its own state after a cancel;
   switching to THR sets LEV −40; LEV set through
   RECORDING SETUP 2 keeps a −20 dBFS tone out at −12 dB and a −46 dBFS
   tone out at −40, and starts on a −50 dBFS tone at −60; turning IN never
   writes QPL.
 
-On a unit (Chupitnik's MKII, 11-12 Oct 2026, images THR1 to THR5 flashed
+On a unit (Chupitnik's MKII, 11-13 Oct 2026, images THR1 to THR9 flashed
 from the card, `CHANGELOG.md`):
 
 - THR shows on RECORDING SETUP; armed with TRACK 1 + REC AB, silence never
@@ -99,7 +119,15 @@ from the card, `CHANGELOG.md`):
 - LEV and IN on RECORDING SETUP 2 work (THR2); IN's hold and fall read
   steadily on music (THR3); THR4, with LEV −60 to 0 and the −40 default,
   reported working.
-- THR5, this code: the above again; with LEV at 0 dB an ordinary source
+- THR6: armed in silence, track 1's status icon blinks; a second press
+  stops the blink, and so does the take starting.
+- THR9, this code: the THR6 checks again; TRIG moved to ONE while armed
+  stops the blink and the input records nothing; THR armed inside
+  RECORDING SETUP 1 records (GRID RECORDING off); IN reaches `---` in
+  under 2 s after the input stops.
+- Several tracks armed at once (14 Oct, THR9's code): each starts its own
+  take, into its own buffer with its own RLEN.
+- THR5: the above again; with LEV at 0 dB an ordinary source
   does not start it (full scale not tried on the unit); armed in silence,
   TRIG moved from THR to ONE, then the input: no take, and the next TRACK
   + REC AB records at once as ONE.
@@ -107,8 +135,9 @@ from the card, `CHANGELOG.md`):
   + REC AB and REC AB alone), and so does THR5 (ONE, and THR armed inside
   the page), RLEN 16 and MAX alike (12 Oct). ❌ Retracted: "the REC keys do
   not record while a recording page is open" and "armed inside one, THR
-  starts only sometimes", read on THR1, THR3 and THR4 (11 Oct); most
-  likely a take still running (inferred; `docs/contributing/FAILURE_MODES.md`).
+  starts only sometimes", read on THR1, THR3 and THR4 (11 Oct). The cause,
+  measured 13 Oct: GRID RECORDING was on; stock's REC keys do nothing
+  inside RECORDING SETUP then (`docs/contributing/FAILURE_MODES.md`).
 - The first boot after the first flash ran 1.40C's own BOOTSTRAP UPGRADE.
   The bootstrap an octabam image carries is stock's, byte for byte (the
   entry's helper buffer moved to `0x41495de0`, above the platform reserve).
@@ -124,15 +153,15 @@ from the card, `CHANGELOG.md`):
 
 ## Open
 
-- QREC with THR (a quantised start), other tracks, REC CD, several tracks
-  armed at once, an MKI.
-- An armed indicator: nothing on screen shows that a track is waiting.
-- Two other routines name TRIG values (`0x400828e0`, N/A past 2;
-  `0x40068a94`, blank past 2); which screens draw them is not known.
-- The port's REC keys differ from the unit's in one way: REC AB alone does
-  nothing there (on the unit it records on the active track). TRACK + REC
-  with RECORDING SETUP open records there, as on the unit. The gate uses
-  TRACK + REC with the page closed.
+- REC CD, an MKI.
+- `0x400828e0` names TRIG values (N/A past 2); which screen draws it is
+  not known. `0x40068a94` and `0x40068b0c` are PERSONALIZE's DEFAULT TRIG
+  MODE and DEFAULT REC MODE (`0x80000094`, `0x80000098`; ONE, ONE2,
+  HOLD, blank past 2). A fresh Part copies DEFAULT REC MODE into each
+  track's TRIG (`0x40005926`): THR is not offered there.
+- The port's REC keys differ from the unit's: REC AB alone does nothing
+  there, and TRACK + REC records with RECORDING SETUP open. The gate uses
+  TRACK + REC with the page closed, as the unit does.
 - An earlier version kept the level in a BRAIN setting. As an Option with
   labels it crashed under the port after RECORDING SETUP and TRACK + REC
   (with every detour removed); as a Number it was clean. Not chased

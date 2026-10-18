@@ -19,7 +19,7 @@ MODULE = Module(
     key="CC FEEDBACK",
     kind=Kind.CF_PATCH,
     category=Category.MIDI_USB, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.PORT, proof_note="`verify_ccfeedback` (Unicorn) and `verify_set` (the port's MIDI OUT bytes)",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "`verify_ccfeedback` (Unicorn) and `verify_set` (the port's MIDI OUT bytes)",
     doc="Every knob value change is transmitted as its CC (page 1: 16-45; page 2: CC MAP's 62-73), "
         "so a controller's encoders follow the unit.",
     linked=(Linked("cc_feedback", "modules/cc-feedback/cc_feedback.s", dram=True),),

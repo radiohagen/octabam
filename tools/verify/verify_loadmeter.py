@@ -19,8 +19,8 @@ lm_dsp and lm_ot (modules/load-meter/meter.s) and the screen's figures.
               scrub (lm_scrub) zeroes it every frame the DSP wrote it
   every       lm_scrub runs once per frame interrupt (its pass count equals
               lm_out's), so it precedes every reader of MAIN in the interrupt
-              (the stock recorder at 0x4000d340, USB AUDIO OUT at 0x4000d9a0)
-  usb         USB AUDIO OUT's ring (aud_ring, the producer forced on) is
+              (the stock recorder at 0x4000d340, USB's audio producer at 0x4000d9a0)
+  usb         USB's audio-out ring (aud_ring, the producer forced on) is
               byte-identical between this build, an LM_NOPUB build (core 0
               publishes nothing) and an LM_NOOT build (OTOP's four hooks
               replay their displaced instruction and return): no published
@@ -249,7 +249,7 @@ def main():
             check(f"range: core {core}'s writers of X:$37F28: {len(writers)}, none but payload B's boot zero loop "
                   f"(P:$49/$4a)  {stray[:3]}", not stray)
 
-        # ---- usb: no published byte reaches USB AUDIO OUT's ring --------------------
+        # ---- usb: no published byte reaches USB's ring --------------------
         sym = {}
         nm = shutil.which("m68k-elf-nm") or shutil.which("m68k-linux-gnu-nm")
         rings = []
@@ -260,7 +260,7 @@ def main():
                 if len(parts) == 3:
                     sym[parts[2]] = int(parts[0], 16)
             if "aud_ring" not in sym:
-                check("usb: the remix carries USB AUDIO OUT (aud_ring)", False)
+                check("usb: the remix carries USB (aud_ring)", False)
                 break
             card = OUT / f"{tag}.img"
             subprocess.run([str(PY), str(ROOT / "tools/emu/ot_emu/stage_card.py"), str(copy), a.set_name, a.name,
@@ -281,7 +281,7 @@ def main():
         if len(rings) == 3:
             diff = sum(1 for x, y in zip(rings[0], rings[1]) if x != y)
             lows = sum(1 for i in range(3, len(rings[0]), 4) if rings[0][i])
-            check(f"usb: USB AUDIO OUT's ring byte-identical with the publish on and off ({diff} bytes differ; "
+            check(f"usb: USB's ring byte-identical with the publish on and off ({diff} bytes differ; "
                   f"{lows} nonzero low bytes with it on)", diff == 0 and lows == 0)
             diff = sum(1 for x, y in zip(rings[0], rings[2]) if x != y)
             check(f"usb: the ring is byte-identical with OTOP's stamps on and off ({diff} bytes differ)", diff == 0)

@@ -1,5 +1,12 @@
 # Switching OS images from the card, without flashing
 
+**15 Oct 2026 update (#743):** the switch now persists the chosen filename
+in BRAIN/card.work and restores it before the next project load. Use the
+FLASHED row to clear it or STARTUP MENU > EXIT to bypass it. The text below
+records the original temporary-switch design; its non-persistence claims
+are historical. See modules/remix-switch/README.md for the current behaviour
+and what still needs hardware testing.
+
 > Written while the module was OS SWITCH, its list MAIN MENU > OS and the
 > images `.OBI` files in the card root (sanderlegit, PR #542). Since 8 Oct
 > 2026 it is REMIX SWITCH: MAIN MENU > BRAIN > REMIXES, `.RMX` files in
@@ -268,7 +275,10 @@ ends in the flashed image after a power-cycle.
 - **Not a bootloader.** The bootstrap and NOR are untouched. The flashed
   image is the one that boots at power-on, and the only one a failed
   switch can land in.
-- **Not persistent.** A power-cycle forgets the switch. A "boot X at
+- **Historical choice, superseded 15 Oct 2026 (#743).** REMIX SWITCH now
+  saves the selected filename in BRAIN/card.work and restores it at boot;
+  STARTUP MENU > EXIT bypasses it and the FLASHED row clears it.
+  The original design said: a power-cycle forgets the switch. A "boot X at
   power-on" option would mean the flashed image reading a choice from the
   card and switching at once, which roughly doubles boot time. Deliberately
   left out.

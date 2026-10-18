@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Read USB AUDIO's counters from a unit over USB (the vendor request
-0xc0/0x55 the module answers on EP0; modules/usb-audio-out/usbaudio.s).
+"""Read USB audio-out's counters from a unit over USB (the vendor request
+0xc0/0x55 the module answers on EP0; modules/usb/usbaudio.s).
 
   tools/hw/usb_counters.py            # once
   tools/hw/usb_counters.py --watch 1  # every second, deltas beside the values
@@ -12,7 +12,7 @@ package: `brew install libusb`, then
 and run this with `/usr/local/bin/python3` (25 Sep 2026).
 A device-recipient control request needs no interface claim, so the
 audio and MIDI drivers macOS attaches stay attached. The unit must be
-running an image with a USB AUDIO OUT module; on any other image the request STALLs
+running an image with a USB module whose LAYOUT is not OFF; on any other image the request STALLs
 (reported here, not an error).
 
 Meaning (from usbaudio.s): produced/consumed are frame counts (the ring is
@@ -25,7 +25,7 @@ ring's low and high water at packet builds since the host's first poll of
 this open; anchor = the frames the consumer skipped at that first poll (the
 producer's output between SET_INTERFACE and the host starting to poll).
 
---in reads USB AUDIO IN's counters (0xc0/0x56; modules/usb-audio-in/
+--in reads the audio-in counters (0xc0/0x56; modules/usb/
 usbaudio_in.s) instead: produced/consumed = frames into and out of its
 ring; pkts = OUT packets retired; lastn = frames in the last one; lastfill
 = the ring's fill at the last DSP frame; underruns = blocks the ring could
@@ -61,7 +61,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--watch", type=float, default=0, help="seconds between reads; 0 = once")
     ap.add_argument("--in", dest="host_in", action="store_true",
-                    help="USB AUDIO IN's counters (vendor request 0x56) instead of USB AUDIO's")
+                    help="the audio-in counters (vendor request 0x56) instead of the audio-out's")
     a = ap.parse_args()
     try:
         import usb.core
@@ -81,7 +81,7 @@ def main():
     try:
         last = read(dev, a.host_in)
     except Exception as e:  # noqa: BLE001
-        sys.exit(f"the request failed: {e} (a STALL means the image carries no USB AUDIO{' IN' if a.host_in else ''})")
+        sys.exit(f"the request failed: {e} (a STALL means the image carries no USB audio{' in' if a.host_in else ' out'})")
     print(" ".join(f"{k}={v}" for k, v in last.items()), flush=True)
     while a.watch > 0:
         time.sleep(a.watch)

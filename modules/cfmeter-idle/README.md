@@ -29,7 +29,7 @@ stock `bras .` and `cfmeter` never posted its load (card ready 0); remix
 
 ## On the unit
 
-Not measured on the unit.
+Cursory testing on Sam's MKII (owner report, 16 Oct 2026).
 
 ## Gates
 

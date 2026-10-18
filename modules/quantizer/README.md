@@ -58,6 +58,14 @@ the full description, with what was measured and what was inferred.
 
 ## How it is built
 
+The wrapper shortens the octave-number detour at `0x400449b8` to six
+bytes and keeps stock's shared `movel d0,sp@-` at `0x400449be`.
+The MIDI drawer branches directly to that push; replacing it with a NOP
+made TRACK → CHROMATIC return into the LCD descriptor (`0x400bf10a`, #741).
+The author's audio runtime already pushes its own value and resumes after
+the shared instruction, so its source is unchanged. The panel regression
+gate is `tools/verify/verify_quantizer_ui.py` (audio and MIDI, MKI and MKII).
+
 Source: `upstream/` is Tim's repository (submodule, pinned to `v2.9`
 (`525f4b1`)). Nothing inside `upstream/` is edited here. The manifest here
 (`manifest.py`) executes `upstream/quantizer/manifest.py` from the source on

@@ -103,7 +103,7 @@ MODULE = Module(
     key="RLEN PLEN",
     kind=Kind.CF_PATCH,
     category=Category.MACHINES, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.PORT, proof_note="26 Sep 2026",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "26 Sep 2026",
     doc="ColdFire cave: RLEN value PLEN (past MAX) = one loop of the track's "
         "pattern on its own scale, so TRIG ONE + QREC PLEN records the next "
         "pass and stops.",

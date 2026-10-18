@@ -67,10 +67,10 @@ the last finished frame's:
 
 `meter.s`'s `lm_scrub` (a detour at `0x4000d310`, the `tstl` before the
 stock recorder reads MAIN) copies the bytes out and zeroes them, before the
-recorder (`0x400068e4`), USB AUDIO OUT and STEMS read the buffer: every
+recorder (`0x400068e4`), USB's audio producer and STEMS read the buffer: every
 reader sees stock's bytes; it runs once per frame interrupt (its pass
 count equals the interrupt count, `verify_loadmeter` every), ahead of the
-recorder's call at `0x4000d340` and USB AUDIO OUT's at `0x4000d9a0`. STEM
+recorder's call at `0x4000d340` and USB's audio producer's at `0x4000d9a0`. STEM
 REC reads MAIN from the transfer routine (`0x40004b12`), outside that
 order, so the two are refused together (`conflicts`) until measured. A record whose magic, sum, period (20,000 to
 60,000 counts; nominal 36,256) or busy (at most its period) is wrong is
@@ -109,7 +109,7 @@ FX2 of the first position, then the next), 8..15 payload B's (tracks 1-4).
 the stock mixer, AMP and everything else. The stamps read and write only
 registers that are dead at the hook sites (`a` and `b` and `r2`, `r3`; the
 start hook saves `a` through the displaced store) and no modifier register;
-`verify_loadmeter` compares USB AUDIO OUT's ring with the stamps in and
+`verify_loadmeter` compares USB's audio-out ring with the stamps in and
 replaced by no-ops (`LM_NOOT`): byte-identical. They cost 101 words a
 payload (257 in all with the meter). Measured only under the port, whose
 timer moves in 1,024-count steps, so single calls read 0 or 1,024 and only
@@ -159,7 +159,7 @@ interrupts; core 0 busy 20,480 of a 36,864-count period, core 1 17,421 of
 36,028; the view read `DSP0 57%/ 60% M0`, `DSP1 51%/ 54%`. The mean busy
 rose by 508 and 1,504 counts on core 0, 500 and 1,503 on core 1, for
 1,000- and 3,000-cycle burns (expected 500 and 1,500: errors +1.6%, +0.3%,
--0.1%, +0.2%). USB AUDIO OUT's ring was byte-identical with the publish on
+-0.1%, +0.2%). USB's audio-out ring was byte-identical with the publish on
 and off; 9.0 host commands per frame interrupt with the view open and
 closed.
 
@@ -173,7 +173,7 @@ the chip's; the numbers on a unit are a hardware-round item.
 - `tools/verify/verify_loadmeter.py`: with both DSP cores under the port,
   the records arrive and pass, the view's DSP rows carry numbers, the
   scrub zeroes MAIN's byte every frame and runs once per frame interrupt,
-  USB AUDIO OUT's ring is byte-identical with the publish on and off
+  USB's audio-out ring is byte-identical with the publish on and off
   (`LM_NOPUB`), the closed view draws nothing and moves the same host
   traffic, nothing stock writes the claimed words but payload B's boot
   zero loop, and an injected burn (`LM_BURN` builds) raises each core's

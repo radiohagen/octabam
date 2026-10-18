@@ -179,7 +179,7 @@ handlers (level 6 as well) are not timed. Not run on a unit.
 - **Frame interrupt, exit.** Every exit of the stock handler runs its
   epilogue at `0x4000d9a6` (`moveml`, `lea`, `rte`); `m_tail` replaces it:
   duration = exit − entry into a sum, a count and a maximum, then the
-  epilogue. USB AUDIO's producer (`0x4000d9a0`, the instruction before)
+  epilogue. USB's audio producer (`0x4000d9a0`, the instruction before)
   is inside the measured span.
 - **Publisher.** In `m_tail`, every 125 ms (16,500,000 counts): eight
   values into a table, the displayed slot k advanced through 0..15. Every

@@ -32,7 +32,7 @@ violations after the fix.
 
 ## On the unit
 
-Not flashed.
+Cursory testing on Sam's MKII (owner report, 16 Oct 2026).
 
 ## Open
 

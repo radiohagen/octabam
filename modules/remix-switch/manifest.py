@@ -6,8 +6,8 @@ reserve with a mailbox, and resets the unit the way OS UPGRADE does after
 it flashes. On the way back up, a chainloader in the OS entry (a ROM cave,
 reached before the DSP upload or any other set-up) finds the mailbox,
 checks the stage, copies it over the image the bootstrap just depacked and
-calls it as the bootstrap called us. NOR is never written; a power-cycle
-boots the flashed image again, and a staged image need not carry this
+calls it as the bootstrap called us. NOR is never written; BRAIN/card.work
+keeps the chosen filename, restored at boot, and a staged image need not carry this
 module (stock 1.40C itself is a valid target). Every remix that carries
 BRAIN carries REMIX SWITCH (tools/remix/registry.py); until 8 Oct 2026 it was
 a fifth root category of its own, OS, in every image (PR #542).
@@ -22,7 +22,7 @@ README.md beside this file is the procedure.
 import pathlib
 import re
 
-from remix.schema import ArenaReserve, Category, Detour, DspHook, DspSection, Gate, Kind, Linked, Module, Proof
+from remix.schema import ArenaReserve, Blob, Category, Detour, DspHook, DspSection, Gate, Kind, Linked, Module, Proof, Setting, Store
 
 H = bytes.fromhex
 HERE = pathlib.Path(__file__).resolve().parent
@@ -59,15 +59,18 @@ MODULE = Module(
     name="remix-switch",
     key="REMIX SWITCH",
     kind=Kind.HYBRID,
-    category=Category.REFERENCE, author="sanderlegit", author_url="https://github.com/sanderlegit",
+    category=Category.UTILITIES, author="sanderlegit", author_url="https://github.com/sanderlegit",
     proof=Proof.HARDWARE,
     proof_note="an MKII, 29 Sep 2026 (OCTABAM14 with BOOT TRACE): switched to its own "
                "image and to stock 1.40C, audio and play working; and with the park "
                "moved into the dead vector run (BSRETVEC) booted, played and switched "
                "away again -- 40 region words down to 18; `verify_remixswitch`. The list in "
-               "BRAIN's pane and /BRAIN/REMIXES/ (8 Oct 2026): under the port only",
+               "BRAIN's pane and /BRAIN/REMIXES/ (8 Oct 2026), and the persisted selection (#743): under the port only",
     doc="MAIN MENU > BRAIN lists the raw OS images (.RMX) in /BRAIN/REMIXES/ and boots the one "
-        "picked without writing the flash; a power-cycle returns to the flashed image.",
+        "picked without writing the flash; remembers the choice across reboots.",
+    store=Store("octabam.remix-switch"),
+    settings=(Setting(1, "BOOT REMIX", Blob(24),
+                      doc="the last selected .RMX filename; empty boots FLASHED; stored in BRAIN/card.work"),),
     linked=(
         Linked("osw_chain", "modules/remix-switch/chain.s", loader=True, include=_include),
         Linked("osw_switch", "modules/remix-switch/switch.s", dram=True, include=_include),
@@ -99,6 +102,10 @@ MODULE = Module(
                "the OS entry, after it parks the bootstrap's argument: a staged image first"),
         Detour(0x40064C32, H("2f39400cbf6c"), "osw_switch", "osw_menu",
                "MAIN MENU opening: the REMIXES list rescanned from the card, BRAIN's pane reset to its top"),
+        Detour(0x4002574C, H("4879100f8378"), "osw_switch", "osw_bootproject",
+               "boot LOAD PROJECT: restore the saved remix before loading the project"),
+        Detour(0x4002573E, H("4eb9400228dc"), "osw_switch", "osw_bootfiles", kind="jsr",
+               note="boot LOADING FILES: restore the saved remix on the remembered-card path too"),
     ),
     # the list is BRAIN's REMIXES sub-list (brain_rmx_rows, brain_rmx_n)
     requires=("BRAIN", "MEMORY"),

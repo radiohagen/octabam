@@ -94,8 +94,8 @@ MODULE = Module(
     key="MIDI SCENES",
     kind=Kind.CF_PATCH,
     category=Category.PARTS, author="bkkbrls-del/midisc", author_url="https://github.com/bkkbrls-del/midisc",
-    proof=Proof.PORT,
-    proof_note="`verify_scenes` against MIDISC2.1 under the port, phase 1 scenarios (b1, b7, b3, b29copy, b29clear); MIDISC 2.0 ran on the author's unit as `ok-ms` (14 Sep 2026)",
+    proof=Proof.HARDWARE,
+    proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "`verify_scenes` against MIDISC2.1 under the port, phase 1 scenarios (b1, b7, b3, b29copy, b29clear); MIDISC 2.0 ran on the author's unit as `ok-ms` (14 Sep 2026)",
     doc="Scene locks for the MIDI tracks (hold-to-lock, readout, unlock, lock LEDs, XF morph, "
         "scene clear / copy / paste), kept per Part in scenes.work and CS1. Port of bkkbrls-del's midisc project.",
     linked=(Linked("scenes", "modules/midi-scenes/scenes.s", dram=True),),

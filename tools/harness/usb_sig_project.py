@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A project where every track plays its own steady tone: the USB AUDIO
+"""A project where every track plays its own steady tone: the USB audio
 channel-mapping and click fixture (the shape of octemu's `sig8` set).
 
   python3 tools/harness/usb_sig_project.py --source <a local project> [--out out/usb-sig-project]
@@ -202,7 +202,7 @@ def main():
     for t in range(8):
         make_sample(dest / "AUDIO" / "USBSIG" / f"T{t + 1}.wav", t)
     lines = [f"T{t + 1}: L {tone(t)[0]} Hz  R {tone(t)[1]} Hz  -> USB channels {2 * t + 1}/{2 * t + 2}" for t in range(8)]
-    (dest / "USBSIG_README.txt").write_text("USB AUDIO signal project: one steady stereo tone per track, A01 step 1, looping.\n"
+    (dest / "USBSIG_README.txt").write_text("USB audio signal project: one steady stereo tone per track, A01 step 1, looping.\n"
                                             + "\n".join(lines) + "\n"
                                             "Card: AUDIO/USBSIG/T*.wav into the SET's AUDIO folder; the .work/.strd files into PRESETS/<name>/.\n")
     print("\n".join(lines))

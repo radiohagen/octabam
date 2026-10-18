@@ -82,6 +82,20 @@ class DocLinks(unittest.TestCase):
         self.assertTrue(self.fails({"docs/guide/OTHER.json": json.dumps(
             {"files": {path: {"path": path, "commit": "a" * 40, "sha256": "b" * 64}}}, indent=2)}))
 
+    def test_usage_fragment_links_resolve_against_the_generated_page(self):
+        self.assertEqual(self.fails({
+            "docs/site/usage/x.md":
+                "![knobs](../../img/x/knobs.png) [index](../modules.md)\n",
+            "docs/site/reference/modules/x.md": "# X\n",
+            "docs/site/reference/modules.md": "# Modules\n",
+            "docs/site/img/x/knobs.png": "\n"}), [])
+
+    def test_a_usage_fragment_link_still_must_resolve(self):
+        got = self.fails({
+            "docs/site/usage/x.md": "![knobs](../../img/x/gone.png)\n",
+            "docs/site/reference/modules/x.md": "# X\n"})
+        self.assertEqual(got,
+                         ["docs/site/usage/x.md:1: link to ../../img/x/gone.png -- no such file"])
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 
 255 Kits per project. A Kit is a saved Part; each pattern plays the Kit
 assigned to it, through the stock Part slots. `Kind.CF_PATCH`: one DRAM
-unit (`kits.s`), 16 detours and STORE's events, nothing on the DSP. The firmware facts it
+unit (`kits.s`), 17 detours and STORE's events, nothing on the DSP. The firmware facts it
 stands on are [`docs/firmware/PARTS.md`](../../docs/firmware/PARTS.md).
 
 Credit: Em ([emuyia](https://github.com/emuyia)) designed Kits on the
@@ -128,6 +128,9 @@ which is not what an MD or MnM Kit holds.
   * 4 + Part + 1) when none is assigned, as in a NEW PROJECT (`001 ---`
   read from the plane; stock draws `Pt:1 ONE`). The stock Part name is the
   Kit's first six characters (its field is seven bytes).
+- After an EMPTY RESET the unit comes up KITS-ready: PART opens LOAD
+  KIT (the blank project's stock Parts migrated in as Kits 0–63, as a
+  project's first load does), the status line `001 ---`.
 - PTN+FUNC+RIGHT saves into the pattern's own Kit, the slot's only when
   it has none, and PTN's release then opens no SELECT PATTERN
   (`0x460d173e`, the flag stock sets in the PATTERN+TRIG handler).
@@ -198,6 +201,14 @@ which is not what an MD or MnM Kit holds.
   migrate: Kit `bank·4 + part` is the working Part with its name, each
   pattern with content plays its Part's Kit. Her files are left on the
   card.
+- **The blank boot.** With no CS1 — an EMPTY RESET's next power-up, or
+  demo mode — stock boots a blank project and never runs the new-project
+  store event, so KITS would stay off and PART would open the stock Part
+  window. `kits_bootblank` (a detour at the boot's blank path
+  `0x4001fb80`) runs the new-project init: the empty library, READY from
+  the first screen, CS1 saved. The power-up's bank load then finds no
+  `kits.work` and migrates the blank project's stock Parts as Kits
+  (bank·4 + part), as a project's first load does.
 - **Power-off.** RESID (with a magic and a sum) at `0x100f85a0` and ASSIGN
   at `0x100ffe00` in CS1 (stock references nothing there; PLOCKS P2 holds
   `0x100f8600..0x100fbdf0`). The power-up's bank load (the masked load
@@ -256,6 +267,9 @@ OCTABAM89_setgate (bank 3), each scenario forked from one load:
   card, a power cycle of it (`--cs1-in`, `--no-post`) and a power cycle
   of a card whose change was never saved each come back with the same
   ASSIGN and RESID.
+- ✅ (16 Oct 2026) The blank boot (no CS1 — an EMPTY RESET's next
+  power-up): READY from the first screen, the KCS1 header saved at the
+  boot, the stock blank project running (`verify_kits` blank).
 - ✅ Em's files from the Bottleservice 2026 backup: 64 occupied Kits,
   each name and Part equal to what her format gives, ASSIGN from her
   newest manifest, `kits.work` written, hers left in place.

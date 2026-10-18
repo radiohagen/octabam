@@ -420,6 +420,28 @@ def main():
         after = emu_card.extract_image((OUT / "refused.img").read_bytes())
         k = next((k for k in after if k.lower().endswith(f"/{nn}.work")), None)
         check(f"refused: {nn}.work is as it was after a SAVE PROJECT (it used to be overwritten)", after.get(k) == bytes(bad))
+        # The first dialog names the lost feature, before any recovery choice.
+        def refusal_ui(tag):
+            s = Script(); s.tap("no", 400); s.send("enc 1 1", 800)
+            if tag == "options":
+                s.tap("yes", 600)
+            elif tag == "cancel":
+                s.tap("no", 400); s.send("enc 1 1", 800)
+            script = OUT / f"ref_{tag}.script"; script.write_text(s.text())
+            dump = OUT / f"ref_{tag}.bin"
+            run([EMU, "--image", image, "--card", card_bad, "--set", a.set_name, "--project", a.name,
+                 "--load-ms", "90000", "--mkii", "--live-script", script, "--lcd", OUT / f"ref_{tag}.lcd",
+                 "--mem-dump", f"{sym['store_info_lines']:#x},4={dump};"
+                 f"{sym['NWMASK']:#x},4={OUT / f'ref_{tag}_mask.bin'};"
+                 f"0x460e5cd0,4={OUT / f'ref_{tag}_dialog.bin'};"
+                 f"{sym['store_mown']:#x},4={OUT / f'ref_{tag}_menu.bin'}"], OUT / f"ref_{tag}.txt")
+            word = lambda name: int.from_bytes((OUT / f"ref_{tag}_{name}.bin").read_bytes(), "big")
+            check(f"refused {tag}: names FX page 2 locks and keeps the original file protected",
+                  int.from_bytes(dump.read_bytes(), "big") == sym["store_info_plk"] and word("mask") & (1 << bank))
+            check(f"refused {tag}: the expected dialog or choices are open",
+                  bool(word("dialog")) == (tag == "info") and bool(word("menu")) == (tag == "options"))
+        with ThreadPoolExecutor(3) as ex:
+            list(ex.map(refusal_ui, ("info", "options", "cancel")))
     check("power cycle, upgrade: legacy P2NV snapshot restored", got["legacy"] == legacy_v and legacy_v is not None)
     print(f"verify_plocksp2: {'FAIL' if fails else 'ok'} ({fails} failure(s))")
     return 1 if fails else 0

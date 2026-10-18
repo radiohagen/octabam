@@ -93,7 +93,7 @@ at exit, the write watch folding the uncached alias.
 | `0x47502c10..0x47fc7410` | the stock delay rings, 10.8 MB: eight rings of 1,411,200 B (wrap `cmpil #1411200` at `0x4000359e`) at a stride of 1,411,328 (`addil #1411328` at `0x40003386`; 128 B, one 16-sample frame, of pad); the boot memset at `0x40002fb4` (`lea 0x4f502c10`, 705,664 × 16 B) ends at `0x47fc7410`; the delay frame routine's four `#0x4f502c10` adds. Stock never names `0x47502c10`; every reference is through the alias. Cleared ~38 M instructions after the boot detour returns; live audio memory after that. Not free | static + port + Bryan T's write-up (`docs/firmware/COLDFIRE_DELAY.md`) + mxldyn's hardware. An earlier "8.8 MB free at 0x47700000" was a watch on cached addresses blind to the clear through the alias: retracted |
 | `0x47fc7410..0x47fe0000` | 101,360 B between the end of the rings and the 128 KiB Octakit kept below the reset stack (until 6 Oct 2026). Octakit's boot-time stage (72,959 B) at the bottom. Not clean: stock's engine task names four buffers inside it through the alias (`0x4ffc7610`, `0x4ffc9010` sector bounce buffers; `0x4ffcb220`, `0x4ffce230` two arrays of 769 × 16 B descriptors), and with static samples in the project the port fills `0x47fc8fe4..0x47fcd9e4` (18,944 B, 37 sectors, the PIO sector loop `0x40015472..0x4001548e`) at project load, inside her stage from `+0x1bd4`. Nothing seen above `0x47fcd9e4`; no literal names anything above `0x47fd1240` | measured on the port's PIO path; a DMA-capable card and play-time streaming unexercised. Em (12 Sep 2026): the stage is needed on boot only, so the fills after boot are a non-issue for Octakit; whether her wrapper's re-hash at project load (`0x40013304`) tolerates a clobbered stage is unconfirmed |
 | `0x46000000..0x47502c10` | ~21 MB outside both big clears | unmeasured; stock's sample pool may live there. Measure with samples loaded and the recorder running before placing anything |
-| inside the row above | fixed firmware buffers named by static reads (addresses are the uncached alias; cached = minus `0x08000000`). Sizes unmeasured. `0x4ec94004`/`0x4ec94008`: READ CAPACITY(10) reply, 8 B (`0x4001e350`, `0x4001e35a`). `0x4ec94800`: USB dQH list (`usbaudio_in.s`). `0x4ec94900..`, `0x4ecc8000`, `0x4ecc9000`: EP2 dQHs, dTDs and buffers (`modules/usb-midi/README.md`). `0x4ecb8000`: the USB mass-storage worker's sector buffer (`0x4001eed8`, `STEM_REC.md` section 7.7). `0x4ecd3000`: the buffered file layer's staging buffer (`STEM_REC.md` section 7.5) | static; not placed on |
+| inside the row above | fixed firmware buffers named by static reads (addresses are the uncached alias; cached = minus `0x08000000`). Sizes unmeasured. `0x4ec94004`/`0x4ec94008`: READ CAPACITY(10) reply, 8 B (`0x4001e350`, `0x4001e35a`). `0x4ec94800`: USB dQH list (`usbaudio_in.s`). `0x4ec94900..`, `0x4ecc8000`, `0x4ecc9000`: EP2 dQHs, dTDs and buffers (`modules/usb/README.md`). `0x4ecb8000`: the USB mass-storage worker's sector buffer (`0x4001eed8`, `STEM_REC.md` section 7.7). `0x4ecd3000`: the buffered file layer's staging buffer (`STEM_REC.md` section 7.5) | static; not placed on |
 
 What the port cannot see: caches (it has none), the recorder, anything
 after the handoff, and DMA traffic (the eDMA's descriptors and completions
@@ -136,8 +136,10 @@ octamax 2.0 takes its 64. MEMORY (`modules/memory/README.md`) sizes the
 reserve per remix from the claims: the linked runtime, its stage and
 `.bss`, every DramRegion and every fixed-address ArenaReserve (a fixed
 1,707 pages, 10,487,808 B, `0x40a955e0..0x41495de0`, until 11 Oct 2026).
-The base literal moves up by that much at its 24 sites (23 direct plus
-`lea base+6144` at `0x40094a62`), and the four geometry words (page count,
+The base literal moves up by that much at its 23 sites (22 direct plus
+`lea base+6144` at `0x40094a62`; the literal's other use, `cmpal` at
+`0x400254f8`, is the end of PURGE SAMPLES' walk over the banks and stays
+stock: moved, the walk ran off the end of RAM, `tools/remix/arena.py`), and the four geometry words (page count,
 free-list fill limit, arena clear length, recorder page cap) are computed
 from the reservation (`tools/remix/arena.py` stacks any number; until 6
 Oct 2026 Octakit's 528 at the top were the other one, and the `octakit`

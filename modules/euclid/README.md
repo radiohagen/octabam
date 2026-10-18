@@ -60,7 +60,7 @@ Rotation and odd Euclidean lengths do not rotate the track swing grid. The
 
 ## On the unit
 
-Not hardware-tested: the current revision has not been run on a unit.
+Cursory testing on Sam's MKII (owner report, 16 Oct 2026).
 
 ## Clock restart ordering
 

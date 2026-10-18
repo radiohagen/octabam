@@ -103,7 +103,9 @@ str_q:
 str_stops:
         .asciz  "PLAYBACK WILL STOP"
 str_home:
-        .asciz  "OFF/ON: BACK TO FLASHED"
+        .asciz  "REMEMBER AFTER REBOOT"
+str_saveerr:
+        .asciz  "REMIX CHOICE NOT SAVED"
 str_flashed:
         .asciz  "FLASHED"
 str_hash:
@@ -292,19 +294,17 @@ buildrows:
         addq.l  #1,%d1
         cmp.l   %d2,%d1
         bcs.s   4b
-        | after a switch (status RUN): a FLASHED separator and, on its own
-        | row where the whole name fits, the image a power-cycle returns to.
-5:      lea     (OSW_MBOX).l,%a1
-        move.l  (MB_STATUS,%a1),%d0
-        cmpi.l  #ST_RUN,%d0
-        bne.s   7f
-        lea     head1,%a3
+        | Always offer FLASHED, including after a startup-menu bypass,
+        | so a saved choice can be cleared from the installed image.
+5:      lea     head1,%a3
         lea     str_flash,%a0
         bsr.w   heading
         lea     str_empty,%a0
         bsr.w   headtailq
         bsr.w   flashname
         bsr.w   quiet
+        move.l  #osw_pickhome,%d0
+        move.l  %d0,(-16,%a2)           | FLASHED's name is selectable
         addq.l  #2,%d2
         | a failed last switch: its reason
 7:      lea     (OSW_MBOX).l,%a1
@@ -442,6 +442,15 @@ osw_pick:
         cmp.l   count,%d0
         bcc.s   9f
         move.l  %d0,idx
+        bra.s   pick_dialog
+
+        .global osw_pickhome
+osw_pickhome:
+        lea     (-8,%sp),%sp
+        movem.l %d2/%a2,(%sp)
+        moveq   #-1,%d0
+        move.l  %d0,idx                 | FLASHED: clear the saved choice
+pick_dialog:
         | line 1: "BOOT <label>?"
         lea     line1,%a2
         clr.b   (%a2)
@@ -450,9 +459,14 @@ osw_pick:
         bsr.w   strcat
         addq.l  #8,%sp
         move.l  idx,%d0
+        bmi.s   pick_home_label
         mulu.w  #NLEN,%d0
         lea     labels,%a0
         add.l   %d0,%a0
+        bra.s   pick_label
+pick_home_label:
+        bsr.w   flashname
+pick_label:
         move.l  %a0,-(%sp)
         move.l  %a2,-(%sp)
         bsr.w   strcat
@@ -608,6 +622,8 @@ osw_body_end:
 osw_load:
         lea     (-24,%sp),%sp
         movem.l %d2-%d5/%a2-%a3,(%sp)
+        tst.l   boot_pending
+        bne.w   2f                     | boot: the engine's load is held; nothing to sync
         jsr     (0x4006d4a8).l          | as OS UPGRADE's deferred step (0x4006370c)
         | OS UPGRADE's pre-flash sequence (0x40080444..0x40080480)
         jsr     (0x400a10c8).l
@@ -626,7 +642,17 @@ osw_load:
         addq.l  #8,%sp
         bra.s   1b
         | "/BRAIN/REMIXES/" + name
-2:      lea     path,%a2
+2:      tst.l   idx
+        bpl.s   load_file
+        pea     str_empty
+        jsr     brain_remix_save
+        addq.l  #4,%sp
+        tst.l   %d0
+        bne.w   saveerr
+        clr.l   (OSW_MBOX+MB_MAGIC).l
+        bra.w   osw_reset
+load_file:
+        lea     path,%a2
         clr.b   (%a2)
         pea     str_ospath
         move.l  %a2,-(%sp)
@@ -689,7 +715,16 @@ osw_load:
         mvz.w   (NOR_BOOTVER).w,%d1
         cmp.l   %d1,%d0
         bne.w   bootver
+        tst.l   boot_pending
+        bne.s   load_hash
+        bsr.w   curname
+        move.l  %a0,-(%sp)
+        jsr     brain_remix_save
+        addq.l  #4,%sp
+        tst.l   %d0
+        bne.w   saveerr
         | the hash the chainloader checks
+load_hash:
         lea     (OSW_IMG).l,%a0
         move.l  %d4,%d0
         moveq   #0,%d1
@@ -919,6 +954,9 @@ notos:
 bootver:
         pea     str_bootver
         bra.s   msg
+saveerr:
+        pea     str_saveerr
+        bra.s   msg
 ioerr:
         pea     (STR_IOERR).l
 msg:    move.l  (%sp)+,%a0
@@ -928,7 +966,86 @@ msg:    move.l  (%sp)+,%a0
         addq.l  #8,%sp
         movem.l (%sp),%d2-%d5/%a2-%a3
         lea     (24,%sp),%sp
+        bsr.w   boot_release
         rts
+
+| Restore the card-wide selection before either of stock's boot posts.
+| The first post may be LOADING FILES on a card remembered in battery RAM.
+| Keep both posts while the UI task loads the image; replay them on error.
+        .global osw_bootproject, osw_bootfiles
+osw_bootproject:
+        bsr.w   boot_try
+        tst.l   boot_pending
+        beq.s   boot_project_stock
+        moveq   #1,%d0
+        move.l  %d0,boot_project
+        rts
+boot_project_stock:
+        pea     (0x100f8378).l
+        jmp     (0x40025752).l
+osw_bootfiles:
+        bsr.w   boot_try
+        tst.l   boot_pending
+        beq.s   boot_files_stock
+        addq.l  #1,boot_files
+        rts
+boot_files_stock:
+        jmp     (0x400228dc).l
+
+boot_try:
+        tst.l   boot_done
+        bne.w   boot_return
+        moveq   #1,%d0
+        move.l  %d0,boot_done
+        | RUN means the selected image is already running. A refusal is
+        | not retried on this boot. Startup menu EXIT is the escape hatch.
+        move.l  (OSW_MBOX+MB_STATUS).l,%d0
+        cmpi.l  #ST_NONE,%d0
+        bne.w   boot_return
+        move.l  (OSW_MBOX+MB_ESCAPE).l,%d0
+        cmpi.l  #0x10,%d0
+        beq.w   boot_return
+        tst.l   (FS_OPEN).l
+        beq.w   boot_return
+        lea     (-44,%sp),%sp
+        movem.l %d2-%d7/%a2-%a6,(%sp)
+        pea     boot_name
+        jsr     brain_remix_get
+        addq.l  #4,%sp
+        tst.l   %d0
+        beq.s   boot_restore
+        | Stage the exact saved filename, without depending on the menu
+        | scan or its cursor. No project is loaded yet, so do not sync.
+        pea     boot_name
+        pea     names
+        bsr.w   strcpy24
+        addq.l  #8,%sp
+        clr.l   idx
+        moveq   #1,%d0
+        move.l  %d0,boot_pending
+        pea     rec_load
+        pea     (UIQUEUE).l
+        jsr     (DEFER).l
+        addq.l  #8,%sp
+boot_restore:
+        movem.l (%sp),%d2-%d7/%a2-%a6
+        lea     (44,%sp),%sp
+boot_return:
+        rts
+
+boot_release:
+        tst.l   boot_pending
+        beq.s   boot_return
+        clr.l   boot_pending
+        tst.l   boot_project
+        beq.s   1f
+        clr.l   boot_project
+        bsr.w   boot_project_stock
+1:      tst.l   boot_files
+        beq.s   boot_return
+        subq.l  #1,boot_files
+        bsr.w   boot_files_stock
+        bra.s   1b
 
 | ---- strings -----------------------------------------------------------------
 | strcat(dst, src): append, bounded to 30 bytes in all (the dialog's line)
@@ -969,6 +1086,11 @@ rec_load:
         .long   osw_load
         .align  4
 count:  .long   0
+boot_done: .long 0
+boot_pending: .long 0
+boot_project: .long 0
+boot_files: .long 0
+boot_name: .space NLEN
 idx:    .long   0
 nhead:  .long   0
 lines:  .long   line1, str_stops, str_home

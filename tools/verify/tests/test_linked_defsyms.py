@@ -27,6 +27,7 @@ entry:
 @unittest.skipUnless(TOOLS, "needs the m68k-elf toolchain (make setup)")
 class DefsymLinkTests(unittest.TestCase):
     def setUp(self):
+        (ROOT / "out").mkdir(parents=True, exist_ok=True)
         self.dir = pathlib.Path(tempfile.mkdtemp(prefix="octabam_defsym_", dir=ROOT / "out"))
         self.src = self.dir / "unit.s"
         self.src.write_text(SRC)
@@ -37,7 +38,7 @@ class DefsymLinkTests(unittest.TestCase):
         shutil.rmtree(self.dir, ignore_errors=True)
 
     def _link(self, defs):
-        raw, _syms = platform_build.link_runtime(
+        raw, _syms, _gsyms, _tables = platform_build.link_runtime(
             [("K", self.unit)], self.dir / "w", dict(defs), 0x40a00000, unit_defs={"unit": defs})
         return raw
 
@@ -53,6 +54,33 @@ class DefsymLinkTests(unittest.TestCase):
         with self.assertRaises(SystemExit) as e:
             self._link((("VAL", 0x1234),))
         self.assertIn("defines VAL", str(e.exception))
+
+
+@unittest.skipUnless(TOOLS, "needs the m68k-elf toolchain (make setup)")
+class UnitTableTests(unittest.TestCase):
+    """Per-unit symbol tables: a same-named label in two units of one link
+    resolves to each unit's own definition, not by nm table order (the
+    octabam-bus storm, 15 Oct 2026)."""
+
+    def test_duplicate_names_scope_to_their_unit(self):
+        (ROOT / "out").mkdir(parents=True, exist_ok=True)
+        d = pathlib.Path(tempfile.mkdtemp(prefix="octabam_units_", dir=ROOT / "out"))
+        try:
+            (d / "one.s").write_text("        .text\n        .globl  one\none:    rts\n"
+                                     "cave:   rts\n")
+            (d / "two.s").write_text("        .text\n        .globl  two\ntwo:    rts\n"
+                                     "cave:   rts\n")
+            one = Linked("one", str((d / "one.s").relative_to(ROOT)), dram=True)
+            two = Linked("two", str((d / "two.s").relative_to(ROOT)), dram=True)
+            _raw, _flat, _gsyms, _tables = platform_build.link_runtime(
+                [("K", one), ("K", two)], d / "w", {}, 0x40a00000)
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+        self.assertEqual(_tables["one"]["cave"], _tables["one"]["one"] + 2)
+        self.assertEqual(_tables["two"]["cave"], _tables["two"]["two"] + 2)
+        self.assertNotEqual(_tables["one"]["cave"], _tables["two"]["cave"])
+        self.assertIn("one", _gsyms)
+        self.assertNotIn("cave", _gsyms)
 
 
 class ReferenceTests(unittest.TestCase):

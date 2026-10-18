@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""A hardware probe for USB AUDIO IN (the host's channels into inputs A/B, C/D or A-D)
-and the USB AUDIO stream it rides on, for anyone with an Octatrack on
+"""A hardware probe for the host's channels into inputs A/B, C/D or A-D
+(USB INPUTS) and the audio stream they ride on, for anyone with an Octatrack on
 `usb-io` to run against their own unit. Bryan T, 27 Sep 2026 (PR #492), for
 a report from an MKI (nordseele, USB_AUDIO_PR468_REVIEW.md): macOS
 CoreAudio restarting the stream's IO context hundreds of times, output-only
@@ -23,8 +23,8 @@ Two modes:
 
       tools/hw/usb_probe.py --mode churn --churn-cycles 100 --churn-on 0.3 --churn-off 0.1
 
-Both modes poll USB AUDIO's counters (vendor 0xc0/0x55, the EP3 IN ring:
-produced/consumed/overruns/bankdup/...) and USB AUDIO IN's (0xc0/0x56, the
+Both modes poll the audio-out's counters (vendor 0xc0/0x55, the EP3 IN ring:
+produced/consumed/overruns/bankdup/...) and the audio-in's (0xc0/0x56, the
 EP3 OUT ring: produced/underruns/overruns/bad/...) throughout, the requests
 tools/hw/usb_counters.py uses; a device-recipient control request needs no
 interface claim, so it runs beside the CoreAudio client.
@@ -46,9 +46,9 @@ Needs: `brew install portaudio`, then
 (libusb is found as tools/hw/usb_counters.py finds it; its docstring has
 the Intel/arm64 note for this Mac).
 
-`0x56` STALLs (reported, not fatal) on an image with no USB AUDIO IN; the
+`0x56` STALLs (reported, not fatal) on an image whose USB INPUTS is OFF; the
 EP3 OUT section of the report is then empty. `0x55` STALLs on an image with
-no USB AUDIO at all.
+no USB audio out (LAYOUT OFF).
 
 Attach the --json report to the issue or PR thread with the unit
 (MKI/MKII), the macOS version and the host app.
@@ -65,14 +65,14 @@ import time
 
 import numpy as np
 
-# USB AUDIO IN's counters (0x56), the EP3 OUT ring: usbaudio_in.s in_counters
+# the audio-in counters (0x56), the EP3 OUT ring: usbaudio_in.s in_counters
 IN_RING_NAMES = ("produced", "consumed", "pkts", "lastn", "lastfill", "underruns", "overruns",
                  "reprimes", "bad", "frames", "seconds", "minfill", "maxfill", "err", "partial")
-# USB AUDIO's counters (0x55), the EP3 IN ring: usbaudio.s
+# the audio-out counters (0x55), the EP3 IN ring: usbaudio.s
 AUDIO_NAMES = ("consumed", "acc", "overruns", "underruns", "lastn", "lastfill", "lastbank",
                "bankdup", "lastsamp", "srcjump", "reprimes", "minfill", "maxfill", "anchor", "produced")
 # the host -> unit stream's channel count is read from the CoreAudio device
-# (2 with USB AUDIO IN AB or IN CD, 4 with IN ABCD)
+# (2 with INPUTS AB or CD, 4 with ABCD)
 
 EXPECTED_RATE = 44100.0
 
@@ -91,7 +91,7 @@ def find_device():
 
 
 def read_counters(dev, ep3out):
-    """ep3out: USB AUDIO IN's ring (0x56); else USB AUDIO's EP3 IN ring (0x55)."""
+    """ep3out: the audio-in ring (0x56); else the audio-out's EP3 IN ring (0x55)."""
     req, names = (0x56, IN_RING_NAMES) if ep3out else (0x55, AUDIO_NAMES)
     n = 4 * len(names)
     raw = bytes(dev.ctrl_transfer(0xc0, req, 0, 0, n, timeout=1000))
@@ -330,14 +330,14 @@ def main():
               f"overruns +{ir['overruns_delta']} underruns +{ir['underruns_delta']} "
               f"bankdup +{ir['bankdup_delta']} reprimes +{ir['reprimes_delta']}")
     else:
-        print("EP3 IN (to the host):  no data (STALLed: the image has no USB AUDIO?)")
+        print("EP3 IN (to the host):  no data (STALLed: the image has no USB audio out -- LAYOUT OFF?)")
     if summary["ep3_out"]:
         orr = summary["ep3_out"]
         print(f"EP3 OUT (from the host): produced +{orr['produced_delta']}, underruns +{orr['underruns_delta']} "
               f"overruns +{orr['overruns_delta']} bad +{orr['bad_delta']}, "
               f"minfill/maxfill {orr['minfill_final']}/{orr['maxfill_final']}")
     else:
-        print("EP3 OUT (from the host): no data (STALLed: the image has no USB AUDIO IN?)")
+        print("EP3 OUT (from the host): no data (STALLed: the image has no USB audio in -- INPUTS OFF?)")
     if summary["at_close"]:
         ac = summary["at_close"]
         print(f"at stream close: EP3 IN overruns +{ac['ep3_in_overruns']} reprimes +{ac['ep3_in_reprimes']} "

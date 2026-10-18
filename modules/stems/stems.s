@@ -8,7 +8,7 @@
 | Every stock address below, with its evidence: docs/firmware/STEM_REC.md.
 |
 | Three parts share the state words below:
-|   stems_action      MAIN MENU > STEMS > REC, in the UI task; stems_source_action
+|   stems_action      STEMS > REC (UP+REC window), in the UI task; stems_source_action
 |                     T1-T8, MAIN, CUE, AB, CD; stems_switch_action the format
 |   stems_frame_hook  the per-frame tap, in the audio interrupt at IPL 5
 |   stems_task        our own RTOS task: the ring to the card, while recording
@@ -360,41 +360,335 @@ bus_src:    .long   BUS, BUS+0x80, IN_AB_OFF, IN_CD_OFF
             .long   IN_AB_OFF+IN_A_OFF, IN_AB_OFF+IN_B_OFF, IN_CD_OFF+IN_A_OFF, IN_CD_OFF+IN_B_OFF
         .balign 2
 
-| ---- the STEMS category (git show 4d2d6456:docs/superpowers/specs/2026-09-28-stem-rec-menu-design.md)
-| A fifth MAIN MENU category. The manifest's TableGrow gives the root a row
-| pointing at stems_cat_label, stems_icon and stems_list. The list and its
-| rows live here, in DRAM: the menu engine writes the list's cursor
-| fields, and STEM REC rewrites the rows' labels. A label changes by one
-| aligned long write to the row's +0x00, so a redraw reads a whole old
-| label or a whole new one. The menu redraws on keys only (STEM_REC.md
-| 16.1): a label the task changes shows at the next key.
-        .equ    ROW_LEN,       24           | a menu row (MAINMENU.md 1)
+| ---- STEMS window (UP+REC): own WCREATE window, not MAIN MENU ----------
+| Tuner-shaped: WCREATE / WFRAME / LPUSH, draw + key layer. No MENU_OPEN,
+| no root-child YES, no PROJECT borrow. Press only — REC release with UP
+| held must not toggle. Rows with action 0 are headings: skip one, never
+| land on a last heading (STEM_REC.md 16.1).
+        .equ    ROW_LEN,       24
         .equ    MENU_ROWS,     18
-        .equ    MENU_VISIBLE,  7            | a submenu pane's rows
-        .equ    ROW_SRC0,      2            | T1's row; the sources T1-T8, MAIN, CUE, AB, CD follow
+        .equ    MENU_VISIBLE,  6            | 7 at pitch 7 put PEAK at y=0 (clipped on h=64)
+        .equ    ROW_SRC0,      2
         .equ    NSRC,          12
-        .equ    ROW_SW0,       14           | AB STEREO; CD STEREO and 24 BIT follow
-        .equ    ROW_PEAK,      17           | PEAK: the last row
-| Rows with action 0 are headings. The engine skips ONE such row, not two
-| in a row, and never moves onto a last one (STEM_REC.md 16.1), so the
-| status row sits alone between REC and T1, and PEAK is the last row.
-        .equ    LIST_SEL,      0x0c         | a list's absolute selection: the row under the cursor
-        .global stems_cat_label, stems_icon, stems_icon_p0, stems_icon_p1, stems_list, stems_rows, stems_zero
-        .equ    stems_zero, 0               | the root row's action, getter and id
+        .equ    ROW_SW0,       14
+        .equ    ROW_PEAK,      17
+        .equ    LIST_SEL,      0x0c
+        .equ    LIST_TOP,      0x04         | first visible row (our scroll)
+        .equ    ROW_ACTION,    0x08
+        .equ    KROWS,         0x46100b18
+        .equ    KUP,           0x33
+        .equ    KDOWN,         0x20
+        .equ    REC_CONT,      0x4004877c
+        .equ    REC_EARLY,     0x4004883a
+        .equ    WCREATE,       0x4005829c   | (w, h, 0, 0, class, closed) -> handle
+        .equ    WFRAME,        0x40056f4c
+        .equ    WDESTROY,      0x40055db4   | (&handle): destroy, SCRDIRTY, handle = 0
+        .equ    CLEAR,         0x40035624
+        .equ    FONT,          0x400ba876
+        .equ    TEXT,          0x40012bd8   | (font, surf, x, y, limit, str)
+        .equ    RULE,          0x40011910
+        .equ    BOX,           0x40012254   | (surf, x1, y1, x2, y2, mode): -1 invert
+        .equ    LPUSH,         0x40031494
+        .equ    LPOP,          0x4003146c
+        .equ    SCRDIRTY,      0x46c7c72c
+        .equ    WINW,          115
+        .equ    WINH,          64           | screen / stock WCREATE max; 72 overflowed the panel
+        .equ    WINCLASS,      5            | TEMPO-like; not MAIN MENU class 1
+        .equ    ROW_PITCH,     7            | glyph tallness; PEAK at y=7 with 6 visible
+        .global stems_cat_label, stems_icon, stems_icon_p0, stems_icon_p1
+        .global stems_list, stems_rows, stems_zero, stems_enter
+        .global stems_live, stems_win, stems_rec_key, stems_draw, stems_close
+        .equ    stems_zero, 0
 stems_cat_label:
         .asciz  "STEMS"
         .balign 4
-stems_icon:                                 | 19 x 9, two planes (MAINMENU.md 1)
+stems_icon:                                 | kept for symbol stability; unused (no root row)
         .long   0x13, 0x09, 0x01, stems_icon_p0, stems_icon_p1
-stems_icon_p0:                              | a record dot: one long a column, the column in its top byte
+stems_icon_p0:
         .long   0, 0, 0, 0, 0, 0
         .long   0x1c000000, 0x3e000000, 0x7f000000, 0x7f000000, 0x7f000000, 0x3e000000, 0x1c000000
         .long   0, 0, 0, 0, 0, 0
-stems_icon_p1:                              | the stock icons' second plane, every column
+stems_icon_p1:
         .rept   19
         .long   0xff800000
         .endr
-stems_list:                                 | shipped filled in: the boot's set-up covers only stock lists
+stems_enter:
+        moveq   #MENU_ROWS,%d0
+        move.l  %d0,stems_list
+        clr.l   stems_list+LIST_TOP
+        clr.l   stems_list+0x08
+        clr.l   stems_list+LIST_SEL
+        moveq   #MENU_VISIBLE,%d0
+        move.l  %d0,stems_list+0x10
+        moveq   #MENU_ROWS,%d0
+        move.l  %d0,stems_list+0x14
+        lea     stems_rows,%a0
+        move.l  %a0,stems_list+0x18
+        lea     lbl_rec,%a0
+        move.l  %a0,stems_rows
+        lea     lbl_ready,%a0
+        move.l  %a0,stems_rows+ROW_LEN
+        moveq   #-1,%d0
+        move.l  %d0,ui_key
+        rts
+| ---- open / close (tuner shape) ----------------------------------------
+stems_open:
+        bsr.w   stems_enter
+        pea     stems_close
+        pea     WINCLASS
+        clr.l   -(%sp)
+        clr.l   -(%sp)
+        pea     WINH
+        pea     WINW
+        jsr     WCREATE
+        lea     24(%sp),%sp
+        move.l  %d0,stems_win
+        beq.s   .Lsw_ofail
+        move.l  %d0,-(%sp)
+        jsr     WFRAME
+        addq.l  #4,%sp
+        pea     STEMS_LAYER
+        jsr     LPUSH
+        addq.l  #4,%sp
+        moveq   #1,%d0
+        move.l  %d0,stems_live
+        bra.w   stems_draw
+.Lsw_ofail:
+        rts
+stems_close:
+        tst.l   stems_win
+        beq.s   .Lsw_cout
+        pea     stems_win
+        jsr     WDESTROY
+        addq.l  #4,%sp
+        pea     STEMS_LAYER
+        jsr     LPOP
+        addq.l  #4,%sp
+        clr.l   stems_live
+.Lsw_cout:
+        rts
+| ---- UP+REC chord: press opens/toggles; release ignored ----------------
+stems_rec_key:
+        move.l  %d0,-(%sp)
+        moveq   #0,%d0
+        move.b  KROWS+(KUP>>3),%d0
+        btst    #(KUP&7),%d0
+        bne.s   .Lsw_chord
+        move.l  (%sp)+,%d0
+        tst.l   8(%sp)
+        bne.s   .Lsw_stock
+        jmp     REC_EARLY
+.Lsw_stock:
+        jmp     REC_CONT
+.Lsw_chord:
+        tst.l   12(%sp)
+        bne.s   .Lsw_press
+        move.l  (%sp)+,%d0
+        rts
+.Lsw_press:
+        move.l  (%sp)+,%d0
+        lea     -16(%sp),%sp
+        movem.l %d0-%d1/%a0-%a1,(%sp)
+        tst.l   stems_win
+        beq.s   .Lsw_ropen
+        bsr.w   stems_close
+        movem.l (%sp),%d0-%d1/%a0-%a1
+        lea     16(%sp),%sp
+        rts
+.Lsw_ropen:
+        bsr.w   stems_open
+        movem.l (%sp),%d0-%d1/%a0-%a1
+        lea     16(%sp),%sp
+        rts
+| ---- keys: UP/DOWN move (skip one heading); YES runs the row -----------
+stems_ud:
+        move.l  %d2,-(%sp)
+        move.l  %d3,-(%sp)
+        moveq   #1,%d0                  | DOWN
+        moveq   #KUP,%d1
+        cmp.l   12(%sp),%d1
+        bne.s   .Lsw_udir
+        moveq   #-1,%d0                 | UP
+.Lsw_udir:
+        move.l  stems_list+LIST_SEL,%d1
+        move.l  %d1,%d2                 | d2 = old sel (stay on failure)
+        add.l   %d0,%d1                 | candidate
+        bmi.s   .Lsw_ustay
+        cmp.l   #MENU_ROWS,%d1
+        bge.s   .Lsw_ustay
+        lea     stems_rows,%a0
+        move.l  %d1,%d3
+        mulu.w  #ROW_LEN,%d3
+        tst.l   ROW_ACTION(%a0,%d3.l)
+        bne.s   .Lsw_uok                  | selectable
+        cmp.l   #MENU_ROWS-1,%d1        | last heading: never land
+        beq.s   .Lsw_ustay
+        add.l   %d0,%d1                 | skip exactly one heading
+        bmi.s   .Lsw_ustay
+        cmp.l   #MENU_ROWS,%d1
+        bge.s   .Lsw_ustay
+        move.l  %d1,%d3
+        mulu.w  #ROW_LEN,%d3
+        tst.l   ROW_ACTION(%a0,%d3.l)
+        beq.s   .Lsw_ustay
+.Lsw_uok:
+        move.l  %d1,stems_list+LIST_SEL
+        move.l  stems_list+LIST_TOP,%d0
+        cmp.l   %d0,%d1
+        bge.s   .Lsw_ubot
+        move.l  %d1,stems_list+LIST_TOP
+        bra.s   .Lsw_upeak
+.Lsw_ubot:
+        move.l  %d0,%d3
+        addq.l  #5,%d3                  | MENU_VISIBLE-1
+        cmp.l   %d3,%d1
+        ble.s   .Lsw_upeak
+        move.l  %d1,%d0
+        subq.l  #5,%d0
+        move.l  %d0,stems_list+LIST_TOP
+.Lsw_upeak:
+| On the last selectable row (24 BIT), pin the pane so PEAK (last heading)
+| stays visible — cursor never lands on it, but the readout must show.
+        cmp.l   #MENU_ROWS-2,%d1
+        blt.s   .Lsw_udone
+        moveq   #MENU_ROWS-MENU_VISIBLE,%d0
+        move.l  %d0,stems_list+LIST_TOP
+        bra.s   .Lsw_udone
+.Lsw_ustay:
+        move.l  %d2,stems_list+LIST_SEL
+.Lsw_udone:
+        move.l  (%sp)+,%d3
+        move.l  (%sp)+,%d2
+        bra.w   stems_draw
+stems_yes:
+        move.l  stems_list+LIST_SEL,%d0
+        mulu.w  #ROW_LEN,%d0
+        lea     stems_rows,%a0
+        move.l  ROW_ACTION(%a0,%d0.l),%d1
+        beq.s   .Lsw_ydraw
+        move.l  %d1,%a0
+        jsr     (%a0)
+.Lsw_ydraw:
+        bra.w   stems_draw
+| ---- draw --------------------------------------------------------------
+| d0=x d1=y a0=str a5=surface
+stems_text:
+        move.l  %a0,-(%sp)
+        pea     -1
+        move.l  %d1,-(%sp)
+        move.l  %d0,-(%sp)
+        move.l  %a5,-(%sp)
+        pea     FONT
+        jsr     TEXT
+        lea     24(%sp),%sp
+        rts
+stems_draw:
+        lea     -44(%sp),%sp
+        movem.l %d2-%d7/%a2-%a5,(%sp)
+        move.l  stems_win,%d0
+        beq.w   .Lsw_dout
+        move.l  %d0,%a5
+        lea     36(%a5),%a5             | surface
+        move.l  %a5,-(%sp)
+        jsr     CLEAR
+        addq.l  #4,%sp
+| Tuner/Elektron y: 0 at the bottom, up is larger. Header in the top
+| strip (h-10), list rows step DOWN the screen (smaller y). stems_text
+| clobbers d0/d1 — keep the row baseline in d3. h-14 left PEAK in the
+| frame; h-10 clears it with MENU_VISIBLE=6 / ROW_PITCH=7.
+        move.l  4(%a5),%d7              | h
+        sub.l   #10,%d7                 | header band (was 14; too tall for PEAK)
+        moveq   #4,%d0
+        move.l  %d7,%d1
+        addq.l  #2,%d1                  | title baseline near the top
+        lea     stems_cat_label,%a0
+        bsr.w   stems_text
+        pea     1
+        move.l  (%a5),%d0               | w
+        subq.l  #6,%d0
+        move.l  %d0,-(%sp)
+        move.l  %d7,%d0
+        subq.l  #1,%d0
+        move.l  %d0,-(%sp)              | rule under the title
+        pea     4
+        move.l  %a5,-(%sp)
+        jsr     RULE
+        lea     20(%sp),%sp
+        move.l  stems_list+LIST_TOP,%d5
+        move.l  stems_list+LIST_SEL,%d6
+        moveq   #0,%d4                  | visible index
+.Lsw_drow:
+        cmp.l   #MENU_VISIBLE,%d4
+        bge.s   .Lsw_ddirty
+        move.l  %d5,%d2
+        add.l   %d4,%d2                 | absolute row
+        cmp.l   #MENU_ROWS,%d2
+        bge.s   .Lsw_ddirty
+        lea     stems_rows,%a2
+        move.l  %d2,%d0
+        mulu.w  #ROW_LEN,%d0
+        move.l  (%a2,%d0.l),%a0         | label
+        move.l  %d7,%d3                 | first row under the title band
+        moveq   #8,%d0                  | first row: 1 px under the rule (glyph top = y+6)
+        sub.l   %d0,%d3
+        move.l  %d4,%d0
+        mulu.w  #ROW_PITCH,%d0
+        sub.l   %d0,%d3                 | d3 = row y (survives text)
+        bmi.s   .Lsw_dnext              | past the bottom: skip
+        moveq   #4,%d0
+        move.l  %d3,%d1
+        bsr.w   stems_text
+        cmp.l   %d6,%d2                 | selected?
+        bne.s   .Lsw_dnext
+        pea     -1
+        move.l  %d3,%d0
+        addq.l  #6,%d0
+        move.l  %d0,-(%sp)              | y2: glyph extends up
+        move.l  (%a5),%d0
+        subq.l  #3,%d0
+        move.l  %d0,-(%sp)              | x2
+        move.l  %d3,-(%sp)              | y1
+        pea     2                       | x1
+        move.l  %a5,-(%sp)
+        jsr     BOX
+        lea     24(%sp),%sp
+.Lsw_dnext:
+        addq.l  #1,%d4
+        bra.s   .Lsw_drow
+.Lsw_ddirty:
+        moveq   #1,%d0
+        move.l  %d0,SCRDIRTY
+.Lsw_dout:
+        movem.l (%sp),%d2-%d7/%a2-%a5
+        lea     44(%sp),%sp
+        rts
+| Input layer: {0, keys, encoders, 0, 0, -1, -1}. Key record 26 B.
+        .balign 4
+STEMS_LAYER:
+        .long   0, STEMS_KEYS, STEMS_ENCS, 0, 0, -1, -1
+STEMS_KEYS:
+        .byte   0x33, 0                 | UP
+        .long   stems_ud, 0, stems_ud, 0, 0
+        .word   15, 5
+        .byte   0x20, 0                 | DOWN
+        .long   stems_ud, 0, stems_ud, 0, 0
+        .word   15, 5
+        .byte   0x31, 0                 | YES
+        .long   stems_yes, 0, 0, 0, 0
+        .word   0, 0
+        .byte   0x32, 0                 | NO
+        .long   stems_close, 0, 0, 0, 0
+        .word   0, 0
+        .byte   0xff, 0
+        .long   0, 0, 0, 0, 0
+        .word   0, 0
+STEMS_ENCS:
+        .byte   0xff, 0
+        .long   0, 0, 0, 0, 0
+        .balign 4
+stems_win:  .long 0
+stems_live: .long 0
+stems_list:
         .long   MENU_ROWS, 0, 0, 0, MENU_VISIBLE, MENU_ROWS, stems_rows
 stems_rows:                                 | label, window, action, getter, child, page id
         .long   lbl_rec,   0, stems_action, 0, 0, 0

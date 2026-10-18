@@ -374,6 +374,14 @@ Not yet.
 
 ## Hooks
 
+REMIX SWITCH stores its last selected filename as a CARD Blob under
+`octabam.remix-switch`, key 1. `brain_remix_get` / `brain_remix_save` read
+and update it in card.work (card.strd is the SAVE PROJECT recovery copy),
+preserving unrelated records and unknown keys. The filename is bounded
+to 24 bytes, NUL-terminated and confined to `/BRAIN/REMIXES/`; malformed
+names, duplicate records and unsupported schemas never trigger a boot.
+The switcher calls the writer only after the engine's sync has drained.
+
 | site | stock | stub |
 |---|---|---|
 | `0x40085342` | `moveq #27,%d1 / movel %d1,%fp@(-570)`, LOAD PROJECT before the empty-project init `0x400909d8` | `brain_on_load`: `brain_load`, then the two instructions |

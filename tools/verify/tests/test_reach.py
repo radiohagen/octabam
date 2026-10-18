@@ -391,7 +391,7 @@ class PlanTests(unittest.TestCase):
 
     def test_a_variant_only_gate_is_a_gate_of_its_module(self):
         from remix import registry
-        scripts = {g.script for g in reach.variant_gates(registry.modules()["USB AUDIO OUT"])}
+        scripts = {g.script for g in reach.variant_gates(registry.modules()["USB"])}
         self.assertIn("tools/verify/verify_usb_post.py", scripts)
         self.assertIn("tools/verify/verify_usb_align.py", scripts)
 

@@ -131,7 +131,7 @@ for f in /opt/m68k-elf/bin/m68k-elf-*; do sudo ln -sf "$f" /usr/local/bin/; done
 
 - `pkgconf` is needed: without `pkg-config`, binutils' configure stops on
   `--with-zstd was given, but pkgconfig/libzstd.pc is not found`.
-- ✅ USB MIDI's linked unit matches its author's build at `0x400d24f0`,
+- ✅ USB's `usbmidi` unit matches its author's build at `0x400d24f0`,
   1,124 bytes (`make bus REMIX=octatrick`).
 - ✅ This repository's pinned ColdFire bytes still match
   (`tools/build/label_fmt.py`), and `scripts/disasm.sh emac 0x40003664 8`
@@ -168,7 +168,7 @@ done
   (`bne.s` to a `.global` label more than 127 bytes into the section: it
   emits an `R_68K_PC8` relocation that overflows). The same loop with a
   local label assembles at any offset.
-- ❌ USB MIDI's linked unit links to 1,130 bytes that differ from its author's
+- ❌ USB's `usbmidi` unit links to 1,130 bytes that differ from its author's
   (sha256 `b49af01e…`, not `6291d91e…`), so the build refuses it.
 - ✅ Both differences are caused by the toolchain: the bare-metal toolchain
   above builds both units to match their authors' bytes from the same source.

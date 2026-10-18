@@ -32,6 +32,11 @@ osw_chain:
         bsr.w   txmidi
         .endif
         lea     (OSW_MBOX).l,%a1
+        | The bootstrap clears its key byte on an ordinary boot. EXIT
+        | from its startup menu leaves 0x10; capture it before the OS runs.
+        moveq   #0,%d0
+        move.b  (0x80000200).l,%d0
+        move.l  %d0,(MB_ESCAPE,%a1)
         move.l  (MB_MAGIC,%a1),%d0
         cmpi.l  #OSW_MAGIC,%d0
         bne.s   nombox

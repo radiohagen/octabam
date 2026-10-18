@@ -259,9 +259,9 @@ last section), the hardware capture setup — protocol in `docs/history/CAPTURE_
 | tool | what it does |
 |---|---|
 | `tools/hw/capture_hw.py` | records the unit through an audio interface and analyses the capture numerically |
-| `tools/hw/usb_counters.py` | USB AUDIO's ring counters (`--in`: USB AUDIO IN's) over their vendor requests, once or `--watch` |
+| `tools/hw/usb_counters.py` | the audio-out's ring counters (`--in`: the audio-in's) over their vendor requests, once or `--watch` |
 | `tools/hw/usb_probe.py` | a host session (sustained tone or open/close churn) against a unit on `usb-io`, both rings' counters polled while the stream is open, a verdict and a JSON report |
-| `tools/hw/sos_capture.py` | the sound-on-sound loop sample-exact: a fixture project, a tone + sample-index-ramp signal, a capture over USB AUDIO IN AB / OUT TRACKS (remix `sos-capture`), the same project and signal under the port, a compare that finds the arm, aligns unit and port and lists where recirculating passes or the two runs differ, and `wraps`, which classifies each wrap (repeat, skip, a sample neither lag explains) from the loop's own lag, on any audio |
+| `tools/hw/sos_capture.py` | the sound-on-sound loop sample-exact: a fixture project, a tone + sample-index-ramp signal, a capture over USB INPUTS AB / LAYOUT TRACKS (remix `sos-capture`), the same project and signal under the port, a compare that finds the arm, aligns unit and port and lists where recirculating passes or the two runs differ, and `wraps`, which classifies each wrap (repeat, skip, a sample neither lag explains) from the loop's own lag, on any audio |
 | `tools/hw/usb_offset.py` | the offset in samples between two channels of one recording, per click (cross-correlation and onset): a click on one track recorded with `tools/rec`, for example a track channel against MAIN in the twenty-channel stream; `--selftest` |
 | `tools/harness/usb_align.py` | the twenty-channel stream's MAIN-to-track alignment under the port: the tone project on a staged card, EP3 IN drained once the sequencer plays, the lag from each tone's phase in its track channel and in MAIN |
 | `tools/hw/rec.swift` | drop-free CoreAudio HAL recorder (compiled on demand); the ffmpeg/avfoundation path drops samples |

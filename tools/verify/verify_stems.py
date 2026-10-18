@@ -3,14 +3,14 @@
 
     python3 tools/verify/verify_stems.py [remix] [--long] [--fat32] [--static] [--only=NAME,...] [--alone]
 
-Static, from the built image: MAIN MENU has five categories, the four
-stock ones byte for byte and STEMS fifth, with its icon and its list;
-CONTROL is stock; the STEMS list ships filled in, its eighteen rows with
-their actions, headings and labels as at boot; the frame site jumps to the
-hook; the ring and the stack sit at the top of the platform reserve, above
-the runtime's stage. `--static` stops there; `--only=NAME,...` runs only
-the named port runs (their names are main()'s table). Then, when the
-port is built, the fixtures are built from the project template
+Static, from the built image: MAIN MENU root and PROJECT stay stock (no
+STEMS row); CONTROL is stock; the STEMS list ships filled in, its eighteen
+rows with their actions, headings and labels as at boot; the frame site
+jumps to the hook; REC's press handler jumps to stems_rec_key (UP + REC);
+the ring and the stack sit at the top of the platform reserve, above the
+runtime's stage. `--static` stops there; `--only=NAME,...` runs only the
+named port runs (their names are main()'s table). Then, when the port is
+built, the fixtures are built from the project template
 (tools/verify/stems_fixture.py; STEMS_TEMPLATE=<dir>, default
 out/projects/Ultimate FX 1.5.3) and the port runs of the proof of concept,
 of the streaming plan and of the eight-track plan follow: the mask takes
@@ -45,9 +45,11 @@ RUNTIME_ELF = pathlib.Path("out/platform/runtime/runtime.elf")
 LAYOUT_DIR = pathlib.Path("out/platform")      # platform_build.LAYOUT lives here, by name
 CONTROL_DESC, CONTROL_ROWS, ROW_LEN, STOCK_N = 0x400cbd54, 0x400cc5a8, 24, 6
 ROOT_DESC, ROOT_ROWS, ROOT_N = 0x400cbd8c, 0x400cc698, 4      # MAIN MENU's root (MAINMENU.md 2)
-MENU_ROWS, ROW_TRK0, ROW_PEAK, MENU_VISIBLE = 18, 2, 17, 7     # stems.s: the STEMS list
+PROJECT_DESC, PROJECT_N = 0x400cbcac, 15                     # stock PROJECT (MAINMENU.md 2)
+MENU_ROWS, ROW_TRK0, ROW_PEAK, MENU_VISIBLE = 18, 2, 17, 6     # stems.s: the STEMS list
 FRAME_SITE = 0x40004b12
 ATA_FIRST_SITE = 0x40014cfe  # the stock PIO write's first sector (STEM_REC.md 11.7)
+REC_SITE = 0x40048774        # REC press handler (PANEL.md code 0x29)
 
 # Task 11's interface (STEM_REC.md section 9.4): T1's slot in the read-back
 # half, and the direction char blockdump.py's summary prints for that class.
@@ -144,15 +146,14 @@ def rd32(img, a):
 
 def static(img, stock, s):
     n = rd32(img, ROOT_DESC)
-    check("MAIN MENU has five categories", n == 5, f"{n}")
+    check("MAIN MENU root stays stock (four categories)", n == ROOT_N, f"{n}")
     rows = rd32(img, ROOT_DESC + 0x18)
-    check("the root rows moved", rows != ROOT_ROWS, f"0x{rows:08x}")
-    a, b = rows - BASE, ROOT_ROWS - BASE
+    check("the root rows pointer is stock", rows == ROOT_ROWS, f"0x{rows:08x}")
+    a, b = ROOT_ROWS - BASE, ROOT_ROWS - BASE
     check("the four stock categories came across byte for byte",
           img[a:a + ROW_LEN * ROOT_N] == stock[b:b + ROW_LEN * ROOT_N])
-    r5 = [rd32(img, rows + ROW_LEN * ROOT_N + 4 * k) for k in range(6)]
-    check("category 5 is STEMS: its label, its icon and its list; no action, getter or id",
-          r5 == [s["stems_cat_label"], s["stems_icon"], 0, 0, s["stems_list"], 0], f"{[hex(x) for x in r5]}")
+    check("PROJECT stays stock (fifteen rows)", rd32(img, PROJECT_DESC) == PROJECT_N,
+          f"{rd32(img, PROJECT_DESC)}")
     c = CONTROL_DESC - BASE
     check("CONTROL is stock: its descriptor byte for byte (six rows, its own row array)",
           img[c:c + 0x1c] == stock[c:c + 0x1c], f"count {rd32(img, CONTROL_DESC)}")
@@ -162,6 +163,9 @@ def static(img, stock, s):
     want = bytes.fromhex("4ef9") + s["stems_ata_first"].to_bytes(4, "big")
     got = img[ATA_FIRST_SITE - BASE:ATA_FIRST_SITE - BASE + 6]
     check("0x40014cfe is jmp stems_ata_first", got == want, got.hex())
+    want = bytes.fromhex("4ef9") + s["stems_rec_key"].to_bytes(4, "big") + b"\x4e\x71"
+    got = img[REC_SITE - BASE:REC_SITE - BASE + 8]
+    check("0x40048774 is jmp stems_rec_key; nop", got == want, got.hex())
 
 
 def regions(s):
@@ -200,7 +204,7 @@ def menu_static(s):
     lng = lambda a: int.from_bytes(runtime_at(s, a, 4), "big")  # noqa: E731
     txt = lambda a: runtime_at(s, a, 32).split(b"\0")[0].decode("latin1")  # noqa: E731
     lst = [lng(s["stems_list"] + 4 * k) for k in range(7)]
-    check("the STEMS list ships filled in: 18 rows, 7 visible, its rows",
+    check("the STEMS list ships filled in: 18 rows, 6 visible, its rows",
           lst == [MENU_ROWS, 0, 0, 0, MENU_VISIBLE, MENU_ROWS, s["stems_rows"]], f"{[hex(x) for x in lst]}")
     rows = [[lng(s["stems_rows"] + ROW_LEN * r + 4 * k) for k in range(6)] for r in range(MENU_ROWS)]
     check("REC runs stems_action; T1-T8 and MAIN to CD stems_source_action; the three switches "

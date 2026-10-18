@@ -35,7 +35,7 @@ KEY KLVL TXTR.
   and blur) and the shared countdown. 1,093 words per payload; its tables
   are 546 P words, parked in the stock curve bank by the build. Pockey
   (the first version, 13–22 Sep 2026 in Character) priced 277.
-- Not on hardware. 22 Sep 2026's squeal on the master, which removed the
+- Cursory testing on Sam's MKII (owner report, 16 Oct 2026). 22 Sep 2026's squeal on the master, which removed the
   first TXTR, was never reproduced on the harness and is not addressed here.
 
 ## Gates

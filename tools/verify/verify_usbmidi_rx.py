@@ -19,7 +19,7 @@ store per byte; the watch's log is read after the port exits), compared with
 the bytes sent. Each transfer must also be ACCEPTED whole by the EP2 OUT dTD
 (the dormant init primes it at 64 bytes).
 
-SKIPs when the remix has no USB MIDI or the port is not built (`make emu-cf`).
+SKIPs when the remix has no USB or the port is not built (`make emu-cf`).
 What this cannot see: timing against DIN traffic arriving during a packet,
 and the controller's behaviour on the unit (the dTD re-size is port-only).
 """
@@ -65,8 +65,8 @@ def main():
     if not IMAGE.is_file():
         print("  [FAIL] verify_usbmidi_rx: no out/mainos_bus.bin (make bus)")
         return 1
-    if "USB MIDI" not in registry.remix(os.environ.get("REMIX")).modules:
-        print("  [SKIP] verify_usbmidi_rx: the remix has no USB MIDI")
+    if "USB" not in registry.remix(os.environ.get("REMIX")).modules:
+        print("  [SKIP] verify_usbmidi_rx: the remix has no USB")
         return 0
     notes16 = b"".join(bytes([0x90, 0x30 + i, 0x64]) for i in range(16))
     sysex = bytes([0xf0]) + bytes(range(1, 67)) + bytes([0xf7])

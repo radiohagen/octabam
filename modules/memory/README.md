@@ -4,7 +4,7 @@ Platform module. Owns octabam's reserve in stock's audio page arena and sizes it
 
 ## The reserve
 
-Stock keeps one arena of 6,144-byte pages for Flex samples and the track recorders: 14,602 pages at `0x40a955e0` (`tools/remix/arena.py`). octabam's platform takes pages off the bottom by moving the arena's base literal at its 24 sites and rewriting the four geometry words. Until 11 Oct 2026 it took a fixed 1,707 pages (10,487,808 B) in every remix with a DRAM unit.
+Stock keeps one arena of 6,144-byte pages for Flex samples and the track recorders: 14,602 pages at `0x40a955e0` (`tools/remix/arena.py`). octabam's platform takes pages off the bottom by moving the arena's base literal at its 23 sites and rewriting the four geometry words. Until 11 Oct 2026 it took a fixed 1,707 pages (10,487,808 B) in every remix with a DRAM unit.
 
 The reserve now holds exactly what is claimed, in whole pages:
 

@@ -31,8 +31,8 @@ def load_inc(modules):
 MODULE = Module(
     name="cfmeter", key="CF METER", kind=Kind.HYBRID,
     category=Category.REFERENCE, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.PORT,
-    proof_note="ColdFire half on image 92 (Sam's MKII, 3 Oct 2026: interrupt 123.1 us stopped, 213.5 us playing); "
+    proof=Proof.HARDWARE,
+    proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "ColdFire half on image 92 (Sam's MKII, 3 Oct 2026: interrupt 123.1 us stopped, 213.5 us playing); "
                "the DSP slots and DBRN under the port only (4 Oct 2026)",
     doc="Probe: frame-interrupt duration and (with CF METER IDLE) idle time, plus core 0's frame spin count, "
         "ESAI underrun/overrun frames and frame period, printed as audio on T8's FX2.",

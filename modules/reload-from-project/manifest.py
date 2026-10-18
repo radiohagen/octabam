@@ -24,5 +24,5 @@ MODULE = runpy.run_path(str(_UPSTREAM), run_name="remix_manifest_reload_from_pro
 # are added here rather than in his manifest. His conflict with OCTAKIT is
 # dropped: Octakit is not in octabam since 6 Oct 2026 (KITS replaces it).
 MODULE = dataclasses.replace(
-    MODULE, conflicts=tuple(c for c in MODULE.conflicts if c[0] != "OCTAKIT"), category=Category.MACHINES, author="Zac-Kyoti/octatrack-kyoti-fw", author_url="https://github.com/Zac-Kyoti/octatrack-kyoti-fw",
+    MODULE, conflicts=tuple(c for c in MODULE.conflicts if c[0] != "OCTAKIT"), category=Category.UTILITIES, author="Zac-Kyoti/octatrack-kyoti-fw", author_url="https://github.com/Zac-Kyoti/octatrack-kyoti-fw",
     proof=Proof.HARDWARE, proof_note="the author's MKI (standalone image), sequencer and metronome phase kept; 1 Oct 2026 from DRAM in an octabam image with all six KYOTI modules")

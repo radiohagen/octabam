@@ -713,6 +713,23 @@ def main():
             bg.pop(name).result()
 
 
+    # The blank boot: no CS1 -- an EMPTY RESET's next power-up (the stock
+    # checksum fails, the boot takes the blank path). The stock blank project
+    # never runs the store's new-project event, so without the boot hook
+    # (kits_bootblank) KITS stays off and PART opens the stock Part window
+    # (a field report, 15 Oct 2026). The hook makes the boot's blank project
+    # a KITS project: the empty library, READY from the first screen.
+    def blankboot_run():
+        dmp = (f"{KS:#x},48={OUT / 'blank_st.bin'};0x100f85a0,72={OUT / 'blank_cs1.bin'};"
+               f"0x46c82456,4={OUT / 'blank_cur.bin'}")
+        run([EMU, "--image", image, "--card", card, "--set", "OCTABAM", "--project", "KITS",
+             "--load-ms", "90000", "--no-post", "--live-script", s1, "--mem-dump", dmp], OUT / "blank.txt")
+
+    if not only or "blank" in only:
+        for f in ("blank_st.bin", "blank_cs1.bin", "blank_cur.bin", "blank.txt"):
+            (OUT / f).unlink(missing_ok=True)
+        defer("blank", (), blankboot_run)
+
     def newboot_run():
         files = emu_card.extract_image((OUT / "newsave.img").read_bytes())
         name = next(k.split("/")[1] for k in files if k.startswith("OCTABAM/") and k.count("/") == 2
@@ -754,20 +771,25 @@ def main():
             run(cmd, OUT / f"{tag}.txt")
         with ThreadPoolExecutor(3) as ex:
             list(ex.map(lambda t: kbad(*t), [("kbad_ignore", None), ("kbad_over", 1), ("kbad_back", 2)]))
-        # the prompt: an encoder turn opens the list, LEVEL scrolls, YES answers
+        # The refusal explanation comes first; YES opens the recovery list.
         def ui(tag, *rows):
             sc = Script(); sc.tap("no", 400); sc.send("enc 1 1", 800)
+            if tag != "kui_info" and tag != "kui_cancel":
+                sc.tap("yes", 400)
             for r in rows:
                 sc.send(r, 700)
             sp = OUT / f"{tag}.script"; sp.write_text(sc.text())
             dmp = (f"{KS:#x},48={OUT / f'{tag}_st.bin'};{sym['store_npend']:#x},4={OUT / f'{tag}_np.bin'};"
                    f"{sym['store_pend']:#x},32={OUT / f'{tag}_pend.bin'};{sym['KBACKUP']:#x},8={OUT / f'{tag}_bk.bin'};"
                    f"0x460e5e28,4={OUT / f'{tag}_cbs.bin'};0x460e5e30,4={OUT / f'{tag}_obj.bin'};"
-                   f"{sym['store_mown']:#x},4={OUT / f'{tag}_mown.bin'}")
+                   f"{sym['store_mown']:#x},4={OUT / f'{tag}_mown.bin'};"
+                   f"{sym['store_info_lines']:#x},4={OUT / f'{tag}_explain.bin'};"
+                   f"0x460e5cd0,4={OUT / f'{tag}_dialog.bin'}")
             run([EMU, "--image", image, "--card", c, "--set", "OCTABAM", "--project", "KBAD", "--load-ms", "90000",
                  "--live-script", sp, "--mem-dump", dmp], OUT / f"{tag}.txt")
         with ThreadPoolExecutor(3) as ex:
-            list(ex.map(lambda t: ui(*t), [("kui_open",), ("kui_over", "enc 6 1", "key 0x31 down", "key 0x31 up"),
+            list(ex.map(lambda t: ui(*t), [("kui_info",), ("kui_cancel", "key 0x32 down", "key 0x32 up", "enc 1 1"),
+                                           ("kui_open",), ("kui_over", "enc 6 1", "key 0x31 down", "key 0x31 up"),
                                            ("kui_ignore", "key 0x31 down", "key 0x31 up")]))
 
     defer("reboot", ("saveproj",), lambda: boot("reboot", OUT / "saved.img"))
@@ -1242,6 +1264,21 @@ def main():
               im[O_ASSIGN:O_VALID] == w[O_ASSIGN:O_VALID] and kit(im, 2) == kit(w, 2) and kit(im, 5) == kit(w, 5)
               and held[0] and eng[0] == 0 and eng[1] == sl[0])
 
+    # ---- the blank boot (no CS1: an EMPTY RESET's next power-up) -------------
+    # The boot's own migration then fills the library (every bank's Parts as
+    # Kits), as it does on a stock NEW PROJECT; what the hook adds is READY
+    # from the first screen and the CS1 copy, asserted here.
+    if not only or "blank" in only:
+        joined("blank")
+        if exists("blank"):
+            clean("blank")
+            cs1 = (OUT / "blank_cs1.bin").read_bytes()
+            check("blank: CS1 holds the KCS1 header (the empty library, saved at the boot)",
+                  cs1[:4] == b"KCS1")
+            cur = (OUT / "blank_cur.bin").read_bytes()
+            check(f"blank: the boot took the stock blank path (project {cur.hex()})",
+                  cur == b"\x40\x0e\x21\xe0")
+
     # ---- Em's v3 files ----------------------------------------------------------
     if (not only or "import" in only) and all(f.is_file() for f in v3):
         finish(OUT / "import.txt")
@@ -1276,6 +1313,13 @@ def main():
     if (not only or "krefuse" in only) and exists("base") and "store_answer_cb" in sym:
         joined("krefuse")
         w = lambda tag, n: struct.unpack(">I", (OUT / f"{tag}_{n}.bin").read_bytes())[0]
+        check("kui_info: explains the refused file before the recovery choices, still protected",
+              w("kui_info", "dialog") != 0 and w("kui_info", "mown") == 0 and w("kui_info", "np") == 1
+              and w("kui_info", "explain") == sym["store_info_kits"]
+              and st("kui_info")["NOWRITE"] == 1)
+        check("kui_cancel: NO leaves the file protected and another encoder turn does not reopen the prompt",
+              w("kui_cancel", "dialog") == 0 and w("kui_cancel", "mown") == 0 and w("kui_cancel", "np") == 1
+              and st("kui_cancel")["NOWRITE"] == 1)
         check(f"kui_open: the encoder turn opened STORE's list (M_OBJ {w('kui_open', 'obj'):#x}, callbacks {w('kui_open', 'cbs'):#x} "
               f"= store_cbtab {sym['store_cbtab']:#x}, open flag {w('kui_open', 'mown')}); the file is still listed ({w('kui_open', 'np')})",
               w("kui_open", "obj") != 0 and w("kui_open", "cbs") == sym["store_cbtab"] and w("kui_open", "mown") == 1

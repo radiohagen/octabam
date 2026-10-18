@@ -1,13 +1,20 @@
-site_name: octabam manual
+site_name: Octabam
 site_url: https://sambanks.github.io/octabam/
 repo_url: https://github.com/sambanks/octabam
 repo_name: sambanks/octabam
 docs_dir: .
 site_dir: ../../out/site
-# the _remix-*.md fragments are snippet includes, not pages
-exclude_docs: reference/_remix-*.md
+use_directory_urls: false
+# the _remix-*.md fragments are snippet includes, not pages; usage/*.md
+# are included into generated module pages; img/ holds image assets.
+exclude_docs: |
+  reference/_remix-*.md
+  usage/*.md
 extra_css:
+  - css/fonts.css
   - css/sidebar-spacing.css
+  - css/site-tables.css
+  - css/manual.css
 theme:
   name: shadcn
   # The theme follows the system appearance; its header toggle can override it.
@@ -17,23 +24,90 @@ theme:
     light: shadcn-light
     dark: github-dark
 nav:
-  - Get started:
-      - Overview: index.md
-      - Choose a remix: choosing.md
-      - Build and flash: build-flash.md
-      - Safety and recovery: safety.md
-  - Remixes:
-      - octabam-core: remix-core.md
-      - octabam-inserts: remix-inserts.md
-      - octabam-bus: remix-bus.md
-  - Customize:
-      - Build your own remix: own-remix.md
-      - BRAIN: brain.md
-  - Reference:
-      - Modules: reference/modules.md
+  - Getting Started:
+      - A love letter to the Octatrack: index.md
+      - Choose a Remix: choosing.md
+      - Build and Install: build-flash.md
+      - Feature Directory: reference/modules.md
+  - Effects:
+      - Send: reference/modules/send.md
+      - Delay Server: reference/modules/busdelay.md
+      - Reverb Server: reference/modules/busverb.md
+      - Spectrum: reference/modules/spectrum.md
+      - Character: reference/modules/character.md
+      - Character TXTR: reference/modules/character-txtr.md
+      - Modulation: reference/modules/modulation.md
+      - Transient: reference/modules/transient.md
+      - Euclid: reference/modules/euclid.md
+      - Gate Verb: reference/modules/gateverb.md
+      - LOFI2: reference/modules/lofi2.md
+      - Miniverb: reference/modules/miniverb.md
+      - Sidechain Compressor: reference/modules/sidechain-compressor.md
+      - Tape Echo: reference/modules/tapeecho.md
+      - Vocoder: reference/modules/vocoder.md
+      - Wave: reference/modules/wave.md
+  - Bus Setup:
+      - FX2 Lock: reference/modules/fx2-lock.md
+      - Mode Defaults: reference/modules/mode-defaults.md
+      - Rig Hosts: reference/modules/rig-hosts.md
+      - Tempo Sync: reference/modules/tempo-sync.md
+  - Machines and Sequencer:
+      - Analog BD: reference/modules/analog-bassdrum.md
+      - Direct Jump: reference/modules/direct-jump.md
+      - Direct Jump (Kyoti): reference/modules/direct-jump-kyoti.md
+      - Euclid Fill: reference/modules/euclid-fill.md
+      - Quantize Live Rec Toggle: reference/modules/quantize-live-rec-toggle.md
+      - Scale Quantizer: reference/modules/quantizer.md
+      - Rec Threshold: reference/modules/rec-threshold.md
+      - Recorder Trig Mute: reference/modules/rec-trig-mute.md
+      - RLEN PLEN: reference/modules/rlen-plen.md
+      - Stem Recording: reference/modules/stems.md
+      - Synth Machine: reference/modules/synth.md
+      - Tuner: reference/modules/tuner.md
+      - Tempo Controls: reference/modules/tempo-bus.md
+      - Mute Modes: reference/modules/mute-modes.md
+      - Page 2 Parameter Locks: reference/modules/plocks-p2.md
+  - Kits and Scenes:
+      - Kits: reference/modules/kits.md
+      - MIDI Scenes: reference/modules/midi-scenes.md
+      - Page 2 Scene Locks: reference/modules/scenes-p2.md
+  - MIDI and USB:
+      - USB: reference/modules/usb.md
+      - CC Map: reference/modules/cc-map.md
+      - CC Feedback: reference/modules/cc-feedback.md
+  - Settings:
+      - Brain: brain.md
+      - Memory: reference/modules/memory.md
+      - Store: reference/modules/store.md
+  - Utilities:
+      - Random Naming: reference/modules/rnd-name.md
+      - Reload from Project: reference/modules/reload-from-project.md
+      - Remix Switch: reference/modules/remix-switch.md
+  - Fixes:
+      - ATA Write Guard: reference/modules/ata-write-guard.md
+      - Batch Bugfixes: reference/modules/batch-bugfixes.md
+      - Erase Empty Trigless Locks: reference/modules/erase-empty-trigless-locks.md
+      - Lo-Fi AMF Fix: reference/modules/lofi-amf-fix.md
+      - Recorder Loop Fix: reference/modules/recorder-loop-fix.md
+  - Diagnostics:
+      - Boot Trace: reference/modules/boot-trace.md
+      - CF Meter: reference/modules/cfmeter.md
+      - CF Meter Idle: reference/modules/cfmeter-idle.md
+      - Load Meter: reference/modules/load-meter.md
+      - Testgen: reference/modules/testgen.md
+      - Wave Load: reference/modules/waveload.md
+  - Remix Reference:
+      - Octabam Core: remix-core.md
+      - Octabam Inserts: remix-inserts.md
+      - Octabam Bus: remix-bus.md
+      - Create a Remix: own-remix.md
+  - Help:
+      - Safety and Recovery: safety.md
+      - Screenshot Coverage: reference/screenshots.md
       - Credits: reference/credits.md
 markdown_extensions:
   - admonition
+  - pymdownx.details
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid

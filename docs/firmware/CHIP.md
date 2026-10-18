@@ -99,6 +99,21 @@ a 100 Hz tick. Event order, which the gates compare, is unaffected; every
 wall-clock figure in the port's records would be a factor of two out. Not
 reviewed; the falsifier is a hardware measurement of the unit's tick rate.
 
+### The instruction-form register
+
+A DSP form ships if a stock payload runs it or a row here approves it.
+The precedent grep is `out/dsp/payload_*.asm`
+(`tools/build/dsp_disasm_all.py`); a form with no site there gets a row
+only by PR, with the hardware evidence in the row: probe, image, date,
+what was measured, what would falsify it, and the confidence marker the
+evidence earned. A form without a row does not ship
+(TRAPS.md #trap-chip-form). Forms a payload runs are not listed here; the
+payloads are their record.
+
+| form | used by | evidence |
+|---|---|---|
+| *(none approved yet)* | | |
+
 ## 2. Cycles
 
 | | | |

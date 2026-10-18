@@ -1,0 +1,16 @@
+{
+  "ata-write-guard": "Storage fix. It adds no LCD page or panel control.",
+  "batch-bugfixes": "Changes MIDI triggering, Part changes, and a trig LED. It adds no LCD page.",
+  "boot-trace": "Diagnostic MIDI output during boot. It adds no LCD page.",
+  "cc-feedback": "Changes outgoing MIDI CC messages. It adds no LCD page or panel control.",
+  "cc-map": "Maps incoming MIDI CC messages to existing parameter pages. It adds no LCD page.",
+  "cfmeter-idle": "Supplies idle-time measurements to CF Meter; it has no separate screen. See the CF Meter captures.",
+  "erase-empty-trigless-locks": "Changes trig LED behaviour when the final lock is erased. The LCD is unchanged.",
+  "lofi-amf-fix": "Corrects LO-FI audio processing. The stock controls and LCD are unchanged.",
+  "mode-defaults": "Updates existing effect values when MODE changes. It has no separate screen; see the effect's setup page.",
+  "recorder-loop-fix": "Corrects recorder playback and loop timing. It adds no LCD page or panel control.",
+  "rig-hosts": "Sets new Parts' effect assignments. It has no separate screen; the bus pages show the resulting assignments.",
+  "store": "Shared project-file handling. It adds no LCD page or panel control.",
+  "tempo-sync": "Changes the existing delay TIME readout and MIDI note handling. It has no separate screen; see the bus delay and TEMPO controls.",
+  "waveload": "Uses CF Meter's BURN control to select the number of wave engines. It has no separate screen. See the CF Meter captures."
+}

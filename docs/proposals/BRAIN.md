@@ -13,7 +13,7 @@ Confidence markers: ✅ measured, 🟡 inferred with a falsifier stated,
 
 | word | meaning | example |
 |---|---|---|
-| **setting** | a value that configures a module | USB AUDIO's output layout; KITS's AUTOSAVE |
+| **setting** | a value that configures a module | USB's output layout; KITS's AUTOSAVE |
 | **default** | the value something takes when nothing is stored for it | BusDelay's twelve knob bytes on a newly selected effect |
 | **template** | a named set of values for one target, applied by copy | a MIDI track set up for one external instrument |
 | **target** | a thing that has values: its owner declares the fields, where each lives, and a capture and an apply routine | an FX page; a MIDI track; a module's settings |
@@ -78,12 +78,12 @@ event to the brain at Kit load and save.
 ### 4.1 A module
 
 ```python
-store=Store(id="octabam.usb-audio"),
+store=Store(id="octabam.usb"),
 settings=(
-    Setting(key=1, name="OUT", kind=Option("MAIN", "MAIN+CUE", "MASTER", "TRACKS"),
+    Setting(key=1, name="LAYOUT", kind=Option("TRACKS MAIN CUE", "TRACKS", "MASTER", "MAIN CUE", "MAIN", "TRACKS POST", "OFF"),
             default=0, scope=Scope.CARD, apply=Apply.BUILD),
-    Setting(key=2, name="IN", kind=Option("OFF", "AB", "CD", "ABCD"),
-            default=0, scope=Scope.CARD, apply=Apply.NEXT_BOOT, early=True),
+    Setting(key=2, name="INPUTS", kind=Option("AB", "CD", "ABCD", "OFF"),
+            default=0, scope=Scope.CARD, apply=Apply.BUILD),
 ),
 ```
 
@@ -122,8 +122,8 @@ settings=(
 ```python
 REMIX = Remix(...,
     modules=(..., "BRAIN"),
-    settings={("octabam.usb-audio", "OUT"): Pin("MASTER"),
-              ("octabam.usb-audio", "IN"): "CD"},
+    settings={("octabam.usb", "LAYOUT"): Pin("MASTER"),
+              ("octabam.usb", "INPUTS"): "CD"},
     defaults={("DELAY SERVER", "GRAIN", "PTCH"): 96},
 )
 ```

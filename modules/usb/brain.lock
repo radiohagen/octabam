@@ -1,0 +1,36 @@
+{
+ "params": {},
+ "retired": {
+  "params": [],
+  "settings": []
+ },
+ "settings": {
+  "1": {
+   "labels": [
+    "TRACKS MAIN CUE",
+    "TRACKS",
+    "MASTER",
+    "MAIN CUE",
+    "MAIN",
+    "TRACKS POST",
+    "OFF"
+   ],
+   "name": "LAYOUT",
+   "type": "option"
+  },
+  "2": {
+   "labels": [
+    "AB",
+    "CD",
+    "ABCD",
+    "OFF"
+   ],
+   "name": "INPUTS",
+   "type": "option"
+  }
+ },
+ "store": {
+  "id": "octabam.usb",
+  "major": 1
+ }
+}

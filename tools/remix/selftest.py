@@ -59,7 +59,7 @@ _HARD_ASM.write_text("        move    x:>$4a40,x0             ; curve 4's base\n
 
 def _hooked(name, site=0x88, payloads=frozenset({"A"}), sram=(), priority=None):
     """A DSP section with no chooser row, reached by a jsr planted in stock
-    P code (USB AUDIO IN's RX inject)."""
+    P code (USB's audio-in RX inject)."""
     return Module(
         name=name, key=name.upper(), kind=Kind.HYBRID, doc="fixture",
         dsp=DspSection(asm="does/not/exist.asm",
@@ -873,19 +873,21 @@ def main():
     _rig = ("FILTER", "SPATIALIZER", "EQUALIZER", "PHASER", "FLANGER", "CHORUS",
                  "PLATE REV", "SPRING REV", "DARK REV", "COMPRESSOR", "LO-FI",
                  "DJ EQ", "COMB FILTER")
-    _want = {"midi-loopback": (), "midi-loopback-usb": (), "midi-loopback-follow": (), "midi-ensemble": (), "harmony-track-bus": _rig, "harmony-plocks": (), "midi-harmony": (), "midi-harmony-follow": (), "harmony-degrees": (), "midi-sram": (), "midi-follow": (), "midi-scales": (), "midi-part-state": (), "mods": (), "octabam-core": (), "usb-out-tracks-main-cue": (), "usb-out-tracks": (), "usb-out-master": (),
+    _want = {"midi-loopback": (), "midi-loopback-usb": (), "midi-loopback-follow": (), "midi-ensemble": (), "harmony-track-bus": _rig, "harmony-plocks": (), "midi-harmony": (), "midi-harmony-follow": (), "harmony-degrees": (), "midi-sram": (), "midi-follow": (), "midi-scales": (), "midi-part-state": (), "pio-write-fix": (), "mods": (), "ata-write-guard": (), "octabam-core": (), "usb-out-tracks-main-cue": (), "usb-out-tracks": (), "usb-out-master": (),
              "usb-out-tracks-post": (),
              "remix-switch": (), "remix-switch-trace": (),   # REMIX SWITCH's park in dead vectors, no region words
              "usb-out-main-cue": (), "usb-out-main": (), "usb-midi": (), "stems": (),     # stock effects + ColdFire modules, no DSP words
-             "rec-threshold": (), "plocks-p2": (), "scenes-midisc": (), "kits": (), "pio-write-fix": (), "analog-bassdrum": ("SPRING REV",),
+             "stems-brain": (),   # STEM REC under PROJECT + BRAIN/REMIX SWITCH; no DSP words
+             "rec-threshold": (), "plocks-p2": (), "scenes-midisc": (), "kits": (), "analog-bassdrum": ("SPRING REV",),
              "sidechain-compressor": ("SPRING REV",), "kyoti-mute-sidechain": ("SPRING REV",),   # its DSP section in SPRING's words
              # Zac Kyoti's ColdFire modules on the stock effects, no DSP words
              **{_k: () for _k in ("direct-jump-kyoti", "batch-bugfixes", "reload-from-project",
                                   "quantize-live-rec-toggle", "erase-empty-trigless-locks",
-                                  "mute-modes", "kyoti-mute-jump", "kyoti-fixes", "rec-trig-mute")},
+                                  "mute-modes", "kyoti-mute-jump", "kyoti-fixes", "rec-trig-mute",
+                                  "euclid-fill")},
              # the twelve io remixes: the IN module's RX inject is placed in SPATIALIZER's words
              **{f"usb-io-{o}-{i}": ("SPATIALIZER",) for o in ("tracks", "tracks-main-cue", "main-cue", "main") for i in ("ab", "cd", "abcd")},
-             "octatrick": ("SPATIALIZER",),   # USB AUDIO IN's ABCD inject, as in the io remixes
+             "octatrick": ("SPATIALIZER",),   # USB's ABCD input inject, as in the io remixes
              "sos-capture": ("SPATIALIZER",),   # usb-io-tracks-ab + the recorder fixes
              "cfmeter": ("DARK REV",), "cfmeter-port": ("DARK REV",), "cfmeter-post": ("DARK REV",), "cfmeter-tracks": ("DARK REV",),   # the readout insert's words
              "waveload": ("DARK REV",), "waveload-port": ("DARK REV",),   # CF METER's readout insert, as cfmeter

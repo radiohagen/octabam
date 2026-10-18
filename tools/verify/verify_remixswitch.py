@@ -65,7 +65,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1])); import toolpath  # noqa: E402,F401
-from remix import registry  # noqa: E402
+from remix import brainfile, registry  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 EMU = ROOT / "out/emu/ot_emu"
@@ -200,6 +200,11 @@ def main():
     tree = work / "card"
     (tree / "BRAIN" / "REMIXES").mkdir(parents=True)
     (tree / "BRAIN" / "REMIXES" / "STOCK140.RMX").write_bytes(stock)
+    unknown_value = brainfile.Value(99, brainfile.BLOB, b"keep future key")
+    unknown_record = brainfile.Record(brainfile.SETTINGS, "absent.module", payload=b"future payload")
+    initial = brainfile.File(brainfile.CARD_WORK, [unknown_record,
+        brainfile.Record(brainfile.SETTINGS, "octabam.remix-switch", payload=unknown_value.encode())])
+    (tree / "BRAIN" / "card.work").write_bytes(initial.encode())
     import emu_card
     card = work / "card.img"
     card.write_bytes(emu_card.build_image(str(tree), size_mb=64))
@@ -220,8 +225,10 @@ def main():
     key(KEY_YES, 300)                                  # into BRAIN's pane: the cursor on TEMPLATES
     key(KEY_DOWN)                                      # TEMPLATES, REMIXES
     key(KEY_YES, 400)                                  # its screen: the cursor on the image
+    menu_lines = list(lines)
     key(KEY_YES, 600)                                  # STOCK140 picked: the dialog
-    key(KEY_YES, 3000)                                 # the dialog: boot it
+    key(KEY_YES, 20)                                   # the dialog: boot it
+    send(f"wait {MBOX + C['MB_RESET']:#x} 52435220 eq 20000", 20000)
     send("quit")
     script = work / "panel.txt"
     script.write_text("\n".join(lines) + "\n")
@@ -230,14 +237,15 @@ def main():
     out, hits, d = boot("ui", [(0x3FFC, norver)], ui_watch,
                         {"mbox": (MBOX, 72), "stage": (IMG, len(stock)), "body": (BODY, len(body)),
                          "scanext": (0x460F77B0, 4), "rmxn": (rt["brain_rmx_n"], 4)},
-                        extra=["--card", str(card), "--live-script", str(script), "--mkii"],
+                        extra=["--card", str(card), "--live-script", str(script), "--mkii",
+                               "--card-out", str(work / "ui_card.img")],
                         max_instr=4_000_000_000)
     ran = [s for s, a in zip(("osw_scan", "osw_pick", "osw_answer", "osw_load", "osw_reset"), ui_watch)
            if hits.get(a)]
     check("ui: MAIN MENU's scan, the image's row, the dialog's YES, the deferred load and the reset ran",
           len(ran) == 5, "ran: " + ", ".join(ran))
-    check("ui: BRAIN's REMIXES screen has the one image (no FLASHED rows on a boot that was not a switch)",
-          struct.unpack(">I", d.get("rmxn", b"\0\0\0\0"))[0] == 1, d.get("rmxn", b"").hex())
+    check("ui: BRAIN's REMIXES screen has one image and the FLASHED heading and selectable name",
+          struct.unpack(">I", d.get("rmxn", b"\0\0\0\0"))[0] == 3, d.get("rmxn", b"").hex())
     check("ui: the pane's switch syncs the project first (SYNC TO CARD posted), as OS UPGRADE does",
           hits.get(0x40022CD4, 0) >= 1, f"{hits.get(0x40022CD4, 0)}x")
     check("ui: an MKII sends the panel its two start-up bytes (`60 02`) before the reset",
@@ -264,6 +272,37 @@ def main():
           mb[C["MB_RESET"]:C["MB_RESET"] + 4].decode("latin1"))
     (work / "ui_mbox.bin").write_bytes(mb)
     (work / "ui_stage.bin").write_bytes(stage)
+    files = emu_card.extract_image((work / "ui_card.img").read_bytes())
+    saved = next((v for k, v in files.items() if k.lower().lstrip("/") == "brain/card.work"), b"")
+    saved_file = brainfile.parse(saved)
+    selected = saved_file.find(brainfile.SETTINGS, "octabam.remix-switch")
+    check("ui: the selected filename is saved in BRAIN/card.work for the next boot",
+          selected is not None and selected.values()[0].data.rstrip(b"\0") == b"STOCK140.RMX")
+    check("ui: saving the choice keeps an absent module's record and an unknown setting byte for byte",
+          saved_file.find(brainfile.SETTINGS, "absent.module").encode() == unknown_record.encode()
+          and next(v for v in selected.values() if v.key == 99).encode() == unknown_value.encode())
+    # Return to FLASHED from the actual pane, including after a bypass.
+    clear_lines = menu_lines
+    lines.clear(); lines.extend(clear_lines)
+    t[0] = float(clear_lines[-1].split()[0]) + 400
+    key(KEY_DOWN); key(KEY_DOWN)       # file, FLASHED separator, flashed name
+    key(KEY_YES, 400); key(KEY_YES, 20)
+    send(f"wait {MBOX + C['MB_RESET']:#x} 52435220 eq 20000", 20000)
+    send("quit")
+    clear_script = work / "clear.script"
+    clear_script.write_text("\n".join(lines) + "\n")
+    escape = work / "escape.bin"
+    escape.write_bytes(b"\x10")
+    out, hits, d = boot("clear", [(0x3ffc, norver), (0x80000200, escape)],
+                        [rt["osw_pickhome"], rt["osw_reset"]], {"mbox": (MBOX, 88)},
+                        extra=["--card", str(work / "ui_card.img"), "--live-script", str(clear_script), "--mkii",
+                               "--card-out", str(work / "cleared.img")], max_instr=4_000_000_000)
+    cleared_files = emu_card.extract_image((work / "cleared.img").read_bytes())
+    cleared = brainfile.parse(next(v for k, v in cleared_files.items() if k.lower() == "brain/card.work"))
+    choice = cleared.find(brainfile.SETTINGS, "octabam.remix-switch")
+    check("clear: choosing FLASHED in the pane clears the saved selection and resets without a staged image",
+          hits.get(rt["osw_pickhome"], 0) == 1 and hits.get(rt["osw_reset"], 0) == 1
+          and not magic(d["mbox"]) and choice is not None and not choice.values()[0].data.strip(b"\0"))
 
     # ---- chain: the memory the ui run left, booted ------------------------
     watch = [0x40000400, chain["osw_chain"], stub, loader]
@@ -356,6 +395,54 @@ def main():
           ("dialog" not in seq or seq.index("dialog") > seq.index("post")) and "osw_scan" not in seq
           and "osw_load" not in seq, " ".join(seq))
 
+    # A real power-on starts in HOME again with fresh DRAM, and must read
+    # the filename the manual switch saved. No mailbox is carried over.
+    (btree / "BRAIN" / "card.work").write_bytes(saved)
+    (work / "autocard.img").write_bytes(emu_card.build_image(str(btree), size_mb=64))
+    autoscript = work / "auto.script"
+    autoscript.write_text(f"0 wait {MBOX + C['MB_RESET']:#x} 52435220 eq 4000\n4000 quit\n")
+    aw = [rt["osw_load"], rt["osw_reset"], rt["osw_bootproject"], rt["osw_bootfiles"], HANDLER, 0x40022cd4]
+
+    def auto(tag, preload=(), cardname="autocard.img"):
+        return boot(tag, [(0x3ffc, norver), *preload], aw,
+                    {"mbox": (MBOX, 88), "stage": (IMG, len(stock)), "cs1": (0x10000000, 0x100000)},
+                    extra=["--card", str(work / cardname), "--boot-load", "--set", "/OSW", "--project", "P",
+                           "--mkii", "--load-ms", "2000", "--live-script", str(autoscript)],
+                    max_instr=4_000_000_000)
+
+    out, hits, d = auto("automatic")
+    check("automatic: a fresh boot restores the selected image from the card before the project load, without a sync",
+          hits.get(rt["osw_load"], 0) == 1 and hits.get(rt["osw_reset"], 0) == 1
+          and not hits.get(HANDLER) and not hits.get(0x40022cd4) and d.get("stage") == stock
+          and magic(d["mbox"]) == C["OSW_MAGIC"])
+    out, hits, d = auto("escape", [(0x80000200, escape)])
+    check("escape: STARTUP MENU > EXIT skips the saved remix and loads the project in FLASHED",
+          not hits.get(rt["osw_load"]) and hits.get(HANDLER, 0) >= 1
+          and struct.unpack_from(">I", d["mbox"], C["MB_ESCAPE"])[0] == 0x10)
+    out, hits, d = auto("remembered", [(0x10000000, work / "escape_cs1.bin")])
+    check("remembered: the card remembered in battery RAM restores the selection through LOADING FILES",
+          hits.get(rt["osw_bootfiles"], 0) >= 1 and hits.get(rt["osw_reset"], 0) == 1
+          and not hits.get(HANDLER) and d.get("stage") == stock)
+    already = work / "already.bin"
+    already.write_bytes(b"\0" * C["MB_STATUS"] + struct.pack(">I", C["ST_BOOT"]))
+    out, hits, d = auto("already", [(MBOX, already)])
+    check("already: the selected image's boot never recursively switches again",
+          not hits.get(rt["osw_load"]) and hits.get(HANDLER, 0) >= 1 and status(d["mbox"]) == ST["ST_RUN"])
+    # Missing target: hold no engine job forever and do not erase the choice.
+    (btree / "BRAIN" / "REMIXES" / "STOCK140.RMX").unlink()
+    (work / "missing.img").write_bytes(emu_card.build_image(str(btree), size_mb=64))
+    out, hits, d = auto("missing", cardname="missing.img")
+    check("missing: an unavailable target falls back to FLASHED and releases the project load",
+          hits.get(rt["osw_load"], 0) == 1 and not hits.get(rt["osw_reset"]) and hits.get(HANDLER, 0) >= 1)
+    malformed = brainfile.File(brainfile.CARD_WORK, [brainfile.Record(
+        brainfile.SETTINGS, "octabam.remix-switch",
+        payload=brainfile.Value(1, brainfile.BLOB, b"../STOCK140.RMX".ljust(24, b"\0")).encode())])
+    (btree / "BRAIN" / "card.work").write_bytes(malformed.encode())
+    (work / "malformed.img").write_bytes(emu_card.build_image(str(btree), size_mb=64))
+    out, hits, d = auto("malformed", cardname="malformed.img")
+    check("malformed: an invalid stored filename is ignored and the flashed project loads",
+          not hits.get(rt["osw_load"]) and hits.get(HANDLER, 0) >= 1)
+
     # ---- dsp: park the running cores, boot them through the loaders --------
     B = 0x40000400
     blobs = {"bootA": (0x400E21E0, 0x96), "payA": (0x400E2324, 0x136CB),
@@ -378,6 +465,7 @@ def main():
         r = subprocess.run([str(EMU), "--image", str(home), "--preload", f"0x3ffc={norver}", "--dsp",
                             "--dsp-pcwatch", pcwatch, "--interactive"],
                            input="\n".join(cmds) + "\n", capture_output=True, text=True, cwd=ROOT)
+        (work / ("dsp_" + pcwatch.replace(":", "_") + ".log")).write_text(r.stdout + r.stderr)
         oks = [l for l in r.stdout.splitlines() if l.startswith(("ok d0=", "err"))]
         w = [l for l in r.stdout.splitlines() if l.startswith("dsp n=")]
         arrivals = len(w[-1].split()) - 2 if w else 0

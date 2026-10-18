@@ -1,48 +1,47 @@
-# octabam manual
+# A love letter to the Octatrack
 
-octabam is an unofficial community remixer for the Elektron Octatrack's
-operating system. Not affiliated with Elektron.
+octabam adds community features to the Elektron Octatrack: Kits, templates,
+expanded scenes and parameter locks, USB audio, and new effects. You choose
+which features to install by building a **remix** from your own copy of
+OS 1.40C.
 
-It composes **modules** — each one credited to its author — into **remixes**:
-named selections, built into one firmware image from your own copy of OS
-1.40C. The build places the code, wires the hooks by symbol, refuses
-collisions by name, and proves every ported module against its author's own
-build, byte for byte. No firmware is distributed here: a built image contains
-Elektron's OS, so you build it yourself, on your machine.
+This manual explains the additions to stock OS. It assumes you are familiar
+with tracks, Parts, patterns, scenes, and the Octatrack's front panel.
 
-!!! warning "This is not official Elektron firmware"
-    octabam is community software and is not supported by Elektron. A failed
-    flash can leave the installed OS unable to boot until stock OS is
-    reinstalled. Recovery requires a working Startup Menu, a DIN MIDI
-    interface, and a copy of the stock OS. Keep these available before
-    flashing. See
-    [Safety and recovery](safety.md) before flashing.
+## First Installation
 
-    **Do not share a built image.** A built `.bin` or `.syx` contains
-    Elektron's OS.
+1. [Choose a remix](choosing.md) for the effects and workflow you want.
+2. Read [Safety and recovery](safety.md), then back up your CF card.
+3. Follow [Build and install](build-flash.md) to prepare and install your image.
 
-The three remixes:
+## Everyday Use
 
-| remix | what it adds | effects | where it has run |
-|---|---|---|---|
-| [octabam-core](remix-core.md) | the core modules only | all 14 stock effects, both menus unchanged (LO-FI's AMF knob fixed) | port gates only; not on a unit |
-| [octabam-inserts](remix-inserts.md) | core + insert effects | SPECTRUM, CHARACTER, MODULATION, TRANSIENT and EUCLID on FX1 and FX2, GATE VERB, the stock DELAY | port gates only; not on a unit |
-| [octabam-bus](remix-bus.md) | core + a delay and reverb bus | DELAY on track 1, REVERB on track 5, SEND on every other track, the stock DELAY on track 8; SPECTRUM, CHARACTER and MODULATION on FX1 | port gates only; not on a unit |
+| To… | Open… |
+|---|---|
+| Save templates or change defaults | [BRAIN](brain.md) |
+| Assign a saved sound setup to a pattern | [Kits and patterns](reference/modules/kits.md) |
+| Lock parameters on an effect's second page | [Page 2 parameter locks](reference/modules/plocks-p2.md) |
+| Control MIDI tracks with scenes | [MIDI scenes](reference/modules/midi-scenes.md) |
+| Record MAIN and CUE on a computer | [USB audio and MIDI](reference/modules/usb.md) |
+| Look up an effect or shortcut | [Feature directory](reference/modules.md) |
 
-None of the three has run on a unit. Each is verified under the port: an
-emulator build boots the image and every gate passes, but the emulator is not
-the hardware. The closest thing to a hardware run is bottleservice — the same
-delay and reverb bus without the core modules — which ran on Sam's MKII
-(images A0–A6, recorded in the changelog).
+## Reading the Instructions
 
-Start here:
+**Bold labels** identify controls and menu items. An arrow indicates a menu
+path: **PROJ → BRAIN → TEMPLATES**. A plus sign indicates a combination:
+hold **FUNC** while pressing the other key. Commands and filenames appear
+in `monospace`.
 
-- [Choosing a remix](choosing.md) — the three compared.
-- [Build your own remix](own-remix.md) — combine existing modules, check
-  compatibility, and build a custom selection.
-- [Build and flash](build-flash.md) — from nothing installed to a flashed unit.
-- [BRAIN](brain.md) — the on-unit screens: templates, settings, defaults, and
-  switching remixes from the card.
-- [Safety and recovery](safety.md) — the recovery procedure and its limits.
+Screen illustrations show captured firmware screens. Their values are
+examples; available features and screen labels depend on the image you run.
 
-The repository: https://github.com/sambanks/octabam
+## About the Project
+
+octabam is unofficial community software and is not supported by Elektron.
+Hardware testing varies by feature and remix; emulator checks do not prove
+hardware behaviour. Read the test status on the relevant remix page.
+
+Build images locally from your own OS 1.40C. Built firmware contains
+Elektron's software and must not be shared. Module authors are listed in
+[Credits](reference/credits.md). Source code and technical documentation are
+in the [repository](https://github.com/sambanks/octabam).

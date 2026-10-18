@@ -34,11 +34,23 @@ import dataclasses
 import pathlib
 import runpy
 
-from remix.schema import Category, Proof
+from remix.schema import Category, Gate, Keep, Proof
 
 _UPSTREAM = pathlib.Path(__file__).resolve().parent / "upstream" / "quantizer" / "manifest.py"
 
 MODULE = runpy.run_path(str(_UPSTREAM), run_name="remix_manifest_quantizer")["MODULE"]
+# The MIDI branch at 0x400449b6 enters the final word of the author's
+# eight-byte audio hook: `movel d0,sp@-`. Keep that shared instruction.
+# qz_octnum already pushes the audio value and resumes at 0x400449c0, so
+# the six-byte jump needs only the preceding audio-only load. #741.
+MODULE = dataclasses.replace(
+    MODULE,
+    detours=tuple(dataclasses.replace(d, expect=d.expect[:6], pad_to=6)
+                  if d.site == 0x400449B8 else d for d in MODULE.detours),
+    keeps=MODULE.keeps + (Keep(0x400449BE, bytes.fromhex("2f00"),
+                               "MIDI CHROMATIC octave argument: branch enters after the audio hook"),),
+    gates=MODULE.gates + (Gate("tools/verify/verify_quantizer_ui.py", once=True, venv=True),),
+)
 # The module table's fields are octabam's (README.md, `make docs`), so they
 # are added here rather than in his manifest.
 MODULE = dataclasses.replace(

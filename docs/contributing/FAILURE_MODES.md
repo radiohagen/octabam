@@ -3,6 +3,37 @@
 Symptom → cause (measured, inferred or open) → fix. Add an entry the moment
 a mode is seen on hardware.
 
+## MIDI TRACK → CHROMATIC halts at the LCD surface descriptor (#741)
+
+- **Seen:** BUKKAKEBOREALIS's MKII, octabam-core, reported 15 Oct 2026:
+  `ssp: 4 VEC: 04 FS:0 SR:2000 ADDR: 400BF10A R0178`. KITS seemed good
+  in the same session; the image build identifier was not supplied.
+- **Cause (measured under the port):** the quantizer's octave-number hook
+  nopped a shared stack push at `0x400449be`. MIDI branches directly into
+  it and bypasses the replacement runtime, so the CHROMATIC drawer returns
+  four bytes off its stack into `0x400bf10a` (the LCD descriptor).
+- **Fix:** shorten the installed audio detour to six bytes and `Keep` the
+  shared push. The original report's path runs clean with CHROMATIC selected
+  under the port; `verify_quantizer_ui` covers both modes and models.
+  Hardware retest remains open. A halt on the fixed image would falsify
+  the claim that this accounts for the reporter's entire failure.
+
+## A selected remix is lost after another reboot (#743)
+
+- **Seen:** BUKKAKEBOREALIS's MKII, starting in octabam-core, reported
+  15 Oct 2026: the automatic switch boots the selected remix, then a later
+  reboot returns to core. The maintainer confirmed that the selection must
+  persist; target remix and image build identifiers were not supplied.
+- **Cause (read from the source):** the loader consumes the DRAM mailbox
+  once and the switcher stores no persistent selection. The previous
+  documented power-cycle behaviour fails the intended workflow.
+- **Fix (measured under the port):** keep the selected filename in BRAIN's
+  card store and restore it at boot before the project loads. Missing targets
+  release the project load in FLASHED; STARTUP MENU > EXIT bypasses the choice;
+  the selected image does not recursively switch. Both DSP cores restart.
+  `verify_remixswitch` covers these paths. Hardware retest is open, including
+  the real boot duration and startup-menu bypass on the reporter's MKII.
+
 `git show 666b6154:docs/remixer/FAILURE_MODES.md` holds the earlier text of
 the entries that existed at that commit. These entries are newer than it and
 are not in that blob: "PLAY or a sample load halts the unit in Octakit's
@@ -17,7 +48,7 @@ sequencer and not the tempo", "A ten-character page-2 label faults the unit", "E
 
 - **The claim (11 Oct 2026, THR1, THR3 and THR4 on Chupitnik's MKII):** with RECORDING SETUP 1 or 2 open, REC AB and TRACK + REC AB recorded nothing under TRIG ONE, and THR armed there started only sometimes.
 - **Retracted (12 Oct 2026, the same unit):** stock 1.40C, flashed from the card, records with either page open (TRIG ONE, TRACK 1 + REC AB and REC AB alone), and so do THR5 (the module's commit; ONE, and THR armed inside the page) and THR6. RLEN 16 and RLEN MAX alike.
-- **What the reading most likely was (inferred, not traced):** a take still running, which a press under ONE2 or THR stops, read as "nothing records". Under RLEN MAX a take never ends by itself, and nothing on the screen showed which tracks were recording or armed.
+- **What the reading was (measured, 13 Oct 2026):** GRID RECORDING. Stock 1.40C's REC keys do nothing while GRID RECORDING (`0x460d1736`) is on and a RECORDING SETUP page is open (`0x460d5db4 == 3`, set as the page opens, `0x4002ff4a`, cleared as it closes, `0x4002ef0a`): TRACK + REC tests both at `0x400836e4`, REC AB at `0x40030ed0`. On the unit, with RECORD lit, the REC keys record nothing inside either page, whatever TRIG; with RECORD off they record; a reboot clears it (GRID RECORDING starts off). THR7 (12 Oct) was read the same way and was the same thing. ❌ The earlier inference, "a take still running", is retracted.
 
 ## Crackle on core B, then tracks 1-4 silent: a `rep` in an effect's proc ✅ measured on two units, fixed in their modules; octabam's 20 sites fixed in code, hardware open
 
@@ -49,7 +80,7 @@ sequencer and not the tempo", "A ten-character page-2 label faults the unit", "E
 ## USB MIDI clock moves the sequencer and not the tempo: time stretch, LFOs and FX ignore it ✅ fixed (#633), confirmed on Kazeko's MKI
 
 - **Seen:** reported on Discord, 6 Oct 2026, a remix carrying USB MIDI: USB clock reaches the sequencer, not time stretch, LFOs or FX; DIN clock drives all of them.
-- **Cause:** the tempo (`0x80001818`) is built by the clock handler `0x40005a48` from the DTCN0 interval the UART0 ISR stores for each `0xF8` (`0x4001070a`); the USB decoder enqueued the byte without it, so the tempo stayed at the project's (no DIN clock since power-on) or at the last DIN clock's. Measured under the port (`modules/usb-midi/README.md` "Clock"); that time stretch, LFOs and FX read `0x80001818` is inferred.
+- **Cause:** the tempo (`0x80001818`) is built by the clock handler `0x40005a48` from the DTCN0 interval the UART0 ISR stores for each `0xF8` (`0x4001070a`); the USB decoder enqueued the byte without it, so the tempo stayed at the project's (no DIN clock since power-on) or at the last DIN clock's. Measured under the port (`modules/usb/README.md` "Clock"); that time stretch, LFOs and FX read `0x80001818` is inferred.
 - **Fix:** `usbmidi_rx_decode` timestamps each `0xF8` as the ISR does; `verify_usbmidi_clock` (#633). Kazeko's MKI, 6 Oct 2026: reported working on a build carrying #633 (build number and which of time stretch, LFOs and FX were checked not recorded).
 
 
@@ -519,7 +550,7 @@ Entries from here to the end of the file (5 Oct 2026) were recorded in other doc
 ## Two SET_INTERFACE requests 40 ms apart freeze the unit (USB AUDIO OUT, a DAW changing its buffer size) 🔴 open
 
 - **Seen:** erreye's MK1, 7 Oct 2026, `felipe` remix (USB AUDIO OUT TRACKS POST, `AUD_TARGET` 256 locally), macOS and Ableton Live with the unit as the open input. A buffer-size change in Live: CoreAudio stops IO (20:11:18.653), SET_INTERFACE(4, alt 1) (.747), `Initialize failed` and SET_INTERFACE(4, alt 0) (.786); 6 s later `Unable to select alternate setting`, `0xe00002d6` (timeout): the alt 0 status stage never completed. Then every EP0 request timed out (5 s each), EP 0x82 (USB MIDI) took transaction errors and the device dropped. Frozen until a power cycle; the screen was not recorded. Also while building an aggregate device: 12 failed starts in about a second, and a freeze at 20:08:06 right after a reopen.
-- **Cause:** open. Not reproduced under the port (`usb_host` bench, `--frame`): 24 rounds of alt 1, then 0–160 polls on EP3, alt 0 and GET_INTERFACE; the same 18 rounds with GET CUR + SET CUR 44100 before alt 1, and with SET CUR 48000 (STALL) mid-stream. All clean, alt reads 0. 🟡 erreye's candidate: alt 0 in `audio_setiface_shim` runs `audio_ep3_flush` inside the USB interrupt, and the port's flush completes at once (`modules/usb-audio-out/README.md`, "Bus reset and session end"), so that path is unmeasured on a unit.
+- **Cause:** open. Not reproduced under the port (`usb_host` bench, `--frame`): 24 rounds of alt 1, then 0–160 polls on EP3, alt 0 and GET_INTERFACE; the same 18 rounds with GET CUR + SET CUR 44100 before alt 1, and with SET CUR 48000 (STALL) mid-stream. All clean, alt reads 0. 🟡 erreye's candidate: alt 0 in `audio_setiface_shim` runs `audio_ep3_flush` inside the USB interrupt, and the port's flush completes at once (`modules/usb/README.md`, "Bus reset and session end"), so that path is unmeasured on a unit.
 - **Fix:** none. Workaround: don't change the DAW's buffer size or sample rate while the unit is its open input. To find out: the same on stock upstream test images (`AUD_TARGET` 64, without POST); a diagnostic build on erreye's unit (offered) around the alt 0 flush; whether the port's bench can hold the flush pending.
 
 ## A marginal USB cable freezes the unit in DISK MODE ✅ measured (the cable)

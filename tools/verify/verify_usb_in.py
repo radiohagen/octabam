@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""USB AUDIO IN under the ColdFire port: the host's channels on EP3 OUT reach
+"""USB's audio in under the ColdFire port: the host's channels on EP3 OUT reach
 core 0's RX blocks as the module's inputs (AB, CD or ABCD), the other inputs
 stay the jacks', and closing the stream gives them all back to the jacks.
 
@@ -14,9 +14,9 @@ rings fail for the bench's reasons (measured 26 Sep 2026: 1.39 state-7
 visits per poll against 0.692 pipelined; the unit runs 0.689). Every OUT
 sample is coded: v = ch << 20 | frame (ch = the host channel - 1, frame = a
 running count), so a DSP word says which channel and which frame it came
-from. The IN poll's frame size is the remix's USB AUDIO
-layout's (verify_usb.LAYOUTS): 16 B with USB AUDIO OUT MAIN CUE, 64 with OUT TRACKS,
-80 with OUT TRACKS MAIN CUE, 8 with OUT MAIN.
+from. The IN poll's frame size is the remix's LAYOUT's (verify_usb.LAYOUTS):
+16 B with MAIN CUE, 64 with TRACKS,
+80 with TRACKS MAIN CUE, 8 with MAIN.
 
   run 1 (streaming): hang up while the stream is running; the RX ring's
     completed blocks must hold the coded samples in the module's slots
@@ -27,7 +27,7 @@ layout's (verify_usb.LAYOUTS): 16 B with USB AUDIO OUT MAIN CUE, 64 with OUT TRA
     word 0 of the transfer must be clear and the RX blocks the jacks'
     (silence under the port).
 
-Needs the port (make emu-cf), a built image carrying USB AUDIO IN, and the
+Needs the port (make emu-cf), a built image with INPUTS on, and the
 linked runtime (out/platform/runtime/runtime.elf) for the unit's addresses.
 """
 import os
@@ -51,12 +51,12 @@ ELF = ROOT / "out/platform/runtime/runtime.elf"
 COUNTERS = ("produced", "consumed", "pkts", "lastn", "lastfill", "underruns",
             "overruns", "reprimes", "bad", "frames", "seconds", "minfill", "maxfill",
             "err", "partial")
-# RX block slot -> host channel (0-based) per INPUTS value ("USB AUDIO IN <INPUTS>"); a slot not listed
+# RX block slot -> host channel (0-based) per INPUTS value; a slot not listed
 # is a jack and must read zero under the port
-IN_SLOTS = {"USB AUDIO IN AB": {2: 0, 3: 1},
-            "USB AUDIO IN CD": {0: 0, 1: 1},
-            "USB AUDIO IN ABCD": {2: 0, 3: 1, 0: 2, 1: 3}}
-SLOT_CH = IN_SLOTS["USB AUDIO IN AB"]      # main() sets it from the remix
+IN_SLOTS = {"AB": {2: 0, 3: 1},
+            "CD": {0: 0, 1: 1},
+            "ABCD": {2: 0, 3: 1, 0: 2, 1: 3}}
+SLOT_CH = IN_SLOTS["AB"]      # main() sets it from the remix
 CHANNELS = 2
 fails = []
 
@@ -104,7 +104,7 @@ def replies(b, n):
 
 
 def vendor(b):
-    """USB AUDIO IN's counters over its vendor request (0xc0/0x56)."""
+    """The audio-in counters over the vendor request (0xc0/0x56)."""
     raw = b.ctrl_in(0xc0, 0x56, 0, 0, 4 * len(COUNTERS))
     if len(raw) != 4 * len(COUNTERS):
         raise RuntimeError(f"vendor 0x56: {len(raw)} bytes")
@@ -130,7 +130,7 @@ def run(tag, sym, packets, close_first, in_frame, reset=False, unplug=False):
         b = usb_host.Bench(sock, timeout=120.0)
         usb_host.enumerate_device(b, hs=True)
         b.ctrl_nodata(0x01, 0x0b, 1, 4)                 # SET_INTERFACE 4 alt 1: EP3 IN (the remix's 250 us out layout)
-        b.ctrl_nodata(0x01, 0x0b, 1, 5)                 # SET_INTERFACE 5 alt 1: EP3 OUT (USB AUDIO IN)
+        b.ctrl_nodata(0x01, 0x0b, 1, 5)                 # SET_INTERFACE 5 alt 1: EP3 OUT (audio in)
         frame, sizes, empty, last_n = 0, set(), 0, 11
         snaps = []
         for _k in range(packets):
@@ -151,7 +151,7 @@ def run(tag, sym, packets, close_first, in_frame, reset=False, unplug=False):
                     if last_n == 0:
                         print(f"  (empty IN poll at poll {_k})")
         if close_first:
-            b.ctrl_nodata(0x01, 0x0b, 0, 5)             # alt 0: USB AUDIO IN's stream closed
+            b.ctrl_nodata(0x01, 0x0b, 0, 5)             # alt 0: the audio-in stream closed
             for _ in range(400):                        # 100 ms more of EP3 IN's stream
                 b.ep_in(3, 1024)
         giface = None
@@ -215,25 +215,25 @@ def main():
         print("  [SKIP] verify_usb_in: the port is not built (make emu-cf)")
         return 0
     if not ELF.is_file():
-        print("  [FAIL] verify_usb_in: no linked runtime (build a remix with USB AUDIO IN)")
+        print("  [FAIL] verify_usb_in: no linked runtime (build a remix with INPUTS on)")
         return 1
     sym = symbols()
     if "in_counters" not in sym:
-        print("  [FAIL] verify_usb_in: the runtime has no USB AUDIO IN unit")
+        print("  [FAIL] verify_usb_in: the runtime has no usbaudio_in unit")
         return 1
     remix = registry.remix(os.environ.get("REMIX"))
-    inputs = brain.value(remix, registry.modules(), "octabam.usb-audio-in", "INPUTS")
-    ain = None if inputs is None else f"USB AUDIO IN {inputs}"
+    inputs = brain.value(remix, registry.modules(), "octabam.usb", "INPUTS")
+    ain = None if inputs in (None, "OFF") else inputs
     if ain is None:
-        print("  [FAIL] verify_usb_in: the remix carries no USB AUDIO IN module")
+        print("  [FAIL] verify_usb_in: the remix has INPUTS OFF")
         return 1
     SLOT_CH = IN_SLOTS[ain]
     CHANNELS = len(SLOT_CH)
     print(f"  {ain}: {CHANNELS} host channels -> RX slots {sorted(SLOT_CH)}")
-    layout = brain.value(remix, registry.modules(), "octabam.usb-audio-out", "LAYOUT")
-    audio = None if layout is None else f"USB AUDIO OUT {layout}"
+    layout = brain.value(remix, registry.modules(), "octabam.usb", "LAYOUT")
+    audio = None if layout in (None, "OFF") else layout
     if audio is None or LAYOUTS[audio][2] != 2:
-        print(f"  [FAIL] verify_usb_in: needs a 250 us USB AUDIO OUT layout (MAIN CUE, MAIN, TRACKS or TRACKS MAIN CUE) beside it, not {audio}")
+        print(f"  [FAIL] verify_usb_in: needs a 250 us LAYOUT (all six are) beside it, not {audio}")
         return 1
     in_frame = 4 * LAYOUTS[audio][0]
     print(f"  EP3 IN (the feedback source): {audio}, {in_frame} B a frame")
@@ -261,7 +261,7 @@ def main():
               f"{rate:.4f} per poll; first {s1['frames'] - s0['frames']} / second {s1['seconds'] - s0['seconds']} visits between the reads")
     else:
         check("two counter reads over EP0 during the stream (POLLS >= 4)", False, f"{len(r['snaps'])} read(s)")
-    tgt = re.search(r"^\.set IN_TARGET,\s+(\d+)", (ROOT / "modules/usb-audio-in/usbaudio_in.s").read_text(), re.M).group(1)
+    tgt = re.search(r"^\.set IN_TARGET,\s+(\d+)", (ROOT / "modules/usb/usbaudio_in.s").read_text(), re.M).group(1)
     print(f"  ring fill while consuming: min {c['minfill']} max {c['maxfill']} (target {tgt})")
     # up to NSLOTI (4) dTDs can still be queued when the bench hangs up
     check("every OUT packet retired, whole frames, no errors (up to 4 in flight at hangup)",

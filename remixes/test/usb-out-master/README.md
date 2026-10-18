@@ -1,10 +1,10 @@
-# `usb-out-master` — USB AUDIO OUT MASTER on the stock effects
+# `usb-out-master` — USB LAYOUT MASTER on the stock effects
 
-The stock chooser plus USB MIDI and USB AUDIO OUT MASTER, for testing the two-channel stream on a unit that runs stock projects: no FX1 stations, no chooser changes, no project stamping.
+The stock chooser plus USB at LAYOUT MASTER, for testing the two-channel stream on a unit that runs stock projects: no FX1 stations, no chooser changes, no project stamping.
 
 ## What is in it
 
-- **USB MIDI** and **USB AUDIO OUT MASTER**: USB-MIDI mirroring DIN; track 8's L/R, post-FX, pre-fader, on channels 1/2 at both USB speeds. [`modules/usb-audio-out`](../../../modules/usb-audio-out/README.md#master).
+- **USB** at LAYOUT MASTER: USB-MIDI mirroring DIN; track 8's L/R, post-FX, pre-fader, on channels 1/2 at both USB speeds. [`USB`](../../../modules/usb/README.md#master).
 - the 14 stock FX2 effects.
 
 ## Status

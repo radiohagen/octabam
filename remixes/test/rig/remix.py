@@ -1,7 +1,7 @@
 """rig -- the rig's selection with no ColdFire runtime, for the gates that
 build it.
 
-octabam-bus without USB AUDIO, USB MIDI, Octakit and the scene modules:
+octabam-bus without USB, Octakit and the scene modules:
 the bus, the three stations, TEMPO SYNC, CC MAP, MODE DEFAULTS, RIG HOSTS.
 registry.fixture picks it for verify_ccmap and verify_ccfeedback (CC MAP on
 the hosts under unicorn, no Runtime), verify_character and verify_onebus.

@@ -2,7 +2,10 @@
 # hardware. The gates that need the operator's own 1.40C (make check,
 # make accept, refhash) run locally; `make reach` lists the ones a change
 # reaches and CONTRIBUTING.md is the contract. Each job is one make target,
-# so a red job reproduces with the same command.
+# so a red job reproduces with the same command. `classify` gates each job
+# on whether the diff touches its inputs (tools/verify/ci_paths.py holds
+# the map); it errs toward running: a workflow, Makefile or scripts change
+# runs everything, and `make ci` locally still runs everything.
 name: CI
 on:
   pull_request:
@@ -15,12 +18,42 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  classify:
+    # Which of the jobs below this diff can reach; a skipped job is a grey
+    # check, not a pass. No usable diff (workflow_dispatch) -> everything.
+    name: classify
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      coldfire: ${{ steps.map.outputs.coldfire }}
+      dsp: ${{ steps.map.outputs.dsp }}
+      acceptance: ${{ steps.map.outputs.acceptance }}
+      reach: ${{ steps.map.outputs.reach }}
+      site: ${{ steps.map.outputs.site }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - id: map
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          python3 tools/verify/ci_paths.py --base "$base" --github-output >> "$GITHUB_OUTPUT"
+
   reach:
     # The gates this PR reaches, from its diff against the base branch
     # (tools/verify/reach.py). CI has no firmware, so this prints them and
     # runs none; the PR body lists each with its result from a local run.
     name: gates the PR reaches
-    if: github.event_name == 'pull_request'
+    needs: classify
+    if: github.event_name == 'pull_request' && needs.classify.outputs.reach == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -36,6 +69,8 @@ jobs:
 
   acceptance-runner:
     name: acceptance runner tests (${{ matrix.os }})
+    needs: classify
+    if: needs.classify.outputs.acceptance == 'true'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
@@ -77,7 +112,8 @@ jobs:
     # snippet include. The deploy is the Pages workflow on main; a PR
     # builds without deploying.
     name: manual site builds
-    if: github.event_name == 'pull_request'
+    needs: classify
+    if: github.event_name == 'pull_request' && needs.classify.outputs.site == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -95,6 +131,8 @@ jobs:
 
   dsp-toolchain:
     name: dsp56300 + our patch (${{ matrix.os }})
+    needs: classify
+    if: needs.classify.outputs.dsp == 'true'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -109,6 +147,8 @@ jobs:
 
   coldfire-port:
     name: ColdFire port unit tests (${{ matrix.os }})
+    needs: classify
+    if: needs.classify.outputs.coldfire == 'true'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:

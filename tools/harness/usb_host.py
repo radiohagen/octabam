@@ -7,7 +7,7 @@
   tools/harness/usb_host.py /tmp/ot-usb.sock midi-recv 5   # drain EP2 IN for 5 s
   tools/harness/usb_host.py /tmp/ot-usb.sock midi-send 903c64
   tools/harness/usb_host.py /tmp/ot-usb.sock audio 3 2.0 out.pcm [--fs]   # drain an iso IN endpoint, then the counters
-  tools/harness/usb_host.py /tmp/ot-usb.sock counters       # USB AUDIO's twelve counters (vendor request)
+  tools/harness/usb_host.py /tmp/ot-usb.sock counters       # the audio-out's twelve counters (vendor request)
 
 The line protocol is octemu's (markandrus, MIT), so its tests/usb-host.py
 drives this port too. Every transfer runs under a deadline: a hang IS the
@@ -212,7 +212,7 @@ COUNTERS = ("consumed", "acc", "overruns", "underruns", "lastn", "lastfill", "la
 
 
 def counters(b):
-    """USB AUDIO's fifteen counters over the vendor request 0xc0/0x55 (60 big-endian bytes)."""
+    """The audio-out's fifteen counters over the vendor request 0xc0/0x55 (60 big-endian bytes)."""
     n = 4 * len(COUNTERS)
     raw = b.ctrl_in(0xc0, 0x55, 0, 0, n)
     vals = struct.unpack(f">{len(COUNTERS)}i", raw) if len(raw) == n else None

@@ -80,6 +80,10 @@ costs or proof status — updates the hand-written manual site pages under
 `docs/site/` in the same PR.** The generated reference pages update
 themselves from the manifests (`tools/site/gen_pages.py`).
 
+**Screenshots:** after a rebase, and before the PR, check whether the diff
+changes a screen a shot shows; `docs/contributing/SCREENSHOTS.md` has the
+check and the `capture_manual.py` groups.
+
 ## Worktrees and the shared checkout
 
 **ALWAYS WORK IN A GIT WORKTREE, never in the main checkout.** Several
@@ -165,16 +169,22 @@ moment it costs real work, and add its line here.
 
 **ColdFire / DRAM side**
 
+- [A branch can enter the middle of a displaced span](docs/contributing/TRAPS.md#trap-detour-interior) — whole instructions are insufficient: keep shared branch targets; the MIDI CHROMATIC gate exercises both paths.
+
 - [A write-watch on cached addresses is blind to the uncached-alias clear](docs/contributing/TRAPS.md#trap-watch-alias) — `machine.h` folds the alias.
 - [The boot verifier booted the wrong image](docs/contributing/TRAPS.md#trap-boot-verifier) — a verifier that reads `out/` must know who wrote it last.
 - [`make … | grep | tail` reports tail's exit code](docs/contributing/TRAPS.md#trap-pipe-exit) — `> log; echo $?`.
 - [Matching an author's bytes with GNU as](docs/contributing/TRAPS.md#trap-gnu-as) — `lea SYM:l` for same-unit labels; `moveq`; the `-Ttext` 2-mod-4 `nop`.
+- [A bank-file fixture edits the file; the firmware parses it into a different RAM layout](docs/contributing/TRAPS.md#trap-work-file-ram) — anchor fixture edits to a known-good write; RAM addresses from the routine's arithmetic.
 - [A loader draft clobbered d0 and reused a0 after the hash](docs/contributing/TRAPS.md#trap-loader-regs) — `verify_dram_boot` watches entry and `fatal`.
 - [Fixed `/tmp` names corrupted parallel builds](docs/contributing/TRAPS.md#trap-tmp-race) — mkdtemp per process now; a failure moving between remixes is a shared-scratch race.
+- [The memory word-count fixture can race reach and shard snapshots](docs/contributing/TRAPS.md#trap-word-fixture) — ignore its scratch path so it is not planned or copied as a real remix.
 - [Replacing a stock routine can halt every other caller](docs/contributing/TRAPS.md#trap-stock-callee) — diff the routine and its callers with `tools/build/where.py`.
 - [A forked port shares its DSP memory with its siblings](docs/contributing/TRAPS.md#trap-fork-shm) — `unshareRanges`; new shared maps need the same.
 - [The port ran under Rosetta and nothing said so](docs/contributing/TRAPS.md#trap-rosetta) — `file out/emu/ot_emu` is the check.
 - [The report is API and prints paths](docs/contributing/TRAPS.md#trap-report-api) — re-save refhash only after the artifacts are shown identical.
+- [Same-named labels across units resolve by nm table order](docs/contributing/TRAPS.md#trap-nm-order) — per-unit tables; a ref naming a symbol its unit does not define is refused.
+- [A completion IRQ in the first-sector write window polls DRQ on the stale count](docs/contributing/TRAPS.md#trap-first-sector-irq) — the guard keeps the sector and its bookkeeping inside the existing mask; `verify_ata_write` gates it.
 
 ## How claims are written here
 

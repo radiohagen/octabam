@@ -8,7 +8,7 @@ Where each doc is, by who reads it. A module's own page is
 
 | doc | what it is |
 |---|---|
-| [site/index.md](site/index.md) | the manual site (MkDocs, deployed to GitHub Pages on merges to main): choosing a remix, making a custom remix, BRAIN, build and flash, safety — written for musicians |
+| [site/index.md](site/index.md) | the musician-facing manual site: choose a remix, build and flash it, use BRAIN, and recover to stock OS |
 | [guide/BUILDING.md](guide/BUILDING.md) | what to install (macOS, Linux/WSL2), the toolchain, your own OS 1.40C, building an image, flashing from the card or over MIDI, after the flash, recovery, back to stock |
 | [../remixes/README.md](../remixes/README.md) | the remixes you can flash, with where each has run |
 | [guide/REMIXER.md](guide/REMIXER.md) | composing your own remix: the `make remix` TUI, or a `remix.py` by hand |
@@ -30,6 +30,7 @@ Where each doc is, by who reads it. A module's own page is
 | [contributing/PLACEMENT.md](contributing/PLACEMENT.md) | where a module's code goes and what is free, measured |
 | [contributing/TESTING.md](contributing/TESTING.md) | every gate, what it proves and cannot see; `make check`, `make reach`, shards, `make accept`, bit-identity, CI |
 | [contributing/TOOLING.md](contributing/TOOLING.md) | every tool by pipeline stage, and which README each tool directory has |
+| [contributing/SCREENSHOTS.md](contributing/SCREENSHOTS.md) | re-capturing the manual site's LCD screenshots: when, `capture_manual.py` groups, the records and coverage page, the probe scripts, FX page behaviour |
 | [contributing/FAILURE_MODES.md](contributing/FAILURE_MODES.md) | what has gone wrong on a unit: symptom, cause, fix, the gate that catches it |
 | [contributing/TRAPS.md](contributing/TRAPS.md) | the trap register: what has cost real work in the code, build, emulators and harness — symptom, fix, the gate that catches it |
 | [../AGENTS.md](../AGENTS.md) | working rules, worktrees, build and check, and the trap index (for people and coding agents) |
@@ -58,10 +59,12 @@ REPITCH in [REPITCH.md](firmware/REPITCH.md)).
 
 [proposals/](proposals/): [BRAIN.md](proposals/BRAIN.md), the design for
 settings, defaults and templates (6 Oct 2026; `modules/brain` builds it and
-measures it under the port, not on a unit), and the two
+measures it under the port, not on a unit), the two
 OTX documents it starts from, nordseele's shared settings store (draft, not
 implemented): [OTX_PROJECT_PROPOSAL.md](proposals/OTX_PROJECT_PROPOSAL.md)
-and [OTX_MODULE_GUIDELINES.md](proposals/OTX_MODULE_GUIDELINES.md).
+and [OTX_MODULE_GUIDELINES.md](proposals/OTX_MODULE_GUIDELINES.md), and
+[USB.md](proposals/USB.md), merging the four USB modules into one with
+run-time settings held by the brain (14 Oct 2026).
 
 [proposals/remixes/](proposals/remixes/README.md): remix proposals, each
 taken on hardware to verified stable before it lands under `remixes/`.

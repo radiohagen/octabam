@@ -4,10 +4,10 @@ The stock chooser plus USB MIDI on the OT's own USB port. The unit appears to a 
 
 ## What is in it
 
-- **USB MIDI** (markandrus, [octemu](https://github.com/markandrus/octemu), MIT) — MIDI in and out over USB. Incoming messages take the same path as DIN MIDI IN; everything the unit sends on DIN is also sent over USB. [`modules/usb-midi/README.md`](../../../modules/usb-midi/README.md).
+- **USB MIDI** (markandrus, [octemu](https://github.com/markandrus/octemu), MIT) — MIDI in and out over USB. Incoming messages take the same path as DIN MIDI IN; everything the unit sends on DIN is also sent over USB. [`USB`](../../../modules/usb/README.md#usb-midi).
 - the 14 stock FX2 effects.
 
-The USB AUDIO modules are built on USB MIDI (its composite descriptor and ISR shim) and each has its own remix under `remixes/test/usb-out-*` and `usb-io-*`.
+USB's audio halves are built on its MIDI composite descriptor and ISR shim, and each audio layout has its own remix under `remixes/test/usb-out-*` and `usb-io-*`.
 
 ## Status
 

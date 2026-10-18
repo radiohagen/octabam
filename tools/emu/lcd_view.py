@@ -39,7 +39,11 @@ import time
 import zlib
 
 W, H = 128, 64
-ON, OFF = (0xE8, 0xF0, 0x60), (0x18, 0x20, 0x10)
+PALETTES = {
+    "white": ((0, 0, 0), (255, 255, 255)),
+    "yellow": ((0xE8, 0xF0, 0x60), (0x18, 0x20, 0x10)),
+}
+ON, OFF = PALETTES["white"]
 
 
 def pixels(plane):
@@ -49,12 +53,13 @@ def pixels(plane):
     return [[bit(63 - y, x) for x in range(W)] for y in range(H)]
 
 
-def png(rows, path, scale=4):
+def png(rows, path, scale=4, palette="white"):
+    on, off = PALETTES[palette]
     out = []
     for y in range(H * scale):
         line = bytearray([0])
         for x in range(W * scale):
-            line += bytes(ON if rows[y // scale][x // scale] else OFF)
+            line += bytes(on if rows[y // scale][x // scale] else off)
         out.append(bytes(line))
     raw = b"".join(out)
 
@@ -440,10 +445,12 @@ def main():
     ap.add_argument("--term", action="store_true", help="draw in the terminal instead of a window")
     ap.add_argument("--panel", help="the port's --live FIFO: draw keys and encoders under the screen and write events to it")
     ap.add_argument("--scale", type=int, default=4)
+    ap.add_argument("--palette", choices=PALETTES, default="white",
+                    help="PNG colours (default: black on white)")
     a = ap.parse_args()
 
     if a.png:
-        png(screen(read_plane(a.plane)), a.png, a.scale)
+        png(screen(read_plane(a.plane)), a.png, a.scale, a.palette)
         print(a.png)
         return
 

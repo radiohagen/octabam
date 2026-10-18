@@ -4,7 +4,7 @@ from remix.schema import Proof, Remix
 
 REMIX = Remix(
     name="rec-threshold",
-    family="mods", proof=Proof.HARDWARE, proof_note="Chupitnik's MKII, 11-12 Oct 2026, THR1 to THR5 from the card: armed with TRACK 1 + REC AB, silence never records, the input starts the take, a second press cancels, LEV and IN on RECORDING SETUP 2, TRIG moved off THR while armed drops the arm; THR5 is this code",
+    family="mods", proof=Proof.HARDWARE, proof_note="Chupitnik's MKII, 11-13 Oct 2026, THR1 to THR9 from the card: armed with TRACK 1 + REC AB, silence never records, the input starts the take, a second press cancels, LEV and IN on RECORDING SETUP 2, TRIG moved off THR while armed drops the arm and the blink, an armed track's icon blinks, armed inside RECORDING SETUP 1 it records; THR9 is this code",
     doc="stock effects with the threshold-armed recorder TRIG THR, its LEV and an IN meter: the image for a unit.",
     modules=("REC THRESHOLD", "FILTER", "EQUALIZER", "DJ EQ", "PHASER", "FLANGER",
              "CHORUS", "SPATIALIZER", "COMB FILTER", "COMPRESSOR", "LO-FI",

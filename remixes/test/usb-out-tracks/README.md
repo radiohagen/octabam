@@ -1,10 +1,10 @@
-# `usb-out-tracks` — USB AUDIO OUT TRACKS on the stock effects
+# `usb-out-tracks` — USB LAYOUT TRACKS on the stock effects
 
-The stock chooser plus USB MIDI and USB AUDIO OUT TRACKS, for testing the sixteen-channel stream on a unit that runs stock projects: no FX1 stations, no chooser changes, no project stamping.
+The stock chooser plus USB at LAYOUT TRACKS, for testing the sixteen-channel stream on a unit that runs stock projects: no FX1 stations, no chooser changes, no project stamping.
 
 ## What is in it
 
-- **USB MIDI** and **USB AUDIO OUT TRACKS** (markandrus/octemu): USB-MIDI mirroring DIN; sixteen 24-bit channels, track N's L/R on 2N−1/2N, post-FX, pre-fader; the tracks' stereo sum at full speed. [`modules/usb-audio-out`](../../../modules/usb-audio-out/README.md#tracks).
+- **USB** (markandrus/octemu) at LAYOUT TRACKS: USB-MIDI mirroring DIN; sixteen 24-bit channels, track N's L/R on 2N−1/2N, post-FX, pre-fader; the tracks' stereo sum at full speed. [`USB`](../../../modules/usb/README.md#tracks).
 - the 14 stock FX2 effects.
 
 ## Status

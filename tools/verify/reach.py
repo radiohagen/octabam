@@ -391,10 +391,11 @@ def recipe_scripts(make_text, target):
 def variant_gates(m):
     """Every gate the module declares, in every build variant: a variant
     (schema.Module.variant) can name gates the unbound module does not
-    carry (USB AUDIO OUT's verify_usb_post and verify_usb_align, by
-    LAYOUT). Until 12 Oct 2026 a change to such a gate reached nothing.
-    Each Apply.BUILD Option takes every label and a Binary 0 and 1; any
-    other kind keeps its default."""
+    carry (USB's verify_usb_post and verify_usb_align, by LAYOUT). Until
+    12 Oct 2026 a change to such a gate reached nothing. Each Apply.BUILD
+    Option takes every label and a Binary 0 and 1; any other kind keeps
+    its default. A combination the variant refuses (the build refuses it
+    too) runs in no remix and has no gates of its own."""
     import itertools
     from remix.schema import Apply, Binary, Option
     gates = list(getattr(m, "gates", ()))
@@ -411,7 +412,11 @@ def variant_gates(m):
         else:
             axes.append([(st.name, st.default)])
     for combo in itertools.product(*axes):
-        for g in m.bind(dict(combo)).gates:
+        try:
+            bound = m.bind(dict(combo))
+        except ValueError:
+            continue
+        for g in bound.gates:
             if g not in gates:
                 gates.append(g)
     return gates
@@ -570,7 +575,7 @@ class Context:
                 gate_once[g.script] = gate_once.get(g.script, False) or getattr(g, "once", False)
         # A gate only a build variant declares runs where that variant is
         # built: the remixes whose bound module carries it (verify_usb_post:
-        # the TRACKS POST layout's remixes, not every USB AUDIO OUT remix).
+        # the TRACKS POST layout's remixes, not every USB remix).
         gate_remixes = {}
         if set(gate_owners) - plain:
             for name in registry.remix_names():

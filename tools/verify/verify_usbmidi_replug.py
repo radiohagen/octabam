@@ -37,7 +37,7 @@ no host queue of outstanding reads, and none of silicon's handling of a
 prime the controller has not taken or of a queue head rewritten under a
 primed endpoint. It checks the preconditions the fix removes.
 
-SKIPs when the remix has no USB MIDI or the port is not built (`make emu-cf`).
+SKIPs when the remix has no USB or the port is not built (`make emu-cf`).
 """
 import os
 import pathlib
@@ -219,8 +219,8 @@ def main():
     if not IMAGE.is_file():
         print("  [FAIL] verify_usbmidi_replug: no out/mainos_bus.bin (make bus)")
         return 1
-    if "USB MIDI" not in registry.remix(os.environ.get("REMIX")).modules:
-        print("  [SKIP] verify_usbmidi_replug: the remix has no USB MIDI")
+    if "USB" not in registry.remix(os.environ.get("REMIX")).modules:
+        print("  [SKIP] verify_usbmidi_replug: the remix has no USB")
         return 0
     run()
     print(f"verify_usbmidi_replug: {'OK' if not fails else f'{len(fails)} FAILED'}")

@@ -2,7 +2,7 @@
 """The MAIN/CUE-to-track alignment of the twenty-channel USB stream, under the
 ColdFire port.
 
-USB AUDIO OUT TRACKS MAIN CUE reads channels 1-16 from the tracks' read-back
+USB LAYOUT TRACKS MAIN CUE reads channels 1-16 from the tracks' read-back
 arena (the previous ping-pong bank) and 17-20 from the mixdown buffer (the
 current pull), two sources with two timings. On hardware MAIN was heard
 lagging the tracks (Bryan T, 25 Sep 2026), the amount unmeasured. This
@@ -23,7 +23,7 @@ samples and in 16-sample blocks; MAIN R against the right channels likewise.
 
 The source project is the template usb_sig_project.py needs (a locally saved
 Octatrack project; default OT_PROJECT or ~/.octabam_project). The remix must
-carry USB AUDIO OUT TRACKS MAIN CUE. Needs the port (make emu-cf) and the .venv.
+carry USB with LAYOUT TRACKS MAIN CUE. Needs the port (make emu-cf) and the .venv.
 """
 import argparse
 import cmath
@@ -92,8 +92,8 @@ def main():
     if not EMU.exists() or not PY.exists():
         sys.exit("usb_align: needs the port (make emu-cf) and the .venv")
     remix = registry.remix(a.remix)
-    if brain.value(remix, registry.modules(), "octabam.usb-audio-out", "LAYOUT") != "TRACKS MAIN CUE":
-        sys.exit(f"usb_align: {a.remix} does not carry USB AUDIO OUT with LAYOUT TRACKS MAIN CUE")
+    if brain.value(remix, registry.modules(), "octabam.usb", "LAYOUT") != "TRACKS MAIN CUE":
+        sys.exit(f"usb_align: {a.remix} does not carry USB with LAYOUT TRACKS MAIN CUE")
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)

@@ -75,7 +75,7 @@ Five fields are the README's module table, rendered by `make docs`
 (`tools/remix/index.py --write`) and held current by `verify_docs`:
 
 ```python
-    category=Category.TRACK,            # BUS, TRACK, MACHINES, PARTS, MIDI_USB, FIXES, REFERENCE
+    category=Category.TRACK,            # BUS, TRACK, MACHINES, PARTS, MIDI_USB, FIXES, SETTINGS, UTILITIES, REFERENCE
     author="repeat98", author_url="https://github.com/repeat98",
     proof=Proof.RENDER,                 # CHECK, RENDER, PORT, HARDWARE
     proof_note="its own render gates; not on hardware",   # the unit, image, date; or the gate
@@ -507,7 +507,7 @@ dsp=DspSection(
   separately). `stock` is one word pair, or `{"A": (w0, w1), "B": (w0, w1)}`
   with a per-payload `site` when the words themselves differ (a `do` or
   branch target inside the instruction). A section with hooks and no `MenuEntry` is placed on
-  `payloads` only and takes no dispatch entry: USB AUDIO IN's RX inject at
+  `payloads` only and takes no dispatch entry: USB's audio-in RX inject at
   the frame head, P:0x88, on payload A. The ledger refuses two hooks whose
   two-word spans share a word on one payload.
 - **Program space is per core.** `make bus REMIX=<name>` prints the live ledger.
@@ -601,11 +601,11 @@ must end below its ceiling.
 calls `fn(modules)` (the remix's modules by key), writes the text it
 returns beside the unit as `remix.inc`, and the source reaches it with
 `.include "remix.inc"` (`modules/mode-defaults`: the view table of every
-module in the image; `modules/usb-midi`: the USB configuration descriptors,
-grown with the audio function when a USB AUDIO module is in the remix, with
-that module's channel count; `modules/usb-audio-*`: the layout `.set` that
-picks which of three builds of one source the unit is). Works for
-both forms since 25 Sep 2026.
+module in the image; `modules/usb` (descriptors.py): the USB configuration
+descriptors, grown with the audio function when the module's LAYOUT is not
+OFF, with that layout's channel count; `modules/usb` (manifest.py): the
+layout `.set` that picks which of three builds of one source the unit
+is). Works for both forms since 25 Sep 2026.
 
 `Linked.defsyms=(("NAME", value), ...)` (as `CavePatch.defsyms`) defines
 symbols the source uses and does not define, for both `m68k-elf-as` (so
@@ -819,8 +819,8 @@ A setting declared `apply=Apply.BUILD` chooses code: the module's
 Option as its label, and the build binds each selected module once per
 remix (`registry.bound`), so every reader of those fields sees the chosen
 code. An `include` callable reads the values from the bound module's
-`build_values`. `modules/usb-audio-out/manifest.py` is the worked example:
-one source, five layouts.
+`build_values`. `modules/usb/manifest.py` is the worked example:
+one source, six layouts (seven with OFF).
 
 Then `python3 tools/remix/brain.py lock <module>` writes
 `modules/<module>/brain.lock`, committed with the manifest; `make

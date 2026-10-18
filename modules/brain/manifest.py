@@ -255,7 +255,7 @@ _NOLOAD = os.environ.get("BRAIN_DIAG") == "noload"
 MODULE = Module(
     name="brain", key=schema.BRAIN_KEY, kind=Kind.CF_PATCH,
     category=Category.SETTINGS, author="Sam Banks", author_url="https://github.com/sambanks",
-    proof=Proof.PORT, proof_note="`verify_brain` under the port (6 Oct 2026); not on hardware",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "`verify_brain` under the port (6 Oct 2026)",
     doc="The settings store on the unit: card-wide knob defaults read from BRAIN/card.work at each project load (docs/proposals/BRAIN.md).",
     # MODEDEF_TABLE: MODE DEFAULTS' view table, 0 without that module.
     # BRAIN's own settings (SETTINGS > BRAIN), read by brain.c

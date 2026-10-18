@@ -75,7 +75,7 @@ MODULE = Module(
     key="STORE",
     kind=Kind.CF_PATCH,
     category=Category.PARTS, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.PORT, proof_note="",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026)",
     doc="Platform: the stock save, load, copy, CS1 and Part sites KITS and PLOCKS P2 share.",
     linked=(Linked("store", "modules/store/store.s", dram=True, include=store_inc),),
     gates=(Gate("tools/verify/verify_store_copy.py", stage="image", venv=True),),

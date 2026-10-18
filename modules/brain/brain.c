@@ -855,6 +855,142 @@ static int write_card(u32 at, u32 kept)
 	return write_store("/BRAIN/card.work", 0, at, kept);
 }
 
+/* REMIX SWITCH's CARD setting, key 1: a bounded filename, or empty for
+ * FLASHED. It is a Blob (no scalar SETTINGS row). The switcher calls this
+ * after the sync has drained, or before the boot posts any engine work. */
+#define RMX_STORE "octabam.remix-switch"
+#define RMX_IDLEN (sizeof RMX_STORE - 1)
+#define RMX_NLEN 24
+
+static int remix_name_ok(const char *s)
+{
+	u32 n = 0;
+	while (n < RMX_NLEN && s[n]) {
+		char c = s[n];
+		if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+		      (c >= '0' && c <= '9') || c == ' ' || c == '.' || c == '_' || c == '-'))
+			return 0;
+		n++;
+	}
+	return n == 0 || (n >= 5 && n < RMX_NLEN && s[0] != '.' && s[n - 4] == '.' &&
+		(s[n - 3] & ~32) == 'R' && (s[n - 2] & ~32) == 'M' && (s[n - 1] & ~32) == 'X');
+}
+
+/* The sole record, with a supported schema and intact payload. Duplicates
+ * or an unreadable record make a write fail as well as a read stay home. */
+static const u8 *remix_record(int n, int *bad)
+{
+	const u8 *found = 0;
+	for (u32 r = 0, at = HDR; n > 0 && r < be16(buf + 10); r++, at += be32(buf + at + 16)) {
+		const u8 *p = buf + at;
+		if (p[0] != K_SETTINGS || !same_id(p + REC_HDR, p[1], RMX_STORE, RMX_IDLEN))
+			continue;
+		const u8 *pay = p + REC_HDR + align4(p[1]);
+		if (found || be16(p + 2) != 1 || crc32(pay, be32(p + 8)) != be32(p + 12))
+			*bad = 1;
+		found = p;
+	}
+	return found;
+}
+
+/* Return the size of a bounded TLV, or zero for a malformed payload. */
+static u32 remix_tlv(const u8 *v, u32 left)
+{
+	if (left < 4)
+		return 0;
+	u32 len = v[3], head = 4;
+	if (len == 255) {
+		if (left < 8 || v[2] != T_BLOB)
+			return 0;
+		len = be32(v + 4);
+		head = 8;
+	}
+	if (len > left - head || align4(len) > left - head)
+		return 0;
+	return head + align4(len);
+}
+
+int brain_remix_get(char *name)
+{
+	name[0] = 0;
+	int n = current_store(), bad = 0, seen = 0;
+	const u8 *r = remix_record(n, &bad);
+	if (n <= 0 || bad || !r)
+		return 0;
+	const u8 *p = r + REC_HDR + align4(r[1]);
+	for (u32 at = 0, plen = be32(r + 8); at < plen;) {
+		u32 size = remix_tlv(p + at, plen - at);
+		if (!size)
+			return name[0] = 0;
+		if (be16(p + at) == 1) {
+			if (seen++ || p[at + 2] != T_BLOB || p[at + 3] != RMX_NLEN)
+				return name[0] = 0;
+			for (u32 k = 0; k < RMX_NLEN; k++)
+				name[k] = p[at + 4 + k];
+		}
+		at += size;
+	}
+	if (!remix_name_ok(name))
+		name[0] = 0;
+	return name[0] != 0;
+}
+
+/* Keep every other record and every unknown key of our own record. */
+int brain_remix_save(const char *name)
+{
+	if (!remix_name_ok(name))
+		return 2;
+	int n = current_store(), bad = 0;
+	const u8 *old = remix_record(n, &bad);
+	if (n < 0 || bad)
+		return 2;
+	u32 at = HDR, kept = 0;
+	for (u32 i = HDR, k = 0; n > 0 && k < be16(buf + 10); k++, i += be32(buf + i + 16)) {
+		const u8 *p = buf + i;
+		if (p == old)
+			continue;
+		u32 size = be32(p + 16);
+		if (size > BUF_LEN - at)
+			return 3;
+		for (u32 j = 0; j < size; j++)
+			out[at + j] = p[j];
+		at += size;
+		kept++;
+	}
+	u32 prefix = REC_HDR + align4(RMX_IDLEN);
+	if (prefix + 4 + RMX_NLEN > BUF_LEN - at)
+		return 3;
+	u8 *r = out + at, *pay = r + prefix;
+	for (u32 k = 0; k < prefix + 4 + RMX_NLEN; k++)
+		r[k] = 0;
+	r[0] = K_SETTINGS; r[1] = RMX_IDLEN;
+	put16(r + 2, 1);
+	for (u32 k = 0; k < RMX_IDLEN; k++)
+		r[REC_HDR + k] = RMX_STORE[k];
+	put16(pay, 1); pay[2] = T_BLOB; pay[3] = RMX_NLEN;
+	for (u32 k = 0; k < RMX_NLEN - 1 && name[k]; k++)
+		pay[4 + k] = (u8)name[k];
+	u32 plen = 4 + RMX_NLEN;
+	if (old) {
+		const u8 *p = old + REC_HDR + align4(old[1]);
+		for (u32 i = 0, len = be32(old + 8); i < len;) {
+			u32 size = remix_tlv(p + i, len - i);
+			if (!size)
+				return 2;
+			if (be16(p + i) != 1) {
+				if (size > BUF_LEN - at - prefix - plen)
+					return 3;
+				for (u32 k = 0; k < size; k++)
+					pay[plen + k] = p[i + k];
+				plen += size;
+			}
+			i += size;
+		}
+	}
+	put32(r + 8, plen); put32(r + 12, crc32(pay, plen)); put32(r + 16, prefix + plen);
+	return write_card(at + prefix + plen, kept + 1) < 0 ? 4 : 0;
+}
+
 /* The settings records of one scope: scope 0 is card.work, scope 1 the
  * project's brain.work (pw, ps; proj_paths() first). One record per store
  * that has entries of the scope, its values the table's; keys this image

@@ -7,9 +7,9 @@ to do with octabam's code:
   * a module whose sources are a git SUBMODULE that is not checked out
     (a clone made without `git submodule update --init --recursive`); and
   * a module whose linked unit is checked against its AUTHOR'S bytes
-    (Linked.reference -- USB MIDI). Those bytes come from the author's
+    (Linked.reference -- USB's usbmidi unit). Those bytes come from the author's
     BARE-METAL m68k-elf toolchain. With Ubuntu's m68k-linux-gnu toolchain,
-    symlinked to the m68k-elf names, USB MIDI's unit links to 1,130 bytes
+    symlinked to the m68k-elf names, USB's usbmidi unit links to 1,130 bytes
     that are not its author's and the build refuses every remix that
     carries it (27 Sep 2026), so that toolchain is treated as absent.
 

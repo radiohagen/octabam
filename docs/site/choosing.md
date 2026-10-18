@@ -1,46 +1,50 @@
-# Choosing a remix
+# Choose a Remix
 
-Three remixes are built from the same core modules; they differ in what they
-do with the effects. One keeps stock exactly as stock has it. One adds
-insert effects that run on any track, on FX1 and FX2. One adds the delay and
-reverb bus and keeps three of the inserts on FX1.
+A **module** adds one feature. A **remix** combines modules into an operating
+system image. The three official remixes share the core features and differ
+mainly in their effects.
 
-| | octabam-core | octabam-inserts | octabam-bus |
-|---|---|---|---|
-| stock effects | all 14, unchanged (LO-FI's AMF knob fixed) | the stock DELAY; the other 13 give up their DSP words | the stock DELAY on track 8; the other 13 give up their DSP words |
-| new effects | none | SPECTRUM, CHARACTER, MODULATION, TRANSIENT and EUCLID on FX1 and FX2; GATE VERB on FX2 | SPECTRUM, CHARACTER and MODULATION on FX1; DELAY and REVERB engines on tracks 1 and 5; SEND on tracks 2–4, 6–7 |
-| bus | no | no | yes: DELAY (track 1), REVERB (track 5), SEND elsewhere |
-| LOAD METER | not in the image | in the image | in the image |
-| DSP words free, payload A / B | 0 | 1,231 / 1,231 | 44 / 605 |
-| sample and recorder memory | 12,895 pages | 12,895 pages | 12,895 pages |
-| where it has run | port gates only; not on a unit | port gates only; not on a unit | port gates only; not on a unit |
+## Keep the Stock Effects
 
-Sample and recorder memory is the platform reserve, the same in all three:
-stock's 14,602 pages down to 12,895.
+Choose [Octabam Core](remix-core.md) for Kits, BRAIN, expanded scenes and
+parameter locks, USB, and workflow fixes. All 14 stock effects remain in
+the stock menus, with the LO-FI AMF control fixed.
 
-The core modules are the same set in all three remixes (octabam-core has no
-LOAD METER: its DSP half needs 156 words per payload, and the 14 stock
-effects leave none). They cover: BRAIN (settings, defaults, templates and
-the remix switch), KITS (255 Kits per project), scene and parameter locks on
-page 2, MIDI scenes, USB MIDI and USB audio, and a set of fixes to stock
-behaviour.
+## Add Effects to Individual Tracks
 
-Pick:
+Choose [Octabam Inserts](remix-inserts.md) for SPECTRUM, CHARACTER,
+MODULATION, TRANSIENT, and EUCLID on FX1 and FX2, plus GATE VERB and LOFI2
+on FX2. The stock DELAY remains. These effects process their own tracks;
+you do not need shared bus routing.
 
-- octabam-core if you want the platform features and no change to the
-  effects.
-- octabam-inserts if you want new effects per track, on FX1 and FX2, with no
-  bus wiring to set up.
-- octabam-bus if you want the delay and reverb bus: tracks 1 and 5 become
-  the two engines, every other track gets a SEND with two knobs, DEL and
-  REV. Its FX1 keeps three of the inserts: SPECTRUM, CHARACTER, MODULATION.
+## Share a Delay and Reverb Bus
 
-Each remix's page lists its modules and how to flash it:
+Choose [Octabam Bus](remix-bus.md) to send several tracks to the same delay
+and reverb. Track 1 hosts the delay and track 5 hosts the reverb. Tracks
+2–4 and 6–7 have SEND controls; track 8 retains the stock DELAY.
+SPECTRUM, CHARACTER, and MODULATION are available on FX1.
 
-- [octabam-core](remix-core.md)
-- [octabam-inserts](remix-inserts.md)
-- [octabam-bus](remix-bus.md)
+The tested bus setup uses THRU machines on tracks 1 and 5 with no trigs of
+their own. Read the [bus setup instructions](remix-bus.md) before choosing
+this remix for an existing project.
 
-All three are verified under the port only. None has run on a unit.
+## At a Glance
+
+| Remix | Effects arrangement | DSP load display |
+|---|---|---|
+| **core** | Stock effects | Unavailable |
+| **inserts** | Effects on individual tracks | Included |
+| **bus** | Shared delay and reverb, plus FX1 inserts | Included |
+
+All three reserve memory for the added features, leaving 12,895 sample and
+recorder pages compared with 14,602 in stock OS. Core has no room for the
+DSP portion of LOAD METER.
+
+Test history belongs to a particular image and setup. Read the status on
+each remix page; a module tested on hardware does not establish that the
+whole remix has been tested.
+
+Continue to [Build and install](build-flash.md), or
+[create your own remix](own-remix.md) from the available modules.
 
 For the radiohagen experimental MIDI integration, see [MIDI modules](midi-modules.md).

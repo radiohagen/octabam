@@ -37,7 +37,7 @@ MODULE = Module(
     key="SCENES P2",
     kind=Kind.CF_PATCH,
     category=Category.PARTS, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.PORT, proof_note="26 Sep 2026",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "26 Sep 2026",
     doc="Scene locks and the crossfader on FX1/FX2 page 2 "
         "(hold a scene, turn a page-2 knob).",
     linked=(Linked("p2scenes", "modules/scenes-p2/p2scenes.s", dram=True, include=next_inc),),

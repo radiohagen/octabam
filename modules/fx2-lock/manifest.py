@@ -25,7 +25,7 @@ MODULE = Module(
     key="FX2 LOCK",
     kind=Kind.CF_PATCH,
     category=Category.BUS, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.PORT, proof_note="verify_fx2lock under the port, 4 Oct 2026",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "verify_fx2lock under the port, 4 Oct 2026",
     doc="The FX2 chooser cannot change a track's effect: YES's key-table entry points at NO's close handler, so the select handler never runs.",
     pokes=(
         Poke(0x400BC374, expect=H("40052474"), write=H("4003d440"),

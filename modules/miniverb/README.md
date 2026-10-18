@@ -67,7 +67,7 @@ The finite sweep is not a proof over every possible parameter combination.
 
 ## On the unit
 
-Not flashed or verified on hardware.
+Cursory testing on Sam's MKII (owner report, 16 Oct 2026).
 
 ## Gates
 

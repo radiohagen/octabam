@@ -64,8 +64,8 @@ lm_out:
 | Core 0 (dsp_meter.asm) puts 17 bytes in the low byte of MAIN's first 17
 | longs at 0x80005e60 (channel 6's buffer, docs/firmware/STEM_REC.md section
 | 18.6); stock has zero there. They are copied out and zeroed here, before
-| the stock recorder (0x400068e4, called at 0x4000d340), USB AUDIO OUT and
-| STEMS read the buffer, so every reader sees stock's bytes. A record whose
+| the stock recorder (0x400068e4, called at 0x4000d340), USB's audio
+| producer and STEMS read the buffer, so every reader sees stock's bytes. A record whose
 | magic, sum, period (PMIN..PMAX timer-0 counts) or busy (at most its
 | period) is wrong counts as bad and changes nothing else. The displaced
 | `tstl 0x800018fe` is replayed last: the `bne` after it reads its flags.

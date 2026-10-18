@@ -1,5 +1,15 @@
 # Landing in a chosen image at power-on
 
+**15 Oct 2026 update (#743):** the maintainer's intended behaviour is now
+to keep the selected remix after reboot. REMIX SWITCH implements that
+selection as a CARD Blob in BRAIN/card.work, restored at the boot's first
+LOAD PROJECT or LOADING FILES post. The project posts are held until a
+refused switch releases them. STARTUP MENU > EXIT bypasses the selection;
+the flashed name in REMIXES clears it. This supersedes the historical
+recommendation below. Port verification and hardware retest are tracked
+in modules/remix-switch/README.md; the two-boot duration on an MKII is
+still unmeasured.
+
 > Written while the module was OS SWITCH, its list MAIN MENU > OS and the
 > images `.OBI` files in the card root (sanderlegit, PR #542). Since 8 Oct
 > 2026 it is REMIX SWITCH: MAIN MENU > BRAIN > REMIXES, `.RMX` files in

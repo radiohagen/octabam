@@ -159,7 +159,7 @@ def budget_result(data):
 def _effect(m):
     """A DSP module the fixture can put on a track and the pricer can meter:
     one with a chooser row. A DspSection reached by a hook alone (menu None,
-    USB AUDIO IN's RX inject) is placed by the build but is no effect."""
+    USB's audio-in RX inject) is placed by the build but is no effect."""
     return m.dsp is not None and getattr(m, "menu", 1) is not None
 
 

@@ -1,0 +1,1 @@
+# rnd-name test — RND NAME alone

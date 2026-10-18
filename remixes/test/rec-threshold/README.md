@@ -9,7 +9,7 @@ One ColdFire module and the stock effects. For anyone who wants a recorder to st
 
 ## Status
 
-Working on an MKII (Chupitnik's, 11-12 Oct 2026): images THR1 to THR5 from this remix, flashed from the card; THR5 is this code. Measured under the ColdFire port by `tools/verify/verify_rec_threshold.py` (in `make check`). Not yet tried on a unit: QREC, other tracks than 1, REC CD, an MKI. `CHANGELOG.md` has each image.
+Working on an MKII (Chupitnik's, 11-13 Oct 2026): images THR1 to THR9 from this remix, flashed from the card; THR9 is this code. Measured under the ColdFire port by `tools/verify/verify_rec_threshold.py` (in `make check`). Several tracks armed at once each start their own take (14 Oct). Not yet tried on a unit: QREC, REC CD, an MKI. `CHANGELOG.md` has each image.
 
 ## Build
 

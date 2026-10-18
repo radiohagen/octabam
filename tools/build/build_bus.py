@@ -252,7 +252,7 @@ PLAIN_SLOTS = {m.key: m.plain_slots for m in _CLONED if m.plain_slots}
 _DEF_ASM = {m.key: m.dsp.asm for m in _CLONED}
 # DSP code reached from STOCK code rather than a chooser row
 # (schema.DspSection.hooks with no MenuEntry): placed like an effect, on
-# the payloads it names, with no dispatch entry. USB AUDIO IN's RX inject.
+# the payloads it names, with no dispatch entry. USB's audio-in RX inject.
 HOOKED = [k for k in REMIX.modules
           if _MODS[k].dsp is not None and _MODS[k].menu is None]
 for _k in HOOKED:
@@ -1478,12 +1478,14 @@ def main():
 
 
     if _dram:
-        _pappend, _psyms, _boot, _pnames = _plinked
+        _pappend, _psyms, _pgsyms, _punits, _ploader, _boot, _pnames = _plinked
         for _m, _u in _early:
-            _sym[_u.label] = _psyms
-            print(f"  {_m.key}: {_u.label} in the loader at 0x{_psyms.get(_u.label, 0):08x}")
+            _sym[_u.label] = _ploader
+            print(f"  {_m.key}: {_u.label} in the loader at 0x{_ploader.get(_u.label, 0):08x}")
         for _m, _u in _dram:
-            _sym[_u.label] = _psyms          # detours name units; one table serves all
+            # refs name units; each unit's table holds its own symbols, so a
+            # same-named label in another unit cannot shadow a detour's target
+            _sym[_u.label] = _punits[_u.label]
             _uref = _u.reference_for(_sel)
             if _uref is not None:
                 # The author's oracle for a DRAM unit: linked alone at the
@@ -1504,7 +1506,7 @@ def main():
                              f"0x{_ra:08x} it is {len(_rb)} B sha256 {_got}, not the "
                              f"author's {_rsha} -- source or toolchain drift; refusing")
                 print(f"  {_m.key} {_u.label}: matches the author's build at 0x{_ra:08x} ({len(_rb):,} B)")
-        _exports.update(_psyms)
+        _exports.update(_pgsyms)
         # DRAM label formatters (Linked.registers_formatter), as the cave
         # registration above: skipped for a module not cloned or BLANKED,
         # (CAVE OFF drops TEMPO SYNC's unit itself).
@@ -1580,6 +1582,9 @@ def main():
         if _got != _d.expect:
             sys.exit(f"{_m.key} detour {_d.note or _d.symbol} at 0x{_d.site:08x} finds "
                      f"{_got.hex()}, not {_d.expect.hex()}; refusing")
+        if _d.target is None and _d.symbol not in _sym.get(_d.unit, {}):
+            sys.exit(f"{_m.key} detour {_d.symbol} at 0x{_d.site:08x}: {_d.unit} does "
+                     f"not define it; refusing")
         _target = _d.target if _d.target is not None else _sym[_d.unit][_d.symbol]
         _op = {"jmp": b"\x4e\xf9", "jsr": b"\x4e\xb9", "lea": _d.expect[:2]}[_d.kind]
         _w = _op + _target.to_bytes(4, "big")
@@ -1594,6 +1599,9 @@ def main():
             sys.exit(f"{_m.key} symbol ref {_r.note or _r.symbol} at "
                      f"0x{_r.addr:08x} finds 0x{_got:08x}, not "
                      f"0x{_r.expect:08x}; refusing")
+        if _r.symbol not in _sym.get(_r.unit, {}):
+            sys.exit(f"{_m.key} symbol ref {_r.symbol} at 0x{_r.addr:08x}: {_r.unit} does "
+                     f"not define it; refusing")
         _target = _sym[_r.unit][_r.symbol] + _r.addend
         wr32(_r.addr, _target)
         print(f"    ref 0x{_r.addr:08x}: 0x{_r.expect:08x} -> "
@@ -3529,12 +3537,14 @@ hostquit:
             if not _nref:
                 sys.exit(f"{_n}: no reference to its clone was repointed")
             print(f"  {_n:14s} P=0x{_dmap[_ci]:08x}  {_nref} reference(s) repointed")
-        _pappend, _psyms2, _boot, _pnames = platform_build.build(
+        _pappend, _psyms2, _pgsyms2, _punits2, _ploader2, _boot, _pnames = platform_build.build(
             [(_m.key, _u) for _m, _u in _dram], [], pathlib.Path("out/platform"),
             reserve=_reserve, defsyms=_pdefs, unit_defs=_unit_defs,
             includes={_u.label: _u.include(_sel) for _m, _u in _dram + _early if _u.include is not None},
             regions=_regions, patch=_rt_patch, early=[_u for _m, _u in _early], fixed=_fixed)
-        if _psyms2 != _psyms:
+        if (_psyms2, _pgsyms2, _punits2) != (_psyms, _pgsyms, _punits):
+            # the loader is not compared: its tail (_end & co) moves with
+            # the packed payload the patch changes, by design
             sys.exit("descriptor clones: the platform runtime linked differently the second time")
         _appends[_platform_at] = (
             "octabam loader + payloads (" + ", ".join(_pnames) + ")", _pappend)
@@ -3565,13 +3575,14 @@ hostquit:
                 sys.exit(f"analog bd: 0x{_aa:08x} holds {_got.hex()}, not stock {_aexp.hex()}")
             img[_aa - BASE:_aa - BASE + len(_aw)] = _aw
             print(f"    poke 0x{_aa:08x}: {_aexp.hex()} -> {_aw.hex()}  {_anote}")
-        _pappend, _psyms2, _boot, _pnames = platform_build.build(
+        _pappend, _psyms2, _pgsyms2, _punits2, _ploader2, _boot, _pnames = platform_build.build(
             [(_m.key, _u) for _m, _u in _dram], [], pathlib.Path("out/platform"),
             reserve=_reserve, defsyms=_pdefs, preboot=_pres, unit_defs=_unit_defs,
             includes={_u.label: _u.include(_sel) for _m, _u in _dram + _early if _u.include is not None},
             regions=_regions,       # the same regions as the first link, or its symbols differ
             patch=_rt_patch, early=[_u for _m, _u in _early], fixed=_fixed)
-        if _psyms2 != _psyms or _platform_at is None:
+        if (_psyms2, _pgsyms2, _punits2) != (_psyms, _pgsyms, _punits) \
+                or _platform_at is None:
             sys.exit("analog bd: the platform runtime linked differently the second time")
         _appends[_platform_at] = (
             "octabam loader + payloads (" + ", ".join(_pnames) + ")", _pappend)

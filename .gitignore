@@ -24,6 +24,8 @@ __pycache__/
 *.pyc
 # Generated manual site pages (tools/site/gen_pages.py; the deploy builds them)
 docs/site/reference/
+# Temporary word-count remix used by the DSP memory report (modules/arena.py).
+/remixes/_words.py
 tools/hw/rec
 tools/hw/tone
 # the same two binaries at their pre-10-Sep path, still on some checkouts

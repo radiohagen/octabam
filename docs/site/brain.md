@@ -1,24 +1,55 @@
 # BRAIN
 
-BRAIN is the on-unit screen for the shared settings, defaults and templates
-store, and the way you switch remixes from the card. It is the fifth
-category of the MAIN MENU: PROJ (MAIN MENU), then BRAIN. Its pane is one
-list, most used first: TEMPLATES, REMIXES, SETTINGS, PERFORMANCE, LOG,
-ABOUT. UP and DOWN move the cursor, YES acts on the row, NO goes back to the
-menu.
+![BRAIN in the main menu](img/brain/pane.png)
 
-BRAIN is verified under the port. It has not run on a unit.
+*BRAIN in the main menu*
 
-## TEMPLATES
+BRAIN is the on-unit menu for shared settings, defaults, templates,
+performance information, logs, and remix switching. Open it from the MAIN
+MENU: select **PROJ**, then **BRAIN**. Use **UP** and **DOWN** to move
+through the list, **YES** to open or change the selected item, and **NO** to
+return to the previous screen.
 
-Four tabs: PART, FX, MIDI, PROJECT, each with a NEW row. A template's screen
-has APPLY TO…, SET AS DEFAULT / CLEAR DEFAULT, SAVE, RENAME, DELETE, then its
-VALUES.
+The list contains **TEMPLATES**, **REMIXES**, **SETTINGS**,
+**PERFORMANCE**, **LOG**, and **ABOUT**.
+
+The current remix-switch persistence path has emulator coverage; its MKII
+hardware retest remains open.
+
+## Templates
+
+![BRAIN: Templates](img/brain/templates.png)
+
+*BRAIN: Templates*
+
+A template stores a reusable setup. Use **LEFT / RIGHT** to choose the
+**PART**, **FX**, **MIDI**, or **PROJECT** tab.
+
+1. Select **NEW** and press **YES** to create a template.
+2. Enter a name and confirm with **YES**.
+3. Select the saved template to open its actions and values.
+4. Choose **APPLY TO…** to apply it, or **SET AS DEFAULT** to use it as a
+   starting point. **CLEAR DEFAULT** removes that assignment.
+
+The template screen also provides **SAVE**, **RENAME**, and **DELETE**.
 
 - PART templates hold a whole Part, applied by section and track: FX, LFO,
   INPUT SRC, MIDI TRACKS, SCENES, MACHINES.
+- FX templates store an effect page; applying one to a different effect
+  replaces that effect. MIDI templates store a MIDI track's pages.
 - PROJECT templates cover the stock PROJECT / CONTROL / MIDI screens. SET AS
   DEFAULT on one makes it the settings of every new project.
+
+PART templates leave the project's sample slots, AMP pages, FLEX and STATIC
+SRC pages, and levels unchanged. Applying a PART template lets you choose
+the whole Part, a section across tracks, or a source and destination track.
+A PART default supplies Part Clear and the Parts of a new project.
+
+Use **LEFT / RIGHT** or the encoder to edit values. **NO** returns to the
+previous screen; unsaved edits prompt **SAVE CHANGES?**. A name already in
+use is refused.
+
+### Page Shortcut
 
 A page shortcut saves and loads the page in front of you as a template:
 hold a page key (SRC, AMP, LFO, FX1, FX2) and press FUNC. The list that
@@ -26,14 +57,30 @@ opens has SAVE FX DEFAULT, CLEAR FX DEFAULT, SAVE TEMPLATE, LOAD TEMPLATE,
 DELETE TEMPLATE (plus NAME KNOB on a MIDI track). On an MKII, FUNC + a push
 of the LEVEL encoder opens TOOLS > LOAD.
 
-## REMIXES
+**SAVE FX DEFAULT** stores the current FX page as the default for that
+effect when it is newly selected. **CLEAR FX DEFAULT** removes the stored
+default. **SAVE PROJECT** updates its recovery copy.
 
-The remix switch. Every `.RMX` file in `/BRAIN/REMIXES/` on the CF card is
-listed, sorted; the one whose name matches the running image (case and
+On a MIDI track, **NAME KNOB** gives each of the ten assignable CCs a label
+of up to four characters on CTRL1 and CTRL2. An empty name clears it.
+
+## Switch Remixes
+
+![BRAIN: Switch remixes](img/brain/remixes.png)
+
+*BRAIN: Switch remixes*
+
+Every `.RMX` file in `/BRAIN/REMIXES/` on the CF card is listed in name
+order; the one whose name matches the running image (case and
 spaces ignored) has RUNNING at the right. YES on one asks `BOOT <NAME>?` and
-boots it without writing the flash. After a switch, a FLASHED separator
-shows the image a power-cycle returns to: switching is temporary, and
-OFF/ON always comes back to the flashed image.
+boots it without writing the flash. The choice is saved in BRAIN/card.work
+and restored at the next reboot, before the project loads. After a switch,
+a FLASHED separator shows the installed image; select its name to return
+to it and clear the saved choice.
+
+To bypass the selection for one boot, hold FUNC at power-on and choose
+EXIT in the stock STARTUP MENU, or remove the card. This new persistence
+path has port coverage; its MKII hardware retest remains open.
 
 Making `.RMX` files (an image is a whole OS: stock 1.40C with one remix's
 modules built in):
@@ -49,38 +96,78 @@ Copy the `.RMX` files to `/BRAIN/REMIXES/` on the card. Delete any Mac
 valid switch target. A switch stops playback, syncs the project (as OS
 UPGRADE does), loads and resets.
 
-## SETTINGS
+## Settings
 
-A heading per module that declares settings, then its value rows. YES steps
-the value (wrapping); LEFT and RIGHT step down and up, stopping at the ends.
+![BRAIN: Settings](img/brain/settings.png)
+
+*BRAIN: Settings*
+
+Settings are grouped by module. Press **YES** to cycle through a value's
+options. **LEFT / RIGHT** decrease or increase it, stopping at the ends.
 A value that takes effect at the next boot ends in `*`, with `* AT NEXT
 BOOT` under the list.
 
-BRAIN's own settings are `APPLY DFLTS` (default on — off means every effect
-takes the image's defaults rather than the card's) and `MIDI LOG` and
-`EVENT LOG` (defaults on). Settings persist to the card's `card.work`.
+**APPLY DFLTS** is on by default. Turn it off to use the image's effect
+defaults. Settings persist to `BRAIN/card.work`. The MIDI and event logging
+switches are described under Logs.
 
-## PERFORMANCE
+## Performance Views
 
-LOAD / CPU / DSP / MEM / CARD / MIDI / USB tabs, redrawn every half second.
-The DSP and LOAD rows come from the LOAD METER module, which measures the
-frame interrupt's share of the ColdFire and each DSP core's busy time.
+![BRAIN: Performance views](img/brain/performance.png)
 
-## LOG
+*BRAIN: Performance views*
 
-EVENTS lists the recorded events: `FRAME OVER`, `CPU FULL`, `CARD SLOW`.
-MIDI mirrors MIDI traffic when MIDI LOG is on, and WRITE DEBUG LOG writes
-`/BRAIN/debug.txt` on the card.
+Use **LEFT / RIGHT** to change tabs and **UP / DOWN** to scroll. Values
+refresh every half second.
 
-## ABOUT
+| Tab | What it shows |
+|---|---|
+| LOAD | Processor and DSP activity; WORST FRAME is the longest frame since opening. |
+| CPU | Processor time used by each task, with FRAME IRQ first. |
+| DSP | Processing cost per effect, plus system activity on each DSP core. |
+| MEM | Reserved memory, FLEX use, recorder memory, and remaining audio pages. |
+| CARD | Read and write counts, transferred data, and slowest command. |
+| MIDI | Message rate and counts for each message type. |
+| USB | Audio underruns and overruns, and dropped MIDI output messages. |
 
-IMAGE / CARD / PROJECT / MODULES tabs. IMAGE shows the image name, the remix
-name, and the stock OS it is built on (1.40C). MODULES credits each module's
-key and first author.
+DSP measurements require LOAD METER. Without it, the bars stay empty and
+the DSP tab explains why. USB reports **NOT IN THIS IMAGE** when unavailable.
 
-## Card files
+## Logs
 
-| file | holds |
+![BRAIN: Logs](img/brain/log.png)
+
+*BRAIN: Logs*
+
+Use **LEFT / RIGHT** to switch between **EVENTS** and **MIDI**.
+
+**EVENTS** holds the latest 40 events, newest first: FRAME OVER, CPU FULL,
+and CARD SLOW. Each entry includes the uptime when it occurred. Turn off
+**EVENT LOG** to stop recording events.
+
+**MIDI** shows the latest 24 decoded messages. **MIDI LOG** controls the
+debug recording. **WRITE DEBUG LOG** saves the last 256 messages to
+`/BRAIN/debug.txt`, excluding clock and active sensing. Both logging
+switches are on by default.
+
+## About This Image
+
+![BRAIN: About this image](img/brain/about.png)
+
+*BRAIN: About this image*
+
+Use **LEFT / RIGHT** to change tabs.
+
+| Tab | Information |
+|---|---|
+| IMAGE | Image and remix name, stock OS version, and module count. |
+| CARD | Whether BRAIN settings loaded, used the saved fallback, or were damaged; file size and record counts. |
+| PROJECT | Whether the project was saved with this image, has changed effects, has no saved record, or has damaged BRAIN files. |
+| MODULES | Module names and their authors. |
+
+## BRAIN Files on the Card
+
+| File or location | Contents |
 |---|---|
 | `BRAIN/card.work`, `BRAIN/card.strd` at the card root | card-scope settings; the `.strd` is the card-layer defaults, copied at SAVE PROJECT |
 | `<set>/<project>/brain.work`, `brain.strd` | project-scope settings; the project record |
@@ -90,28 +177,12 @@ The pair rule: `.work` is the working copy, `.strd` the last saved. A
 damaged `.work` falls back to its `.strd`; a damaged pair falls back to the
 image's defaults, and nothing is overwritten.
 
-How the defaults work: at each LOAD PROJECT and at power-up, the core resets
-every effect's twelve descriptor defaults to the image's values, then reads
-`/BRAIN/card.work` (or `card.strd` by the pair rule) and writes each valid
-default record over its effect's bytes. The FX choosers and the new-part
-initialiser read those bytes. SAVE FX DEFAULT (the page shortcut above)
-makes the current FX page the stored default; SAVE PROJECT copies `card.work`
-to `card.strd`. A `card.work` on a card with no `BRAIN` folder: the folder
-and file are created.
+At project load and power-up, effects start with the image's defaults,
+then use valid saved defaults from the card. **SAVE FX DEFAULT** stores the
+current FX page. **SAVE PROJECT** updates the saved recovery copy. BRAIN
+creates its folder and working file when needed.
 
-## Writing defaults from a computer
+## Advanced Reference
 
-The host tool reads and writes the same `card.work`:
-
-```bash
-python3 tools/hw/ot_brain.py default /Volumes/CARD/BRAIN/card.work bottleservice DELAY TIME=52 FB=5
-python3 tools/hw/ot_brain.py default /Volumes/CARD/BRAIN/card.work bottleservice "DELAY SERVER" --mode GRAIN SCTR=30
-python3 tools/hw/ot_brain.py default /Volumes/CARD/BRAIN/card.work bottleservice DELAY --clear
-python3 tools/hw/ot_brain.py dump /Volumes/CARD/BRAIN/card.work
-```
-
-The examples write defaults for the `bottleservice` remix; use the name of
-the remix you run.
-
-The design record:
-https://github.com/sambanks/octabam/blob/main/docs/proposals/BRAIN.md
+For editing defaults from a computer and the full card-file format, see the
+[BRAIN module documentation](https://github.com/sambanks/octabam/blob/main/modules/brain/README.md).

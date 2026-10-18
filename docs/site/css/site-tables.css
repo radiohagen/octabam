@@ -1,0 +1,21 @@
+/* The theme sizes every table cell for short dashboard values
+   (white-space: nowrap, in base.css). Markdown tables hold prose and
+   lists of links; without this the table overflows its column and the
+   rightmost cells are only reachable by horizontal scroll. */
+.table-wrapper td,
+.table-wrapper th {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* A headerless table (the two-column fact tables on the module pages
+   and in the modules index) renders its empty header row as a blank
+   band above the rows: the theme gives every th a fixed height. Collapse
+   the band; the row's bottom border stays as the table's top rule. */
+.table-wrapper thead tr:has(th:empty) {
+  height: 0;
+}
+.table-wrapper thead th:empty {
+  height: 0;
+  padding: 0;
+}

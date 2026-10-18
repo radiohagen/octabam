@@ -46,6 +46,78 @@ def _nm(elf, cwd):
     return {f[2]: int(f[0], 16) for f in rows if len(f) == 3 and not f[2].startswith(".L")}
 
 
+def _nm_globals(elf, cwd):
+    """The link's GLOBAL symbols only. The flat map serves unique names
+    (regions, clones, `_end`); its last-write-wins collapse of same-named
+    locals across units is why per-unit tables exist."""
+    rows = [l.split() for l in _run(["m68k-elf-nm", elf], cwd).splitlines()]
+    return {f[2]: int(f[0], 16) for f in rows
+            if len(f) == 3 and f[1].isupper() and not f[2].startswith(".L")}
+
+
+def _object_symbols(obj, cwd):
+    """[(name, section, value)] of one object's defined symbols from
+    `objdump -t`: a section symbol's value is its offset within the named
+    section, an *ABS* one's is its value, *UND* rows are skipped."""
+    rows = [l.split() for l in _run(["m68k-elf-objdump", "-t", obj], cwd).splitlines()]
+    out = []
+    for f in rows:
+        if len(f) < 5 or f[-1].startswith(".L") or any("d" in x for x in f[1:-3]):
+            continue
+        if f[-3] == "*UND*":
+            continue
+        try:
+            out.append((f[-1], f[-3], int(f[0], 16)))
+        except ValueError:
+            continue
+    return out
+
+
+def _map_sections(map_path):
+    """{(object path, section): (address, size)} from the ld map's
+    per-input-file lines (` .text  addr  size  path.o`)."""
+    out = {}
+    for line in map_path.read_text(errors="replace").splitlines():
+        f = line.split()
+        if len(f) == 4 and f[0].startswith(".") and f[3].endswith(".o"):
+            key = (f[3], f[0])
+            if key in out:
+                sys.exit(f"platform build: {key[1]} of {key[0]} appears twice in the "
+                         f"link map; refusing")
+            try:
+                out[key] = (int(f[1], 16), int(f[2], 16))
+            except ValueError:
+                continue
+    return out
+
+
+def _unit_tables(units, objs, map_path, work):
+    """{unit label: {symbol: address}} — each unit's own defined symbols
+    at their final addresses in the one link (the object names them, the
+    map places them). One flat table for the whole link cannot serve:
+    two units' same-named locals collapse by nm order and a detour wired
+    through the loser lands in the wrong unit's code (the octabam-bus
+    storm, 15 Oct 2026)."""
+    placed = _map_sections(map_path)
+    tables = {}
+    for (_k, u), obj in zip(units, objs):
+        t = {}
+        for name, sec, val in _object_symbols(obj, work):
+            if sec == "*ABS*":
+                t[name] = val
+            elif sec == "*COM*":
+                sys.exit(f"platform build: {obj.name}: common symbol {name} -- the "
+                         f"per-unit tables do not place common symbols; refusing")
+            else:
+                where = placed.get((str(obj), sec))
+                if where is None or not 0 <= val <= where[1]:
+                    sys.exit(f"platform build: {obj.name}: {name} in {sec} at 0x{val:x} "
+                             f"has no placement in the link map; refusing")
+                t[name] = where[0] + val
+        tables[u.label] = t
+    return tables
+
+
 def as_defsyms(defs) -> list[str]:
     """`m68k-elf-as` arguments defining each (name, value)."""
     return [x for n, v in defs for x in ("--defsym", f"{n}=0x{v:x}")]
@@ -128,9 +200,11 @@ def link_runtime(units, work: pathlib.Path, defsyms: dict, base: int, includes=N
         objs.append(obj)
     elf, raw = work / "runtime.elf", work / "runtime.bin"
     _run(["m68k-elf-ld", f"-Ttext=0x{base:x}",
-          *[f"--defsym={n}=0x{v:x}" for n, v in defsyms.items()], "-o", elf, *objs], work)
+          *[f"--defsym={n}=0x{v:x}" for n, v in defsyms.items()],
+          "-Map", work / "runtime.map", "-o", elf, *objs], work)
     _run(["m68k-elf-objcopy", "-O", "binary", elf, raw], work)
-    return raw.read_bytes(), _nm(elf, work)
+    return (raw.read_bytes(), _nm(elf, work), _nm_globals(elf, work),
+            _unit_tables(units, objs, work / "runtime.map", work))
 
 
 def place_regions(ceiling: int, regions, fixed=()) -> dict:
@@ -228,9 +302,10 @@ def build(units, payloads, work: pathlib.Path, reserve=None, defsyms=None, prebo
     link (a bridge's continuation targets, schema.Override). preboot:
     [dict(name, blob, stage, dst, rawlen, rhash)] depacked BEFORE the
     boot-continue call (Analog BD's DSP uploads); the loader
-    carries that section only when there is one. Returns
-    (append bytes, symbols of the octabam runtime, boot poke, payload
-    names) and writes LAYOUT. unit_defs: {unit label: resolved
+    carries that section only when there is one. Returns (append bytes,
+    the link's flat symbols, its globals, {unit label: {symbol: address}},
+    the loader units' globals, boot poke, payload names) and writes
+    LAYOUT. unit_defs: {unit label: resolved
     Linked.defsyms} for each unit's assembly (link_runtime). regions:
     [(symbol, size, align)] of uninitialised DRAM (schema.DramRegion),
     stacked down from the reserve's ceiling and handed to the link as
@@ -245,6 +320,8 @@ def build(units, payloads, work: pathlib.Path, reserve=None, defsyms=None, prebo
     work.mkdir(parents=True, exist_ok=True)
     entries = list(payloads)
     symbols = {}
+    gsyms = {}
+    unit_syms = {}
     layout = {"loader": LOADER_AT}
     if units:
         if reserve is None:
@@ -259,7 +336,7 @@ def build(units, payloads, work: pathlib.Path, reserve=None, defsyms=None, prebo
         # claims, named to the link.
         placed = place_regions(ceiling, regions, fixed)
         defs.update({s: a for s, (a, _) in placed.items()})
-        raw, symbols = link_runtime(units, work / "runtime", defs, base, includes, unit_defs)
+        raw, symbols, gsyms, unit_syms = link_runtime(units, work / "runtime", defs, base, includes, unit_defs)
         if patch:
             raw = bytearray(raw)
             for p_at, p_bytes in sorted(patch.items()):
@@ -353,15 +430,20 @@ def build(units, payloads, work: pathlib.Path, reserve=None, defsyms=None, prebo
     _run(["m68k-elf-ld", f"-Ttext=0x{LOADER_AT:x}", "-o", e, o], work)
     _run(["m68k-elf-objcopy", "-O", "binary", e, b], work)
     append = b.read_bytes()
+    loader_syms = {}
     if early:
-        # the loader units' globals, for the detours that name them
+        # the loader units' globals, for the detours that name them: their
+        # own table, not the runtime's flat map (same-named runtime symbols
+        # would shadow them)
         nm = subprocess.run(["m68k-elf-nm", e], capture_output=True, text=True, check=True).stdout
         for line in nm.splitlines():
             f = line.split()
             if len(f) == 3 and f[1] == "T":
                 symbols.setdefault(f[2], int(f[0], 16))
+                loader_syms[f[2]] = int(f[0], 16)
     # the boot site's stock `jsr 0x40001e50`, redirected to the loader; only
     # needed when no other payload's own writes already route boot here
     boot_poke = (0x4000050C, bytes.fromhex("4eb940001e50"),
                  b"\x4e\xb9" + LOADER_AT.to_bytes(4, "big"), "boot -> octabam loader")
-    return append, symbols, boot_poke, [e["name"] for e in list(preboot) + entries]
+    return (append, symbols, gsyms, unit_syms, loader_syms, boot_poke,
+            [e["name"] for e in list(preboot) + entries])

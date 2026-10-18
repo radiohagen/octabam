@@ -10,6 +10,27 @@ states the symptom, what it cost, the fix, and what now gates it.
 Add a new trap here the moment it costs real work, and add its one-line
 index entry in `AGENTS.md`'s trap index.
 
+<a id="trap-detour-interior"></a>
+### A branch can enter the middle of a displaced instruction span
+
+**Seen:** BUKKAKEBOREALIS's MKII, octabam-core, 15 Oct 2026 (#741):
+MIDI TRACK → CHROMATIC raised VEC 04 at `0x400bf10a`, the LCD surface.
+Reproduced under the port: stock's MIDI branch at `0x400449b6` enters
+`0x400449be`, a `movel d0,sp@-` shared with the audio drawer. The quantizer's
+eight-byte detour at `0x400449b8` replaced that push with a NOP; its runtime
+replays it for audio, but MIDI bypasses the runtime. The formatter then
+pops four bytes too many, and the drawer returns into its surface argument.
+
+**Cost:** the hook assembled and booted, and audio CHROMATIC worked, while
+the MIDI path lost its return address. Whole instructions at a hook's
+edges do not prove that every branch enters at those edges.
+
+**Fix and gate:** the integration installs a six-byte jump over only the
+audio load, leaving the shared push stock and claiming it with `Keep`.
+The author's runtime is unchanged. `verify_quantizer_ui` selects CHROMATIC
+through the panel in audio and MIDI on both models. Inspect incoming
+branches before taking any instruction span for a detour.
+
 ## Traps that have already cost real work
 
 <a name="trap-asm"></a>
@@ -213,13 +234,20 @@ counted to exactly one before they are replaced.
 
 ### An instruction form the chip has never run is not proven by the port
 
-**AN INSTRUCTION FORM THE CHIP HAS NEVER RUN IS NOT PROVEN BY THE PORT.**
-The assembler encodes it, the vendored emulator decodes it the same way, and
-the chip may not: image 44 (21 Sep 2026) wedged on its first block on four
+**A DSP FORM SHIPS ONLY IF A STOCK PAYLOAD RUNS IT OR A ROW IN THE
+INSTRUCTION-FORM REGISTER (`docs/firmware/CHIP.md`, section 1) APPROVES
+IT.** The assembler encodes it, the vendored emulator decodes it the same
+way, and the chip may not — the port proves nothing about a form the chip
+has never run. Image 44 (21 Sep 2026) wedged on its first block on four
 one-word displaced Y stores (`move a,y:(r3+$1)`), a form with no site in
-either stock payload; the X form has 533. Before using a form, grep it in
-`out/dsp/payload_*.asm` (`tools/build/dsp_disasm_all.py`); no precedent means
-a hardware probe first, or the form everything else uses.
+either stock payload; the X form has 533. The pin is not to the form
+alone: image 45 used `move a,y:(r3)+`, which stock runs, and wedged the
+same way (FAILURE_MODES "Sequencer stuck on step 1", cause 🟡 inferred) —
+which is the point: the port showed it for neither form. Before using a
+form, grep it in `out/dsp/payload_*.asm`
+(`tools/build/dsp_disasm_all.py`); no precedent means a hardware probe
+first and then a PR adding the register row with the evidence, or the form
+everything else uses.
 
 <a name="trap-rep-dma"></a>
 
@@ -770,6 +798,35 @@ all oracle failures.
 hash.** Register discipline in a boot stub is not checkable by anything but
 the port: `verify_dram_boot` watches the loader's entry and its `fatal` hang.
 
+<a name="trap-word-fixture"></a>
+
+### The memory word-count fixture can race reach and shard snapshots
+
+The DSP memory word counter (`tools/remix/state.py`) writes a temporary
+`remixes/_words.py` while it builds measurement images. On 16 Oct 2026,
+`reach.py` read it as a changed remix and `check_shards.py` copied it into
+a shard just as the shared gate removed it. The planned `_words` check then
+failed with "no remix '_words'". Ignore that generated path: it is a build
+fixture, not a user selection. Its ignore rule keeps it out of both reach's
+untracked-file scan and shard snapshots.
+
+<a name="trap-work-file-ram"></a>
+
+### A bank-file fixture edits the file; the firmware parses it into a different RAM layout
+
+**A bank-file fixture edits the file; the firmware parses it into a
+different RAM layout (16 Oct 2026).** `verify_scenes` seq fixtures patch
+`bankNN.work` (a trig bitmap at file MTRA+9, 8 bytes big-endian, bit 0 =
+step 1), and the loader parses the file into a RAM structure whose offsets
+differ (the parsed trig mask is at pattern `+0x48d7`;
+`docs/firmware/MIDI_SCENES.md` section 12). Reading a RAM-side offset as a
+file offset, or the file layout as the RAM layout, writes the wrong bytes
+and the scenario plays the project's own trigs: `swd`'s first runs
+measured the original trigs, not the fixture's. Anchor every fixture edit
+to a known-good write (the `swn` notes fixture) and take RAM addresses
+from the routine's own arithmetic (direct_jump.s), not from the file
+layout.
+
 <a name="trap-tmp-race"></a>
 
 ### Two builds on one machine corrupted each other through fixed `/tmp` names
@@ -836,3 +893,52 @@ the binaries' architecture.
 report (the hints name `tools/harness/send_probe.py`), which refhash
 correctly flagged with every artifact identical. Re-save only after proving
 the artifact lines match.
+
+<a name="trap-nm-order"></a>
+
+### Same-named labels across DRAM units resolve by nm table order
+
+**Same-named labels across DRAM units resolve by nm table order.** The
+platform runtime served every unit's refs and detours from one flat symbol
+table of the whole link; `_nm` collapsed same-named symbols by nm output
+order, so three units each defining `cave` (TEMPO SYNC's global, RECORDER
+LOOP FIX's local, RLEN PLEN's local) resolved to whichever definition the
+merge happened to leave last. Merging the four USB modules into one (15
+Oct 2026) flipped that order and the record writer's per-frame `jsr` was
+wired into RECORDER LOOP FIX's spacing code; verify_brain stormed to the
+auto-map limit (busiest pc 0x40004c40 x4194177). The base image was
+correct by table-order luck. The fix: `link_runtime` builds a per-unit
+symbol table from each unit's own object (`objdump -t`) placed by the
+link's `-Map`; a detour or ref naming a symbol its unit does not define
+is refused. `test_linked_defsyms.UnitTableTests` pins the scoping;
+`scripts/refhash.sh` proves the change moved no image.
+<a name="trap-first-sector-irq"></a>
+
+### A completion interrupt in the first-sector write window polls DRQ on a count the producer has not updated yet
+
+**A COMPLETION INTERRUPT IN THE FIRST-SECTOR WRITE WINDOW POLLS DRQ ON A
+COUNT THE PRODUCER HAS NOT UPDATED YET.** Stock's first-sector PIO write
+saves SR in d0 and raises the mask to 7 (`0x40014cdc`), issues the WRITE
+(`0x40014ce4`), then restores SR at `0x40014cf2` — before sending the 256
+data words and before the `0x40014d38..52` update of the buffer pointer
+`0x46c8c594` (+512) and the remaining-sector byte `0x46c8c592` (−−).
+Preempt the engine after the final word (observed exception PC
+`0x40014d34`, TCB `0x460ddde4`) and the completion IRQ runs in sys with
+count 1 and the old pointer: the card already finished the command (status
+`0x50`, DRQ clear), so the handler polls DRQ at `0x4001551e/24/26` forever
+and the lower-priority engine never resumes to fix the bookkeeping. Cost:
+the octabam-inserts loadmeter gate hang on 14–15 Oct 2026 and days of
+falsified leads — server-name parser, packed-stage residue in BRAIN
+scratch, lazy DSP batching, card latency — each measured and dismissed
+under the port. Fix: retain the saved SR in d3 at `0x40014cf2` and detour
+the first-sector return `0x40014d58` to a ten-byte DRAM stub that restores
+SR and replays the stock epilogue, keeping the sector and its bookkeeping
+inside the mask that was already there (the ATA WRITE GUARD module).
+`verify_ata_write` runs the actual routine in the ColdFire Machine with a
+level-5 interrupt forced at the final data word, and gates the stock
+control against the guarded bookkeeping at caller masks 0/1/3/5/7.
+Measured under the port; whether the window occurs with real card timing
+is NOT measured — the guard is not hardware-proven. Rule: an
+interrupt-mask restore that precedes the data it protects is a window;
+before blaming names or parsers, ask what the IRQ handler reads while the
+producer is mid-update.

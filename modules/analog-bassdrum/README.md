@@ -4,7 +4,8 @@ One native Octatrack track machine with **808 / 909** selection in its
 sample-pool-style engine browser. Both original fixed-point synthesis engines run on
 the DSP, upstream of stock AMP and both track FX slots. No recordings are
 embedded. Earlier image ANALOGBD1 was auditioned on an MK1; the current
-engine browser and eight-track changes still need hardware qualification.
+engine browser and eight-track changes: cursory testing on Sam's MKII
+(owner report, 16 Oct 2026).
 
 | Model / page | A | B | C | D | E | F |
 |---|---|---|---|---|---|---|

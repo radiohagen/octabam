@@ -149,6 +149,7 @@
         .globl  kits_partkey, kits_savekey, kits_mkisave, kits_funcyes, kits_level
         .globl  kits_lcopy, kits_lpaste, kits_lclear, kits_pcopy, kits_psnap, kits_pstore_ptn
         .globl  kits_fright, kits_ptrig, kits_status, kits_freload
+        .globl  kits_bootblank
         .globl  KIMG, KSTATE, kits_stage, kits_load_current, kits_save_current
 
 | ============================================================ the hooks ====
@@ -268,6 +269,16 @@ kits_st_newproj:
         movel   %d0,KDIRTY
         clrl    NOWRITE
         bra.w   cs1_save
+
+| bootblank (0x4001fb80): the early boot's blank path (an invalid or wiped
+| CS1, EMPTY RESET, demo mode) never runs the new-project store event, so
+| the stock blank project leaves KITS uninitialised and PART falls to the
+| stock Part window. The boot's blank project is a KITS project: the empty
+| library, READY from the first screen.
+kits_bootblank:
+        jsr     0x40025848           | displaced: the stock blank-project init
+        bsr.w   kits_st_newproj      | the store event this path never fires
+        jmp     0x4001fb86           | the instruction after the call
 
 | bankw_post: after the bank writer (background save, save-as, new project,
 | SAVE PROJECT): kits.work when a Kit or an assignment changed.

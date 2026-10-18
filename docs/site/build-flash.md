@@ -1,137 +1,139 @@
-# Build and flash
+# Build and Flash
 
-From nothing installed to a flashed unit. Every image is built on your own
-computer from your own copy of Octatrack OS 1.40C. This page is the short
-version of the [detailed build guide](https://github.com/sambanks/octabam/blob/main/docs/guide/BUILDING.md),
-which includes Linux/WSL2 setup and toolchain notes.
+Use this procedure to build a card image from your own copy of Octatrack OS
+1.40C, then install it on the unit. For Linux and WSL2 setup, see the
+[detailed build guide](https://github.com/sambanks/octabam/blob/main/docs/guide/BUILDING.md).
 
-!!! warning "This is not official Elektron firmware"
-    octabam is community software and is not supported by Elektron. A failed
-    flash can leave the installed OS unable to boot until stock OS is
-    reinstalled. Recovery requires a working Startup Menu, a DIN MIDI
-    interface, and a copy of the stock OS. Keep these available before
-    flashing. See
-    [Safety and recovery](safety.md) before flashing. **Do not share a built
-    image**: a built `.bin` or `.syx` contains Elektron's OS.
+!!! warning "Read before flashing"
+    octabam is community software, not supported by Elektron. A failed flash
+    can leave the unit unable to boot until stock OS is reinstalled. Keep a
+    working Startup Menu, DIN MIDI interface, and stock OS 1.40C available.
+    Follow [Safety and recovery](safety.md) before proceeding.
 
-## What you need
+    Do not share a built image. A `.bin` or `.syx` contains Elektron's OS.
 
-- A Mac with the Xcode Command Line Tools (`xcode-select --install`) and
-  [Homebrew](https://brew.sh), or Linux / WSL2 (WSL 2, not WSL 1).
-- `python3` 3.10 or newer.
-- `cmake` and [uv](https://docs.astral.sh/uv/): `brew install cmake uv`.
-- An Octatrack MKI or MKII on OS 1.40C. Elektron's MKI and MKII download
-  pages serve the byte-identical file. octabam's own effects have only
+## 1. Prepare the Computer
+
+You need:
+
+- macOS with Xcode Command Line Tools and Homebrew, or Linux / WSL2 (not
+  native Windows).
+- Python 3.10 or newer, CMake, and `uv`.
+- An Octatrack MKI or MKII running OS 1.40C. octabam's own effects have
   been tested on an MKII.
-- A CompactFlash card in the unit, for the fast flashing path.
-- For the MIDI flashing path and recovery: a 5-pin DIN MIDI interface into
-  the Octatrack's MIDI IN, and a SysEx app (SysEx Librarian on macOS) or
-  `make midi-flash`. The Octatrack's own USB port does not take an OS
-  upgrade.
-- Stable power. Do not move the unit while it flashes.
+- A CompactFlash card for the card-flash procedure. For MIDI flashing or
+  recovery, use a 5-pin DIN MIDI interface connected to MIDI IN and a SysEx
+  sender. The Octatrack USB port cannot install an OS upgrade.
+- Stable power. Do not move or disconnect the unit during a flash.
 
-## Get the repository and the stock OS
+On macOS, install the command line tools and dependencies:
+
+```bash
+xcode-select --install
+brew install cmake uv
+```
+
+Then clone and prepare the project:
 
 ```bash
 git clone --recurse-submodules https://github.com/sambanks/octabam
 cd octabam
-make setup            # installs the toolchain; ends with "setup complete"
-make emu-setup        # the emulator's Python environment
-make os               # downloads OS 1.40C from Elektron, prints its SHA256
-make recon            # unpacks it to out/raw/, the file every build reads
+make setup
+make emu-setup
+make os
+make recon
 ```
 
-`make os` downloads `OCTATRACK_OS1.40C_dist.zip` from Elektron's site and
-prints its SHA256; expected
-`370c55a3dad3996b8e4b46400a205066fdaf185ad4d0255a3a3f835060573ff0`.
-`--recurse-submodules` fetches the module authors' repositories; if you
-cloned without it, `git submodule update --init`.
+`make os` downloads stock OS 1.40C from Elektron and prints its SHA256.
+`make recon` unpacks it for the image builder. If you cloned without
+`--recurse-submodules`, run `git submodule update --init` before continuing.
 
-## Build the image
+## 2. Build and Check the Image
+
+Choose one of the [official remixes](choosing.md), then build it. Replace
+`octabam-bus` with your chosen remix name. Pick a new build tag each time you
+flash; the tag appears in the unit's OS version. Use one or two characters:
+for example `1`, `91`, or `A0` (after `99`).
 
 ```bash
 make image REMIX=octabam-bus BUILD=91
 ```
 
-Substitute any remix name. Output:
+The build creates:
 
-```
-out/OCTATRACK_OCTABAM91.bin           the card image
-out/OCTATRACK_OS1.40C_OCTABAM91.syx   the MIDI image
-```
+| File | Use |
+|---|---|
+| `out/OCTATRACK_OCTABAM91.bin` | Flash from the CF card. |
+| `out/OCTATRACK_OS1.40C_OCTABAM91.syx` | Flash over DIN MIDI or use for recovery. |
 
-`BUILD` is a one- or two-character tag of your choosing (digits; past 99 a
-letter then a digit: `A0` is 100). It becomes the unit's OS version string
-(`OCTABAM91`) and the suffix on any octabam effect's name, so a unit can
-always be traced to the build it runs. Bump it every time you flash.
-
-The build prints what it did: every module placed, every hook wired, every
-module checked against its author's own build. It refuses, with the
-reason, rather than write an image it cannot prove.
-
-Before you flash, run the checks for the remix:
+Run the remix checks before flashing:
 
 ```bash
 make check REMIX=octabam-bus
 ```
 
-This builds the image, runs its gates and boots it under the local emulator.
-It is the minimum project check; a successful build alone does not establish
-that an image works. `make check` does not replace a hardware run.
+This builds the image, runs its gates, and boots it under the local
+emulator. It is the minimum project check; it does not establish that the
+image works on hardware. See the selected remix page for its test status and
+any required track or project setup.
 
-## Back up
+## 3. Back Up the Card
 
-Flashing the OS does not touch the CF card. Back it up anyway (USB DISK
-MODE, copy everything). Any remix carrying KITS writes `kits.work` into
-each project it loads; a stock OS ignores that file and plays the Parts as
-saved.
+Use USB DISK MODE to copy the full CF card to your computer. An OS upgrade
+does not format or replace the card. Remixes with KITS write `kits.work`
+into each project they load; stock OS ignores this file and continues to
+use the saved Parts.
 
-## Flash from the card
+## 4. Install the Image
 
-1. On the unit: PROJECT → SYSTEM → USB DISK MODE → YES. The card mounts on
-   the computer.
-2. Copy `out/OCTATRACK_OCTABAM91.bin` to the root of the card, not inside
-   a folder.
-3. Eject the card on the computer, then leave USB DISK MODE on the unit.
-   Without the eject, the unit can read a truncated file.
-4. PROJECT → SYSTEM → OS UPGRADE → YES and confirm.
-5. Wait for the unit to finish and restart, then power-cycle it once more
-   before judging anything: an OS upgrade does not clear DSP RAM.
+Choose one of the following methods.
 
-## Flash over MIDI
+### From the CF Card
 
-This path also works on a unit that does not boot.
+Use this method when the Octatrack boots normally:
 
-1. Your interface's MIDI OUT → the Octatrack's MIDI IN (DIN).
-2. Power off, hold FUNC, power on → STARTUP MENU.
-3. TRIG 3 (MIDI UPGRADE) → "READY TO RECEIVE MIDI UPGRADE".
-4. Send `out/OCTATRACK_OS1.40C_OCTABAM91.syx` from a SysEx app, or
-   `make midi-flash PORT=<port> SYX=<file.syx>`, which paces the messages
-   at the DIN rate. Filter MIDI clock on that port and merge nothing else
-   into it: through a Midihub, a blank preset with one pipe flashed where
-   a performance preset ended in CHECKSUM ERROR. If the unit loses sync,
-   re-enter the Startup Menu and send again slower.
-5. Wait through PREPARING FLASH → UPDATING FLASH. Do not power off or
-   disconnect during either.
-6. Let it finish booting, then power-cycle.
+1. On the unit, select **PROJECT → SYSTEM → USB DISK MODE → YES**.
+2. Copy the `.bin` file to the root of the mounted CF card, not into a
+   folder.
+3. Eject the card from the computer, then leave USB DISK MODE on the unit.
+   This ensures the copy has finished writing.
+4. Select **PROJECT → SYSTEM → OS UPGRADE → YES**, then confirm.
+5. Wait for the unit to finish and restart. Power-cycle it once more before
+   testing; an OS upgrade does not clear DSP RAM.
 
-## After the flash
+### Over DIN MIDI
 
-1. The version. The boot screen and SYSTEM STATUS → OS VERSION read
-   `OCTABAM91`. If it still says `1.40C`, the stock OS is running.
-2. Stamp old projects after flashing a remix that changes an effect's
-   parameter layout (the bus engines, and RIG HOSTS' T1/T5 FX2
-   assignments):
+Use this method if the unit cannot boot far enough to use USB DISK MODE, or
+if you prefer a DIN MIDI transfer:
 
-   ```bash
-   python3 tools/hw/ot_project.py stamp-defaults "<card>/<set>/<project>" <remix>
-   ```
+1. Connect the MIDI interface's **MIDI OUT** to the Octatrack's **MIDI IN**.
+2. Power off. Hold **FUNC** while powering on to open the STARTUP MENU.
+3. Press **TRIG 3** for MIDI UPGRADE and wait for “READY TO RECEIVE MIDI
+   UPGRADE”.
+4. Send the `.syx` file with a SysEx app, or run
+   `make midi-flash PORT=<port> SYX=<file.syx>`. Do not merge other MIDI
+   data or clock into the upgrade port. If the unit reports a checksum
+   error, re-enter the Startup Menu and resend at a slower rate.
+5. Wait through PREPARING FLASH and UPDATING FLASH. Do not power off or
+   disconnect the cable during either phase.
+6. Let the unit finish booting, then power-cycle once more.
 
-   A part saved under an older layout feeds the new one its old bytes and
-   the sequencer can stall on the first play. A project made on the unit
-   after the flash needs no stamp.
+## 5. Confirm the Installation
 
-If the unit misbehaves, the failure register lists what has gone wrong and
-why: https://github.com/sambanks/octabam/blob/main/docs/contributing/FAILURE_MODES.md
+Open **SYSTEM STATUS → OS VERSION** or check the boot screen. It should
+show the tag you chose, for example `OCTABAM91`. If it shows `1.40C`, the
+stock OS is still installed.
 
-Back to stock, always: [Safety and recovery](safety.md).
+Some remixes change effect parameter layouts or default track assignments.
+For projects created before installation, follow the project preparation
+steps on the relevant [remix page](choosing.md). A project created on the
+unit after installation does not need those steps.
+
+## Restore Stock OS
+
+If the modified OS will not boot, use the recovery procedure in
+[Safety and recovery](safety.md). If the unit boots, you can also install
+Elektron's stock `.bin` from the CF card with the same steps above.
+
+For detailed platform setup or troubleshooting, see the
+[full build guide](https://github.com/sambanks/octabam/blob/main/docs/guide/BUILDING.md).

@@ -16,7 +16,7 @@ the last 24 ticks. After each run,
 the stamp both USB runs read 2400, the DIN run's tempo.
 
 Depends on the port counting DTCN0 at 256 fs (rtos.h; inferred from the
-handler's constant). SKIPs when the remix has no USB MIDI or the port is not
+handler's constant). SKIPs when the remix has no USB or the port is not
 built (`make emu-cf`). What this cannot see: clock bytes bunched in one USB
 packet (each tick here is its own transfer), and USB timing on the unit.
 """
@@ -48,8 +48,8 @@ def main():
     if not IMAGE.is_file():
         print("  [FAIL] verify_usbmidi_clock: no out/mainos_bus.bin (make bus)")
         return 1
-    if "USB MIDI" not in registry.remix(os.environ.get("REMIX")).modules:
-        print("  [SKIP] verify_usbmidi_clock: the remix has no USB MIDI")
+    if "USB" not in registry.remix(os.environ.get("REMIX")).modules:
+        print("  [SKIP] verify_usbmidi_clock: the remix has no USB")
         return 0
     sock = f"/tmp/ot-usbclk-{os.getpid()}.sock"     # sun_path is 104 bytes on macOS
     emu = subprocess.Popen([str(EMU), "--image", str(IMAGE), "--interactive", "--usb-host", sock, "--main-level", "off"],

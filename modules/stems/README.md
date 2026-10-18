@@ -1,18 +1,20 @@
 # STEM REC
 
-MAIN MENU › STEMS records to the card while the sequencer plays: every
-track after its fader, the main mix (MAIN), the cue mix (CUE) and the four
-inputs, 16 or 24 bits. It writes the take while it records, so a take can
-run until you stop it, up to 60 minutes. Each source lands as its own file
-in `<set>/AUDIO/YYMMDD-HHMM/` at 44,100 Hz: `T1.wav` to `T8.wav`,
+UP + REC opens STEMS and records to the card while the sequencer plays:
+every track after its fader, the main mix (MAIN), the cue mix (CUE) and
+the four inputs, 16 or 24 bits. It writes the take while it records, so a
+take can run until you stop it, up to 60 minutes. Each source lands as its
+own file in `<set>/AUDIO/YYMMDD-HHMM/` at 44,100 Hz: `T1.wav` to `T8.wav`,
 `MAIN.wav`, `CUE.wav`, and the inputs as `AB.wav` and `CD.wav` (stereo) or
 `A.wav` to `D.wav` (mono). A track's file is its share of MAIN: the
 track's audio times the gain the mix gives it, so the level, MAIN LEVEL,
 the scenes and the crossfader are in it. At every boot the eight tracks
 are on, MAIN, CUE and the inputs off, both input pairs stereo, and the
-width 16 bits; the menu changes each. The port has run every source, both
-widths and the menu key by key on the MKII and MKI panels
-(STEM_REC.md sections 15, 16 and 18).
+width 16 bits; the menu changes each. STEMS opens with UP + REC (no MAIN
+MENU row) so stock menus stay stock and BRAIN can own the root's fifth
+slot. The port has run
+every source, both widths and the menu key by key on the MKII and MKI
+panels (STEM_REC.md sections 15, 16 and 18).
 
 - The design: `git show 4d2d6456:docs/superpowers/specs/2026-09-22-stem-rec-streaming-design.md`,
   over the proof of concept's `git show 4d2d6456:docs/superpowers/specs/2026-09-10-stem-rec-poc-design.md`.
@@ -65,15 +67,14 @@ runs cover:
   run is its top 16 bits.
 
 `tools/verify/verify_stems_menu.py`, also part of `make check REMIX=stems`,
-presses the menu's keys under the port, once as an MKII and once as an
-MKI. It walks the five categories and checks that SYSTEM still reaches OS
-UPGRADE, because MAIN MENU is also the recovery screen. In STEMS it turns
-tracks off and on, turns MAIN on and checks the last source stays on,
-flips the three switches, arms and cancels, records a take with T3 off
-from PLAY to STOP, and checks the seven track files and `MAIN.wav` on
-the card. It also draws every text STEMS can show and checks that each
-fits. A picture of the screen at each step lands in
-`out/stems_runs/menu-*.png`.
+presses the keys under the port, once as an MKII and once as an MKI. It
+checks that SYSTEM still reaches OS UPGRADE from the root (MAIN MENU is
+also the recovery screen), opens STEMS with UP+REC, turns tracks off and
+on, turns MAIN on and checks the last source stays on, flips the three
+switches, arms and cancels, records a take with T3 off from PLAY to STOP,
+and checks the seven track files and `MAIN.wav` on the card. It also
+draws every text STEMS can show and checks that each fits. A picture of
+the screen at each step lands in `out/stems_runs/menu-*.png`.
 
 The fixture projects come from a local copy of EZBot's Ultimate FX 1.5.3
 template, which never enters the repository. The verifier builds them at
@@ -149,8 +150,8 @@ Known from the port, before any flash:
 
 ## How to use it
 
-Open MAIN MENU: the MAIN MENU key on the MKII, FUNC+MIXER on the MKI.
-STEMS is the fifth category, under MIDI, with a record dot for its icon.
+Hold UP and press REC (UP first). The same chord again closes STEMS.
+REC alone stays stock grid recording. MAIN MENU is unchanged.
 Its rows, top to bottom:
 
 | Row | Shows | YES |

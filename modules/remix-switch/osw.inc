@@ -13,7 +13,7 @@
 | the cached window, and the stage must be in DRAM, not in a line, when the
 | unit resets.
 
-        .set    OSW_MBOX,    0x49200000     | the mailbox, 64 bytes
+        .set    OSW_MBOX,    0x49200000     | the mailbox, 88 bytes
         .set    OSW_STUB,    0x49200100     | the copy stub runs here, outside the image it overwrites
         .set    OSW_BODY,    0x49200400     | the chainloader's body, placed by the switcher (chain.s is the ROM gate)
         .set    OSW_BODYMAX, 0x00000200     | its length in longs, at most (2 KB, below OSW_IMG)
@@ -34,6 +34,7 @@
         .set    MB_BODYLEN,  60             | the body's length in longs
         .set    MB_BODYSUM,  64             | the sum of its longs: the gate runs it only whole
         .set    MB_FLASH,    68             | the FLASHED image's name, 16 bytes: written by a switch from it, carried by a switch from a switched image
+        .set    MB_ESCAPE,   84             | bootstrap STARTUP MENU > EXIT: skip the saved remix this boot
 
 | status words (MB_STATUS)
         .set    ST_BOOT,     0x424f4f54     | "BOOT" handed over to the staged image

@@ -1,17 +1,17 @@
 # `usb-io-tracks-cd` — the sixteen track channels out, a stereo pair into inputs C/D (A/B stay on the jacks), on the stock effects
 
-The stock chooser plus USB MIDI, USB AUDIO OUT TRACKS, USB CROSSBAR and USB AUDIO IN CD.
+The stock chooser plus USB (LAYOUT TRACKS, INPUTS CD).
 
-- **USB MIDI** and **USB AUDIO OUT TRACKS** (markandrus/octemu's source): USB-MIDI mirroring
+- **USB** (markandrus/octemu's source) at LAYOUT TRACKS, INPUTS CD: USB-MIDI mirroring
   DIN; the sixteen track channels to the host, 24-bit, every 250 µs.
-  [`modules/usb-audio-out`](../../../modules/usb-audio-out/README.md#tracks).
-- **USB CROSSBAR** (Bryan T): the USB controller bursts and goes first on the
+  [`USB`](../../../modules/usb/README.md#tracks).
+- USB's crossbar (Bryan T): the USB controller bursts and goes first on the
   SDRAM and SRAM crossbar ports, set at boot. Without it the IN stream loses
-  packet tails under a busy project. [`modules/usb-crossbar`](../../../modules/usb-crossbar/README.md).
-- **USB AUDIO IN CD** (Bryan T): a stereo pair into inputs C/D (A/B stay on the jacks), asynchronous with implicit feedback from the
-  out stream. [`modules/usb-audio-in`](../../../modules/usb-audio-in/README.md#cd).
+  packet tails under a busy project. [`USB`](../../../modules/usb/README.md#crossbar).
+- USB's audio in (Bryan T) at INPUTS CD: a stereo pair into inputs C/D (A/B stay on the jacks), asynchronous with implicit feedback from the
+  out stream. [`USB`](../../../modules/usb/README.md#cd).
 - 13 of the 14 stock FX2 effects. SPATIALIZER is on neither menu: its words on
-  payload A hold the IN module's RX inject, and a project that still selects
+  payload A hold USB's RX inject, and a project that still selects
   it runs NONE.
 
 Under the port, `make check REMIX=usb-io-tracks-cd` runs `verify_usb` (six interfaces

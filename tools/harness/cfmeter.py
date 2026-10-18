@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Decode CF METER's readout (modules/cfmeter) from a capture of track 8.
 
-    python3 tools/harness/cfmeter.py capture.wav [--lr 14,15]   # USB AUDIO: T8 = channels 15/16
+    python3 tools/harness/cfmeter.py capture.wav [--lr 14,15]   # USB audio: T8 = channels 15/16
     python3 tools/harness/cfmeter.py --dump out/setverify/port.dump   # the port's read-back blocks
 
 The insert prints a square wave per 16-sample block: L = N x 128, R =

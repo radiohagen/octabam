@@ -1,7 +1,7 @@
 """REC THRESHOLD -- recorder TRIG value 3 (THR): a REC press arms, the input level starts the recording.
 
 `thresh.s` (one DRAM unit) has the detail; README.md the use, the
-measurements and what is open. Nine detours:
+measurements and what is open. Ten detours:
 
 - both recorder key handlers (0x40083544, and 0x400836d8, the one TRACK +
   REC reaches): the idle branch (0x4008364e, 0x40083836), where a press
@@ -12,11 +12,16 @@ measurements and what is open. Nine detours:
   complete page's peak against each armed track's level; at or over it,
   and with the track's TRIG still THR and its recorder idle, the held word
   goes to the immediate mailbox; the arm is spent either way. It also runs
-  the IN meter while RECORDING SETUP 2 draws;
+  the IN meter while RECORDING SETUP 2 draws, and the blink clock while a
+  track is armed;
 - RECORDING SETUP 1's push of the TRIG formatter (0x4002fb8e): THR drawn;
 - RECORDING SETUP 2's cell loop (0x4002fdbe): on a THR track QREC's cell is
   LEV and QPL's is IN; the editor (0x4002ef60) leaves QPL alone there, and
-  after its store (0x4002f0b4) TRIG becoming THR sets an unset LEV to -40.
+  after its store (0x4002f0b4) TRIG becoming THR sets an unset LEV to -40;
+- the track status icon renderer's state-cache load (0x4004bee2): an armed
+  track's icon blinks, whatever it shows, and an armed track no longer on
+  THR loses its arm there (REC_TRIG_MUTE replaces the same load, so the two
+  conflict).
 
 Three pokes: the TRIG count 3 -> 4, which the setup editor clamps by, and
 the Part validator's hard-coded TRIG maximum 2 -> 3, which otherwise
@@ -26,7 +31,7 @@ LEV is the QREC byte under THR (raw -1 .. 16, QREC's own range, so the
 editor and the validator need nothing) through lev_db: -60 .. 0 dB, 4 dB
 steps to -8, then 2 dB. Raw -1 (OFF, never set) becomes -40 (raw 4) when
 TRIG is set to THR, in the Part, its SRAM mirror and the published copy.
-IN is the peak of inputs A-D, held ~0.5 s, then falling ~12 dB/s.
+IN is the peak of inputs A-D, held ~0.5 s, then falling ~29 dB/s.
 """
 
 from remix.schema import Category, Detour, Gate, Kind, Linked, Module, Poke, Proof
@@ -42,7 +47,7 @@ MODULE = Module(
     key="REC THRESHOLD",
     kind=Kind.CF_PATCH,
     category=Category.MACHINES, author="Chupitnik", author_url="https://github.com/Chupitnik",
-    proof=Proof.HARDWARE, proof_note="Chupitnik's MKII, 11-12 Oct 2026, THR1 to THR5 from the card: armed with TRACK 1 + REC AB, silence never records, the input starts the take, a second press cancels, LEV and IN on RECORDING SETUP 2, TRIG moved off THR while armed drops the arm; THR5 is this code",
+    proof=Proof.HARDWARE, proof_note="Chupitnik's MKII, 11-13 Oct 2026, THR1 to THR9 from the card: armed with TRACK 1 + REC AB, silence never records, the input starts the take, a second press cancels, LEV and IN on RECORDING SETUP 2, TRIG moved off THR while armed drops the arm and the blink, an armed track's icon blinks, armed inside RECORDING SETUP 1 it records; THR9 is this code",
     doc="Recorder TRIG value THR: a REC press arms, and recording starts when the input passes the track's LEV (RECORDING SETUP 2, beside a live IN meter).",
     linked=(Linked("thresh", "modules/rec-threshold/thresh.s", dram=True),),
     detours=(
@@ -62,6 +67,8 @@ MODULE = Module(
                "RECORDING SETUP's editor: QPL (shown as IN) is not edited on a THR track"),
         Detour(0x4002F0B4, H("71b9100b14cc"), "thresh", "trig_init",
                "RECORDING SETUP's editor, after the store: TRIG set to THR with LEV unset -> LEV -40 dB"),
+        Detour(0x4004BEE2, H("41f9400c0cb8"), "thresh", "blink_gate",
+               "track status icons: an armed track's icon blinks", kind="jsr"),
         Detour(0x4002FB8E, H("2e84487af642"), "thresh", "trig_screen",
                "RECORDING SETUP: the TRIG formatter push, THR drawn", kind="jsr"),
     ),
@@ -70,5 +77,6 @@ MODULE = Module(
         Poke(VALIDATOR_CMP, H("7202"), H("7203"), "part validator: TRIG max 2 -> 3"),
         Poke(VALIDATOR_SET, H("7602"), H("7603"), "part validator: TRIG max 2 -> 3"),
     ),
+    conflicts=(("REC_TRIG_MUTE", "both replace the track status icon renderer's state-cache load at 0x4004bee2"),),
     gates=(Gate("tools/verify/verify_rec_threshold.py", remix_arg=False, venv=True, stage="image"),),
 )

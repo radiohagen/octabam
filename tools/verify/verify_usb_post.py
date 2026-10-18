@@ -354,7 +354,7 @@ def main():
     nm = subprocess.run(["m68k-elf-nm", str(ELF)], capture_output=True, text=True).stdout
     sym = {p[2]: int(p[0], 16) for p in (l.split() for l in nm.splitlines()) if len(p) == 3}
     if "post_xlv" not in sym:
-        print("  [SKIP] verify_usb_post: the image under test does not carry USB AUDIO OUT TRACKS POST")
+        print("  [SKIP] verify_usb_post: the image under test does not carry LAYOUT TRACKS POST")
         return 0
     work = pathlib.Path(a.keep) if a.keep else pathlib.Path(tempfile.mkdtemp(prefix="usb_post_"))
     work.mkdir(parents=True, exist_ok=True)

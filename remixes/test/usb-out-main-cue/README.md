@@ -1,10 +1,10 @@
-# `usb-out-main-cue` — USB AUDIO OUT MAIN CUE on the stock effects
+# `usb-out-main-cue` — USB LAYOUT MAIN CUE on the stock effects
 
-The stock chooser plus USB MIDI and USB AUDIO OUT MAIN CUE, for testing the four-channel (MAIN + CUE) stream on a unit that runs stock projects: no FX1 stations, no chooser changes, no project stamping.
+The stock chooser plus USB at LAYOUT MAIN CUE, for testing the four-channel (MAIN + CUE) stream on a unit that runs stock projects: no FX1 stations, no chooser changes, no project stamping.
 
 ## What is in it
 
-- **USB MIDI** and **USB AUDIO OUT MAIN CUE** (markandrus/octemu; the MC variant Bryan T's): USB-MIDI mirroring DIN; four 24-bit channels, MAIN L/R + CUE L/R, at the same 250 us cadence as USB AUDIO OUT TRACKS MAIN CUE/FULL (not USB AUDIO OUT MASTER's 1 ms); full speed carries MAIN alone. [`modules/usb-audio-out`](../../../modules/usb-audio-out/README.md#main-cue).
+- **USB** at LAYOUT MAIN CUE (markandrus/octemu; the MC variant Bryan T's): USB-MIDI mirroring DIN; four 24-bit channels, MAIN L/R + CUE L/R, at the same 250 us cadence as the other layouts; full speed carries MAIN alone. [`USB`](../../../modules/usb/README.md#main-cue).
 - the 14 stock FX2 effects.
 
 ## Status

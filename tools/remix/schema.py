@@ -47,6 +47,7 @@ class Category(Enum):
     MIDI_USB = "midi-usb"       # MIDI and USB
     FIXES = "fixes"             # a fix to stock behaviour
     SETTINGS = "settings"       # the settings store and what it carries
+    UTILITIES = "utilities"     # project, recording and naming conveniences
     REFERENCE = "reference"     # the canaries
     STOCK = "stock"             # a stock effect kept in the chooser
 
@@ -59,6 +60,7 @@ CATEGORY_TITLE = {
     Category.MIDI_USB: "MIDI and USB",
     Category.FIXES: "Fixes",
     Category.SETTINGS: "Settings",
+    Category.UTILITIES: "Utilities",
     Category.REFERENCE: "Reference",
     Category.STOCK: "Stock effects",
 }
@@ -581,7 +583,7 @@ class DspHook:
     `jsr >label`; the section replays the displaced instruction itself. The
     build asserts `stock` before it writes, on every payload the section is
     placed on, and the ledger refuses two modules hooking one site. This is
-    how DSP code with no chooser row is reached at all: USB AUDIO IN's RX
+    how DSP code with no chooser row is reached at all: USB's audio-in RX
     inject at the frame head, P:0x88.
     """
 
@@ -968,7 +970,7 @@ class Claims:
     part_window: tuple[tuple[int, int, str], ...] = ()
     # ON-CHIP SRAM a module's DMA engine reads or writes: (address, length,
     # what). 32 KB at 0x80000000; stock's highest static use ends at
-    # 0x80007874 (a 768-byte buffer at 0x80007574). USB AUDIO IN keeps its
+    # 0x80007874 (a 768-byte buffer at 0x80007574). USB (INPUTS on) keeps its
     # dTDs and packet buffers in the top 1 KB. The ledger refuses an overlap
     # between two modules; the stock extent is the author's census. The
     # check is on address overlap, so a range in CS1 (battery SRAM at
@@ -1508,7 +1510,7 @@ class Module:
     # module's Apply.BUILD settings resolved for the remix ({name: value},
     # an Option as its label). registry.bound() applies it once per remix,
     # so every reader of `linked`, `dsp`, `detours` or `gates` sees the
-    # chosen code without asking (modules/usb-audio-out is the first).
+    # chosen code without asking (modules/usb is the first).
     variant: object | None = None
     # The values a bound module was built with ({name: value}); empty on an
     # unbound one. An `include` callable reads them from the selection.

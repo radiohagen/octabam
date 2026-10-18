@@ -117,9 +117,10 @@ The two tables above.
 | `verify_ccmap` | CC MAP | shared | the CC cave re-assembles to its pinned bytes; CC 62-73 write page 2 and clamp to the count; page-1 CCs reach stock | `.venv` |
 | `verify_ccfeedback` | CC FEEDBACK | shared | the knob-change sweep enters the stock CC emitter once per changed byte, gated as stock gates | `.venv` |
 | `verify_kits` | KITS | once, on the smallest carrier | staging through the Part slots, LOAD/SAVE KIT and the list ops, kits.work over a save, reboot and power cycle, migration, Octakit import, a rejected bank file | a project (OT_PROJECT), the port |
+| `verify_quantizer_ui` | SCALE QUANTIZER | once, on the smallest carrier | TRACK → CHROMATIC through the panel, audio and MIDI on MKI and MKII: the keyboard draws and returns with the mode selected; the MIDI path executes the stock stack push the audio detour must keep | port, project (empty fixture if none supplied) |
 | `verify_scenes` | MIDI SCENES | once, on the smallest carrier | MIDI lock scenarios (hold-to-lock, readout, unlock, XF morph, scene apply and release, Part clear / copy / paste) with MIDI OUT bytes and frames, against stock and, with `--oracle`, against bkkbrls-del's MIDISC2.1 image; `--persist` (final gate, not in `make check`): `scenes.work` / `.strd` over a save, reboot and power cycle with CS1, a refused file under IGNORE / OVERWRITE / BACKUP, a 2.x project read once, Kits carrying the locks. Cannot see: the hardware, the sequencer sites (phase 3) | port, project |
-| `verify_usb_in` | USB AUDIO IN AB, CD, ABCD | image | the host's channels land bit-exact on their RX slots, the others stay the jacks', the recorder ring fills, the jacks return at alt 0 | port, `.venv` |
-| `verify_usb_align` | USB AUDIO OUT TRACKS MAIN CUE | image | MAIN and CUE are in phase with the tracks in the twenty-channel stream (lag 0) | port, `.venv` |
+| `verify_usb_in` | USB INPUTS AB, CD, ABCD | image | the host's channels land bit-exact on their RX slots, the others stay the jacks', the recorder ring fills, the jacks return at alt 0 | port, `.venv` |
+| `verify_usb_align` | USB LAYOUT TRACKS MAIN CUE | image | MAIN and CUE are in phase with the tracks in the twenty-channel stream (lag 0) | port, `.venv` |
 | `verify_cfmeter` | CF METER | per remix | the DSP meter under the port with T8's FX2 = CF METER: frames counted within 8 of the frames run; spin min <= max and > 0; period min <= max and > 0; DBRN 40 lowers the spin minimum with the period maximum unchanged (within 10 %); DBRN 127 raises the period maximum past 1.5 x run 1's. Cannot see: the unit's cycle costs (the port prices each instruction at one step) and the ESAI's real underrun behaviour | `.venv`, port, project |
 | `verify_charkey` | CHARACTER | shared | KEY = T1 on both cores: a host-fed T3 (core 1) and T6 (core 0, also under four skews) duck in a burst; KEY = T1 with the host unfed holds no gain reduction; no host holds none; SELF is bit-identical fed or not; the master at KEY = T1 equals KEY = SELF; the host's own output is unchanged by Characters reading it. Cannot see: the chip's timing, anything the ColdFire does (knobs are poked into r6) | `dsp_host` |
 | `verify_character_txtr`, `verify_charkey_txtr` (`modules/character-txtr/`) | CHARACTER TXTR | shared | `verify_character` and `verify_charkey` run on the TXTR module (a `Gate` takes no arguments, so each names the module) | `dsp_host` |
@@ -240,8 +241,8 @@ dear={"DRV": 127, "FOLD": 127, "COMP": 127, "MIX": 127, "WDTH": 127, "SAT": 0},
 **The test remixes are left out** (30 Sep 2026): no remix under
 `remixes/test/` is picked by `make reach` in either tier, as a carrier, the
 floor, the cover or identity. A change to a module that only test remixes
-carry (CF METER, EUCLID, MINIVERB, TAPE ECHO, most USB AUDIO IN/OUT
-variants) reaches the selftest and no remix check, and the listing says
+carry (CF METER, EUCLID, MINIVERB, TAPE ECHO, most USB variants)
+reaches the selftest and no remix check, and the listing says
 so; `TESTS=1` brings the test remixes back.
 
 **Two tiers.** The default is QUICK, for working without losing the
@@ -609,8 +610,8 @@ Typical changes (with `JOBS=4`, kept shards):
 | change | remixes | wall |
 |---|---|---|
 | a module or remix README, or a manifest's or `remix.py`'s display fields | none | seconds (`verify_docs`) |
-| one USB IN or OUT module | its few `usb-io-*` remixes (+ bottleservice if it carries it) | 5-15 min |
-| USB MIDI (every USB remix) | ~24 | 15-20 min, floored by bottleservice |
+| one USB LAYOUT or INPUTS | its few `usb-io-*` remixes (+ bottleservice if it carries it) | 5-15 min |
+| USB (every USB remix) | ~24 | 15-20 min, floored by bottleservice |
 | the build | the cover + identity's moved remixes | 25-40 min |
 
 The floor of most runs is bottleservice's half, and inside it the Octakit
@@ -620,10 +621,12 @@ project loads (`verify_set`, `verify_tempobus`, `verify_modedefaults`,
 ## 11. What GitHub Actions checks
 
 `.github/workflows/ci.yml` runs on every PR, on `main` and by hand, on
-Ubuntu and macOS, with no Elektron bytes (`make ci` runs the same checks):
+Ubuntu and macOS, with no Elektron bytes (each job is one `make` target;
+`make ci` runs them all locally, unfiltered):
 
 | job | target | proves |
 |---|---|---|
+| classify | `tools/verify/ci_paths.py` on the diff | each job below runs only when the diff touches its inputs (the map is `JOB_PREFIXES` there); a skipped job is a grey check, not a pass. No usable diff (a manual run) and workflow, Makefile and `scripts/` changes run everything; `make ci` locally still runs everything |
 | gates the PR reaches | `make reach` (dry run) | the diff classifies and the branch is rebased |
 | acceptance runner tests | `make test-acceptance` | the runner refuses skipped, failed, incomplete and over-budget evidence; `reach` routes as documented; the shard runner covers the recipe |
 | dsp56300 + our patch | `make ci-dsp` | the vendored DSP emulator at its pin takes our patch, builds, passes upstream's runner; `dsp_asm` emits the one-word displaced move |
@@ -641,7 +644,7 @@ their results go in the PR body.
   is not evidence a race is gone. A local red is a defect.
 - **The cycle budget.** The emulator renders an engine the chip cannot
   afford; `make cycles` bounds it statically (instructions, no contention).
-  Hook-only DSP sections (USB AUDIO IN's inject) are not in the price.
+  Hook-only DSP sections (USB's audio-in inject) are not in the price.
 - **The dispatcher's facts.** `dsp_host` hands each effect an r7 and r6 it
   computes; logic keyed on them is measured under the port
   (`--dsp-pcwatch`).

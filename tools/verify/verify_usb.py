@@ -35,21 +35,20 @@ EMU = ROOT / "out/emu/ot_emu"
 IMAGE = ROOT / "out/mainos_bus.bin"
 MIDI_FIFO_HEAD = 0x46100b80         # midi_rx_fifo_head: +1 per byte midi_rx_enqueue (0x40092bbc) takes
 
-# USB AUDIO OUT's five layouts, keyed "USB AUDIO OUT <LAYOUT>" (one source,
-# modules/usb-audio-out/usbaudio.s):
+# USB's six LAYOUT values (one source, modules/usb/usbaudio.s):
 # high-speed channels, packet cap, bInterval (2 = 250 us, 4 = 1 ms), and what each channel
 # carries as (source, L/R): source 0-7 = track 1-8's read-back words, 8 =
 # MAIN, 9 = CUE.
 LAYOUTS = {
-    "USB AUDIO OUT TRACKS MAIN CUE": (20, 960, 2, [(t, c) for t in range(8) for c in (0, 1)] + [(8, 0), (8, 1), (9, 0), (9, 1)]),
-    "USB AUDIO OUT TRACKS": (16, 768, 2, [(t, c) for t in range(8) for c in (0, 1)]),
-    "USB AUDIO OUT TRACKS POST": (16, 768, 2, [(t, c) for t in range(8) for c in (0, 1)]),
-    "USB AUDIO OUT MASTER": (2, 96, 2, [(7, 0), (7, 1)]),
-    "USB AUDIO OUT MAIN CUE": (4, 192, 2, [(8, 0), (8, 1), (9, 0), (9, 1)]),
-    "USB AUDIO OUT MAIN": (2, 96, 2, [(8, 0), (8, 1)]),
+    "TRACKS MAIN CUE": (20, 960, 2, [(t, c) for t in range(8) for c in (0, 1)] + [(8, 0), (8, 1), (9, 0), (9, 1)]),
+    "TRACKS": (16, 768, 2, [(t, c) for t in range(8) for c in (0, 1)]),
+    "TRACKS POST": (16, 768, 2, [(t, c) for t in range(8) for c in (0, 1)]),
+    "MASTER": (2, 96, 2, [(7, 0), (7, 1)]),
+    "MAIN CUE": (4, 192, 2, [(8, 0), (8, 1), (9, 0), (9, 1)]),
+    "MAIN": (2, 96, 2, [(8, 0), (8, 1)]),
 }
 # The servo's target, from the source, so the checks follow it.
-AUD_TARGET = int(re.search(r"^\.set AUD_TARGET,\s+(\d+)", (ROOT / "modules/usb-audio-out/usbaudio.s").read_text(), re.M).group(1))
+AUD_TARGET = int(re.search(r"^\.set AUD_TARGET,\s+(\d+)", (ROOT / "modules/usb/usbaudio.s").read_text(), re.M).group(1))
 RB_BASE, MAIN_CUE_BASE = 0x80003190, 0x80005e60   # the tracks' read-back arena (2 banks) and MAIN/CUE (usbaudio.s)
 
 
@@ -80,7 +79,7 @@ def post_g_default():
     import importlib.util
     sys.path.insert(0, str(ROOT / "tools/harness"))
     import usb_post_model
-    spec = importlib.util.spec_from_file_location("usb_post_manifest", ROOT / "modules/usb-audio-out-tracks-post/manifest.py")
+    spec = importlib.util.spec_from_file_location("usb_manifest", ROOT / "modules/usb/manifest.py")
     man = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(man)
     return usb_post_model.target(0x6c00, 0x7f00, man.xlv_table())
@@ -94,12 +93,12 @@ def main():
         print("  [FAIL] verify_usb: no out/mainos_bus.bin (make bus)")
         return 1
     remix = registry.remix(os.environ.get("REMIX"))
-    midi = "USB MIDI" in remix.modules
-    layout = brain.value(remix, registry.modules(), "octabam.usb-audio-out", "LAYOUT")
-    audio = None if layout is None else f"USB AUDIO OUT {layout}"
-    IN_LAYOUT = {"USB AUDIO IN AB": 2, "USB AUDIO IN CD": 2, "USB AUDIO IN ABCD": 4}
-    inputs = brain.value(remix, registry.modules(), "octabam.usb-audio-in", "INPUTS")
-    ain = None if inputs is None else f"USB AUDIO IN {inputs}"   # + AudioStreaming 5, EP3 OUT (implicit feedback)
+    midi = "USB" in remix.modules
+    layout = brain.value(remix, registry.modules(), "octabam.usb", "LAYOUT")
+    audio = None if layout in (None, "OFF") else layout
+    IN_LAYOUT = {"AB": 2, "CD": 2, "ABCD": 4}
+    inputs = brain.value(remix, registry.modules(), "octabam.usb", "INPUTS")
+    ain = None if inputs in (None, "OFF") else inputs   # + AudioStreaming 5, EP3 OUT (implicit feedback)
     in_ch = IN_LAYOUT[ain] if ain else 0
     sock = f"/tmp/ot-usb-{os.getpid()}.sock"     # sun_path is 104 bytes on macOS; the scratch dirs are longer
     log = ROOT / "out/verify_usb.log"
@@ -153,7 +152,7 @@ def main():
         if audio:
             check("USB AUDIO: the device descriptor is the interface-association composite", dev[4:7] == bytes([0xef, 2, 1]), dev[4:7].hex())
             as_ = [d for d in ifaces if d[5:7] == bytes([1, 2])]
-            check("USB AUDIO: a UAC2 AudioStreaming interface 4 with alt 0 and alt 1" + (", and 5 (USB AUDIO IN)" if ain else ""),
+            check("USB AUDIO: a UAC2 AudioStreaming interface 4 with alt 0 and alt 1" + (", and 5 (INPUTS)" if ain else ""),
                   sorted((d[2], d[3]) for d in as_) == [(4, 0), (4, 1)] + ([(5, 0), (5, 1)] if ain else []),
                   str([(d[2], d[3]) for d in as_]))
             nch, maxpkt, bint, taps = LAYOUTS[audio]
@@ -166,7 +165,7 @@ def main():
                   len(iso) == 1 and (iso[0][3] & 3, iso[0][4] | iso[0][5] << 8, iso[0][6]) == (1, maxpkt, bint),
                   str([(d[3], d[4] | d[5] << 8, d[6]) for d in iso]))
             if ain:
-                check(f"{audio}: EP 0x83 marked implicit-feedback data (USB AUDIO IN's feedback source)",
+                check(f"{audio}: EP 0x83 marked implicit-feedback data (EP3 OUT's feedback source)",
                       len(iso) == 1 and (iso[0][3] >> 4 & 3) == 2, str([hex(d[3]) for d in iso]))
                 ison = [d for d in eps if d[2] == 0x03]
                 check(f"{ain}: EP 0x03 isochronous asynchronous data, {12 * 4 * in_ch} bytes, bInterval 2",
@@ -196,7 +195,7 @@ def main():
             check("USB AUDIO: CS_SAM_FREQ_CONTROL CUR = 44100", cur == (44100).to_bytes(4, "little"), cur.hex())
             # SET CUR of the (fixed, read-only) rate: some UAC2 hosts send it
             # with the rate they have just read and give the audio function up
-            # if it STALLs (the Elektron Outbox 8: modules/usb-audio-out/README.md).
+            # if it STALLs (the Elektron Outbox 8: modules/usb/README.md).
             # 44100 is acknowledged; any other rate STALLs the status stage.
             # Before the fix the stock handler STALLed only EP0 IN, so the
             # data stage was never accepted and the host timed out.
@@ -248,7 +247,7 @@ def main():
             # eDMA rewrites the current bank each frame). Every channel must
             # carry only its own source's words, and every source it should.
             tapped = []
-            post = audio == "USB AUDIO OUT TRACKS POST"
+            post = audio == "TRACKS POST"
             if post:
                 b.poke(XFADE_WEIGHTS, XFADE_64)
             for _ in range(1200):

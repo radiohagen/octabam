@@ -52,11 +52,14 @@
         .global draw_gate
         .global edit_gate
         .global trig_init
+        .global blink_gate
 
         .equ    TRIG_THRESH, 3          | the new TRIG value
         .equ    METER_HOLD, 1400        | frames (~0.5 s) the meter runs after a draw
         .equ    HOLD_FRAMES, 1400       | frames (~0.5 s) IN holds a peak before it falls
         .equ    LEV_INIT, 4             | QREC raw for -40 dB (lev_db), set when TRIG becomes THR
+        .equ    BLINK_BIT, 10           | frame counter bit: 1,024 frames (~0.37 s) on, then off
+        .equ    ICON_CACHE, 0x400c0cb8  | the track status icons' drawn states, [track*4]
         .equ    MAILBOX, 0x46c7e9fa     | immediate recorder command words, [track*4]
         .equ    VOICES, 0x800049d8      | per-track voice records, 168 B; byte 1 = recorder running
         .equ    PAGE_INDEX, 0x46104d00
@@ -183,6 +186,7 @@ frame_check:
         or.l    (%a0)+,%d1
         or.l    (meter_cnt).l,%d1
         beq.w   .fc_out                 | nothing armed, no meter: done
+        addq.l  #1,(blink).l            | the armed icons' blink clock
         addq.l  #7,%d0                  | the page before the new index: (index - 1) & 7,
         moveq   #7,%d1                  | the newest one filled (the new one fills this frame)
         and.l   %d1,%d0
@@ -208,7 +212,7 @@ frame_check:
         move.l  %d0,(meter_cnt).l
         move.l  (in_peak).l,%d0         | the meter: a louder page takes over and
         cmp.l   %d2,%d0                 | restarts the hold; else the hold counts
-        bhi.s   .fc_quieter             | down, then the level falls ~12 dB/s
+        bhi.s   .fc_quieter             | down, then the level falls ~29 dB/s
         move.l  %d2,(in_peak).l
         move.l  #HOLD_FRAMES,%d0
         move.l  %d0,(in_hold).l
@@ -220,9 +224,11 @@ frame_check:
         move.l  %d1,(in_hold).l
         bra.s   .fc_arm
 .fc_fall:
-        move.l  %d0,%d1
-        moveq   #11,%d3
-        lsr.l   %d3,%d1
+        move.l  %d0,%d1                 | x -= x/1024 + x/4096 each frame (5/4096:
+        moveq   #10,%d3                 | -0.0106 dB a frame at 44.1 kHz / 16,
+        lsr.l   %d3,%d1                 | ~29 dB/s; -60 dB from 0 in ~2 s)
+        sub.l   %d1,%d0
+        lsr.l   #2,%d1
         sub.l   %d1,%d0
         move.l  %d0,(in_peak).l
 .fc_arm:
@@ -439,7 +445,10 @@ thr_label:
 | to THR on a track whose QREC byte is OFF (raw -1, never set): LEV := -40
 | dB in the same three places stock writes a value, the Part, the mirror
 | (0x100a54d0 + part x 6322 + track x 12) and the published copy
-| (0x80000c94 + track x 12, as 0x4002f0ca).
+| (0x80000c94 + track x 12, as 0x4002f0ca). An arm is not touched here;
+| blink_gate drops it (THR7 dropped it here; its failure to record from
+| inside RECORDING SETUP on the unit was GRID RECORDING, stock's rule at
+| 0x400836e4, not this code).
 trig_init:
         moveq   #3,%d0
         cmp.l   %d4,%d0
@@ -472,6 +481,46 @@ trig_init:
 lev_db:
         .byte   -60, -56, -52, -48, -44, -40, -36, -32, -28, -24
         .byte   -20, -16, -12, -8, -6, -4, -2, 0
+| 0x4004bee2, a "jsr" detour: the track status icon renderer's `lea
+| 0x400c0cb8,%a0`, its drawn-state cache (d3 the track, a4 the state it is
+| about to compare and draw: 0..3; a Pickup takes its own path, and never
+| arms). While the track is armed, every other blink phase a4 becomes
+| 0x10 + a4, a state the draw switch has no glyph for: the state differs
+| from the cached one, so the box is cleared (0x4004bf4a) and left empty,
+| and the next phase redraws the real icon. The icon blinks whatever it
+| shows. A track whose TRIG is no longer THR (edited, or another Part
+| loaded, while armed) loses its arm here, at the next icon draw, and
+| shows its icon as stock. d0, d1 and a1 are reloaded before any read
+| (0x4004befa, 0x4004bf0a, 0x4004beee and 0x4004c07a); rec_addr keeps d2
+| and a0.
+blink_gate:
+        moveq   #7,%d0
+        cmp.l   %d3,%d0
+        bcs.s   .bg_out
+        move.l  %d3,%d0
+        lsl.l   #2,%d0
+        lea     armed,%a0
+        tst.l   (%a0,%d0.l)
+        beq.s   .bg_out                 | not armed: the icon as stock
+        move.l  %d3,%d1
+        bsr     rec_addr                | a1 (reloaded at 0x4004beee before use)
+        mvs.b   3(%a1),%d1
+        cmpi.l  #TRIG_THRESH,%d1
+        beq.s   .bg_thr
+        clr.l   (%a0,%d0.l)             | TRIG not THR: the arm goes, no blink
+        bra.s   .bg_out
+.bg_thr:
+        move.l  (blink).l,%d0
+        btst    #BLINK_BIT,%d0
+        beq.s   .bg_out                 | the on phase
+        move.l  %a4,%d0
+        moveq   #0x10,%d1
+        or.l    %d1,%d0
+        movea.l %d0,%a4                 | the off phase: no glyph
+.bg_out:
+        lea     (ICON_CACHE).l,%a0      | displaced
+        rts
+
 lbl_lev:
         .asciz  "LEV"
 lbl_in:
@@ -509,3 +558,5 @@ in_peak:
         .long   0                       | the meter's held peak
 in_hold:
         .long   0                       | frames its hold still runs
+blink:
+        .long   0                       | frames counted while armed (the icon's blink)

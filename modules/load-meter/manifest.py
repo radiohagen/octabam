@@ -53,7 +53,7 @@ def _dsp_asm():
 MODULE = Module(
     name="load-meter", key="LOAD METER", kind=Kind.HYBRID,
     category=Category.REFERENCE, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.PORT, proof_note="the window and both DSP cores' figures under the port (verify_loadmeter, verify_brain); not on a unit",
+    proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "the window and both DSP cores' figures under the port (verify_loadmeter, verify_brain)",
     doc="The frame interrupt's share of the ColdFire, each DSP core's busy time per frame and each effect call's cost, for BRAIN's OTOP screen.",
     linked=(Linked("loadmeter", "modules/load-meter/meter.s", cpu="5475", dram=True),),
     # Each core's busy time per frame (dsp_meter.asm): stamps of timer 0 at

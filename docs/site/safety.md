@@ -1,6 +1,9 @@
-# Safety and recovery
+# Safety and Recovery
 
-## Recovery requirements and limits
+Read this page before flashing. Keep the recovery files and equipment
+available whenever you install a modified OS.
+
+## Recovery Requirements
 
 A failed flash can leave the installed OS unable to boot until stock OS is
 reinstalled. Recovery requires a working Startup Menu, a DIN MIDI interface,
@@ -8,11 +11,12 @@ and a copy of the stock OS. The Startup Menu is separate from the operating
 system, but this procedure cannot recover a unit whose Startup Menu or MIDI
 input is unavailable.
 
-The project is community maintained and is not supported by Elektron. By
-flashing, you accept the risk; project maintainers are not responsible for
-damage or data loss.
+octabam is community maintained and is not supported by Elektron. Flashing
+modified firmware carries a risk of data loss or a unit that cannot boot.
+The recovery procedure depends on a working Startup Menu and MIDI input; it
+cannot repair a unit whose Startup Menu or MIDI input is unavailable.
 
-## Recovery procedure
+## Reinstall Stock OS over MIDI
 
 The Startup Menu is separate from the operating system and provides a way
 to reinstall stock if the modified OS will not boot. Recovery requires a
@@ -20,18 +24,40 @@ working Startup Menu, a DIN MIDI interface, and a copy of the stock OS:
 
 1. Power off. Hold FUNC and power on → STARTUP MENU.
 2. TRIG 3 → MIDI UPGRADE → "READY TO RECEIVE MIDI UPGRADE".
-3. Send `downloads/extracted/OCTATRACK_OS1.40C.syx` (the stock OS, from
-   `make os`) over DIN MIDI, from a SysEx app or
-   `make midi-flash PORT=<port> SYX=downloads/extracted/OCTATRACK_OS1.40C.syx`.
+3. Send `downloads/extracted/OCTATRACK_OS1.40C.syx` (created by
+   `make os`) over DIN MIDI with a SysEx app, or run:
+
+   ```bash
+   make midi-flash PORT=<port> SYX=downloads/extracted/OCTATRACK_OS1.40C.syx
+   ```
 4. Wait through PREPARING FLASH → UPDATING FLASH. Do not power off.
 
-If the unit still boots far enough to enter USB DISK MODE, you can also
-install from the CF card. The Octatrack's USB port cannot send an OS
-upgrade.
+If the unit boots far enough to enter USB DISK MODE, you can also install
+stock OS from the CF card. The Octatrack USB port cannot send an OS upgrade.
 
 TRIG 2 → EMPTY RESET clears battery-backed RAM and settings, not the card.
 
-## FAQ
+## Resolve a saved-data File Warning
+
+If a project file for FX page 2 parameter locks, Kits or MIDI scenes is
+unreadable or incompatible, a message names the affected data and file.
+This can happen with damaged or incomplete files as well as older formats.
+An ordinary stock project without these extra files does not need them.
+
+Press **NO** to dismiss the message and keep the original file protected,
+or **YES** to see the options. Turn **LEVEL** to choose, then press **YES**:
+
+| Choice | What happens |
+|---|---|
+| KEEP FILE / SKIP SAVED DATA | Leaves the original file untouched. Its saved data is unavailable for this session. |
+| START FRESH / REPLACE FILE | Continues without the old saved data. The next save replaces the file. For Kits, the project's stock Parts become the starting Kits. |
+| BACKUP FILE THEN START FRESH | Starts fresh, but the next save first copies the original to a `.bak` file. |
+
+These choices do not upgrade or recover the old contents. Keep the file
+if you want to investigate or recover its data later. Pressing **NO** from
+the choices also leaves it protected until the next project load.
+
+## Common Questions
 
 **Is this official Elektron firmware?**
 No. Nothing here is endorsed by, supported by, or affiliated with
@@ -46,11 +72,11 @@ ignores the file), and BRAIN writes its `card.work` / `card.strd`.
 Both run the same OS 1.40C file, and both can flash an octabam image.
 octabam's own effects have only been tested on an MKII.
 
-**Has any of the three remixes run on a unit?**
-No. Each is verified under the port: the emulator boots the image and
-every gate passes, but the emulator is not the hardware. The closest
-thing to a hardware run is bottleservice — the same delay and reverb bus
-without the core modules — which ran on Sam's MKII.
+**Has an official remix run on a unit?**
+The current official remixes have passed port checks; those checks do not
+prove hardware behaviour. The delay and reverb bus without the core modules
+(bottleservice) has run on Sam's MKII. See each remix page for current
+hardware status.
 
 **Why can I not download a built image?**
 A built `.bin` or `.syx` contains Elektron's OS. Distributing it would
