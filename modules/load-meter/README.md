@@ -128,8 +128,10 @@ build's region fit, by name.
 
 **Calibration.** `LM_BURN=N` builds put a DO loop of N one-cycle `nop`s
 at each core's frame end, before the busy stamp: N core cycles plus the
-DO's setup, a constant that cancels between two burns. Timer 0 counts at
-CLK/2, so N cycles add N/2 counts to busy. Under the port one frame's
+DO's setup. The gate compares three nonzero counts (128, 2,048 and 3,968),
+so both setup and program placement cancel; zero omits the DO block and
+is only an unburned control. Timer 0 counts at CLK/2, so a difference of
+N cycles adds N/2 counts to busy. Under the port one frame's
 busy cannot show that: the vendored emulator updates its timers every
 2,048 instructions (`dsp56kEmu/timers.cpp`, `m_timerupdateInterval`), so
 timer 0 reads in 1,024-count steps. A first gate run compared single
@@ -162,6 +164,14 @@ rose by 508 and 1,504 counts on core 0, 500 and 1,503 on core 1, for
 -0.1%, +0.2%). USB's audio-out ring was byte-identical with the publish on
 and off; 9.0 host commands per frame interrupt with the view open and
 closed.
+
+On 18 Oct 2026 the N1 candidate's old zero-to-1,000 comparison measured
+534 instead of 500 counts on core 1, outside its 5% limit. That failure is
+retained. The equal-layout differential control on upstream `octabam-bus`
+measured 962/957 counts on core 0 and 950/959 on core 1 for two 1,920-cycle
+differences (960 expected; original 5% limit). This calibration-only control
+does not qualify N1 or replace the full gate. Seven unit cases also reject
+dead counters, wrong clock ratios and out-of-tolerance gains.
 
 Under the port with `--frame` (the frame timer without the DSP cores, 11
 Oct 2026, `verify_brain`'s `load` cases): windows published every 0.5 s,

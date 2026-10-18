@@ -30,17 +30,17 @@ lm_dsp and lm_ot (modules/load-meter/meter.s) and the screen's figures.
   range       a DSP write watch on X:$37F28 (in the claimed $37F10-$37F2F,
               a word the meter never writes) on each core: only payload B's
               boot zero loop writes it
-  calibrate   builds with LM_BURN = 0, 1000 and 3000 (a 1-cycle nop DO
-              loop at each core's frame end): each core's mean busy over
-              the run rises by the injected cycles in timer-0 counts (CLK/2,
-              so N/2), within TOL; the error is printed
+  calibrate   zero is an unburned control; adjacent nonzero LM_BURN = 128,
+              2048 and 3968 variants have equal DO setup/program placement.
+              Each core's mean busy rises by half the difference in cycles,
+              within the original 5% limit; two gains per core are checked.
 
 What it cannot see: the timer's rate and the burn's cost on the chip (the
 port's cycle table; its timer moves in 1,024-count steps, so only means over
 many samples are compared), DMA timing, hardware jitter. Every % and count is
 a hardware-round item.
 """
-import argparse, os, pathlib, re, shutil, struct, subprocess, sys
+import argparse, hashlib, json, os, pathlib, re, shutil, struct, subprocess, sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1])); import toolpath  # noqa: E402,F401
 from remix import registry  # noqa: E402
@@ -51,9 +51,23 @@ PY = ROOT / ".venv/bin/python3"
 ELF = ROOT / "out/platform/runtime/runtime.elf"
 OUT = ROOT / "out/loadmeter"
 MAIN_LO = 0x80005e63
-TOL = 0.05                       # measured errors 12 Oct 2026: +1.6%, +0.3%, -0.1%, +0.2%
-BURNS = (0, 1000, 3000)
+TOL = 0.05                       # unchanged differential gain limit
+BURNS = (0, 128, 2048, 3968)      # three equal-layout DO variants, within the short count
 FAILS = []
+
+
+def calibration_deltas(busy, burns=BURNS):
+    """Cancel DO setup/program placement using adjacent nonzero variants.
+
+    Zero omits the entire DO block, so it is an unburned control, not the
+    equal-setup baseline promised by this calibration. Three nonzero points
+    retain two independent gain checks per core at the original 5% limit.
+    """
+    if len(burns) < 4 or burns[0] != 0 or any(a >= b for a, b in zip(burns, burns[1:])):
+        raise ValueError('calibration needs zero plus three increasing positive burns')
+    for core in (0, 1):
+        for low, high in zip(burns[1:], burns[2:]):
+            yield core, low, high, busy[high][core] - busy[low][core], (high - low) / 2
 
 
 def check(what, ok):
@@ -103,6 +117,7 @@ def main():
     ap.add_argument("--set-name", default="BRAINSET")
     ap.add_argument("--name", default="BRAINPRJ")
     ap.add_argument("--frames-ms", type=int, default=4000, help="emulated ms the view stays open")
+    ap.add_argument("--calibration-only", action="store_true", help="diagnostic: only differential burn calibration; not the complete gate")
     a = ap.parse_args()
     project = a.project
     if not project and pathlib.Path("~/.octabam_project").expanduser().is_file():
@@ -164,8 +179,37 @@ def main():
         n = sum(1 for ln in text.splitlines() if "[0x20000004]" in ln)
         return (round(n / irqs, 4),) if irqs and n else ()
 
+    def calibrate(image, lmd):
+        busy, logs = {}, []
+        for n in BURNS:
+            img_n, lmd_n = (image, lmd) if n == 0 else build(a.remix, n, f"b{n}")
+            extra = ("--dsp-watch", "1:X:37f28") if n == BURNS[1] else ()
+            v, _x, text_n = run(f"burn{n}", img_n, lmd_n, open_load, a.frames_ms, extra)
+            if extra:
+                logs.append(text_n)
+            busy[n] = (v[15] / max(v[17], 1), v[16] / max(v[17], 1))
+        rows = []
+        for core, low, high, rise, want in calibration_deltas(busy):
+            ok = abs(rise - want) <= TOL * want
+            check(f"calibrate: core {core} mean busy rises by {rise:.0f} counts from DO {low} to {high} "
+                  f"(expected {want:.0f}; error {100 * (rise - want) / want:+.1f}%, within {TOL:.0%})", ok)
+            rows.append(dict(core=core, low=low, high=high, rise=rise, expected=want, passed=ok))
+        (OUT / 'calibration.json').write_text(json.dumps(dict(
+            method='adjacent nonzero DO counts; equal setup and program placement',
+            image_sha256=hashlib.sha256(image.read_bytes()).hexdigest(),
+            tolerance=TOL, means=busy, checks=rows, hardware_tested=False), indent=2)+'\n')
+        return logs
+
     # ---- publish, scrub ------------------------------------------------------
     image, lmd = build(a.remix, 0, "b0")
+    if a.calibration_only:
+        try:
+            calibrate(image, lmd)
+        finally:
+            restored, _ = build(a.remix, 0, "restored")
+            assert restored.read_bytes() == image.read_bytes(), 'calibration did not restore production image'
+        print(f"verify_loadmeter: calibration-only, {len(FAILS)} failure(s); other gate groups not run")
+        return int(bool(FAILS))
     v, (ot, now, ticks), text = run("open", image, lmd, open_load, a.frames_ms,
                                     ("--watch-mem", f"{MAIN_LO:#x},1;0x20000004,2"))
     seq, bad = v[0], v[1]
@@ -211,26 +255,13 @@ def main():
 
     try:
         # ---- calibration: an injected burn raises busy by N/2 counts ----------------
-        # A DO loop of N one-cycle nops costs N core cycles plus the DO's own
-        # setup (a constant, gone in the difference between burns); timer 0 counts
-        # CLK/2, so N cycles are N/2 counts. The port's timer moves in 1,024-count
+        # All compared variants contain the same DO setup/program placement.
+        # Timer 0 counts CLK/2, so a delta of N cycles is N/2 counts.
+        # The port's timer moves in 1,024-count
         # steps (dsp56kEmu timers.cpp: m_timerupdateInterval = 2,048 instructions),
         # so the figure compared is each core's mean busy over the run (lm_dsum),
         # which the frame length (not a multiple of 2,048) dithers.
-        busy = {}
-        for n in BURNS:
-            img_n, lmd_n = (image, lmd) if n == 0 else build(a.remix, n, f"b{n}")
-            extra = ("--dsp-watch", "1:X:37f28") if n == BURNS[1] else ()
-            v, _x, text_n = run(f"burn{n}", img_n, lmd_n, open_load, a.frames_ms, extra)
-            if extra:
-                range_logs.append(text_n)
-            busy[n] = (v[15] / max(v[17], 1), v[16] / max(v[17], 1))
-        for core in (0, 1):
-            for n in BURNS[1:]:
-                rise = busy[n][core] - busy[0][core]
-                want = n / 2
-                check(f"calibrate: core {core} mean busy rises by {rise:.0f} counts for a {n}-cycle burn (expected {want:.0f}; "
-                      f"error {100 * (rise - want) / want:+.1f}%, within {TOL:.0%})", abs(rise - want) <= TOL * want)
+        range_logs.extend(calibrate(image, lmd))
 
         # ---- range: nothing stock writes the claimed words but B's boot zero --------
         for core, log in enumerate(range_logs):
