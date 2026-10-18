@@ -188,6 +188,22 @@ dear={"DRV": 127, "FOLD": 127, "COMP": 127, "MIX": 127, "WDTH": 127, "SAT": 0},
   and the pressure render read it, and `make accept` is blocked by name for
   a DSP module without it.
 
+### Mutable data during boot
+
+A DRAM `Linked` unit may declare `boot_mutable=(("state_symbol", byte_count),)`
+for zero-initialized data that legitimately changes before the boot verifier's
+RTOS handoff. Declare this in the owning module, alongside a gate that checks
+its expected values. The declaration changes verification only, not firmware
+layout or startup behavior.
+
+`verify_dram_boot` resolves symbols from the owning object and link map. It
+rejects missing/ambiguous owners or symbols, ranges outside their owning section
+or runtime payload, overlapping ranges and nonzero initial contents. A zero run
+alone does not prove that memory is data: the module declares that contract and
+must test it. Changes within declared ranges are counted separately; the
+existing 64-byte allowance for other startup writes remains unchanged. This
+shared check verifies payload placement, not the correctness of mutable values.
+
 ## 5. Writing a gate
 
 1. **Say what it proves and what it cannot see** in the docstring's first

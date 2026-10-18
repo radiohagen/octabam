@@ -28,6 +28,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1])); import toolpath  # noqa: E402,F401  (every tools/ dir on sys.path)
 from remix import platform_build, registry  # noqa: E402
+from boot_mutable import resolve_ranges, compare_runtime  # noqa: E402
 
 EMU = ROOT / "out/emu/ot_emu"
 IMAGE = ROOT / "out/mainos_bus.bin"
@@ -78,68 +79,26 @@ fatal_hits = sum(1 for l in hits if f"at 0x{fatal:x}" in l)
 ok = handoff and entry_hits == 1 and fatal_hits == 0
 print(f"  [{'PASS' if ok else 'FAIL'}] verify_dram_boot: {remix.name} boots to the handoff; "
       f"loader ran {entry_hits}x, its fatal hang {fatal_hits}x")
-# Native Part initialization can run after the loader and before handoff.
-# Only these named transient data arrays may differ because of that work;
-# never bless a containing function/section or widen the code-drift budget.
-part_state_ranges = []
-midisc_state = []
-plocks_state = []
-if any(m.key in ('MIDI PART STATE', 'MIDI SCENES', 'PLOCKS P2') for m in mods):
-    runtime_nm = subprocess.check_output([
-        'm68k-elf-nm', str(ROOT / 'out/platform/runtime/runtime.elf')], text=True)
-    runtime_symbols = {f[2]: int(f[0], 16) for f in
-                       (line.split() for line in runtime_nm.splitlines()) if len(f) == 3}
-    if any(m.key == 'MIDI PART STATE' for m in mods):
-        part_state_ranges = [(runtime_symbols[name], size) for name, size in
-                             (('mp_snapshot', 4*8*36), ('mp_part_epochs', 64*4))]
-    if any(m.key == 'PLOCKS P2' for m in mods):
-        # PLOCKS cold boot initializes its marker and checkpoints bank zero.
-        # Check exact words rather than raising the generic drift allowance.
-        plocks_state = [
-            (runtime_symbols[name], before, after)
-            for name, before, after in (
-                ('INITED', bytes(4), b'PLK2'),
-                ('NVBANK', b'\xff'*4, bytes(4)),
-                ('NVGEN', bytes(4), bytes.fromhex('00000001')),
-            )
-        ]
-    if 'msc21_ram' in runtime_symbols:
-        # PR #647 MIDISC2.1 initialization, measured against its unchanged
-        # release21 bytes. Check exact data transitions, not a whole unit or
-        # an increased tolerance that could conceal a modified instruction.
-        midisc_state = [
-            (runtime_symbols['msc21_ram'] + off, bytes(size), b'\xff'*size)
-            for off, size in ((0x1180,16),(0x1210,16),(0x12a0,16),(0x1330,16),(0x1a80,256))
-        ] + [
-            (runtime_symbols[name] + off, before, after)
-            for name, off, before, after in (
-                ('h_400d6586',0x33a,bytes(4),bytes.fromhex('400e21e0')),
-                ('h_400d6c84',0x60,b'\xff',b'\x00'),
-                ('h_400d6c84',0xdc,bytes(4),bytes.fromhex('400e21e0')),
-                ('h_400d6c84',0xe3,b'\xff',b'\x00'),
-            )
-        ]
+# Modules own their mutable-state declarations; this gate only verifies
+# their linked extent/initial contents and accounts for changes at handoff.
+try:
+    mutable_ranges = resolve_ranges(mods, layout, ROOT / "out/platform/runtime", raw)
+except ValueError as error:
+    sys.exit(f"[FAIL] verify_dram_boot: {error}")
 
 for (a, n, p), (label, raw) in zip(dumps, expects):
     got = p.read_bytes() if p.exists() else b""
     diff = [i for i in range(min(len(got), len(raw))) if got[i] != raw[i]]
-    transient = [i for i in diff if any(start <= a+i < start+size
-                                       for start, size in part_state_ranges)]
-    scene_state_ok = all(raw[start-a:start-a+len(before)] == before and
-                         got[start-a:start-a+len(after)] == after
-                         for start, before, after in midisc_state + plocks_state)
-    scene_transient = [i for i in diff if any(start <= a+i < start+len(before)
-                                             for start, before, _ in midisc_state + plocks_state)]
-    remaining = len(diff)-len(transient)-len(scene_transient)
-    # Upstream permits 64 self-written bytes for BRAIN scheduler counters.
-    # Keep the personal Part ranges and exact Scenes/PLOCKS checks as well.
-    fine = len(got) == len(raw) and remaining <= 64 and scene_state_ok
+    # 14 Oct 2026: the official remixes (octabam-bus/-core/-inserts) carry
+    # BRAIN and PLOCKS P2 through this gate for the first time and measured
+    # 41-42 (brain_ts/brain_ts_last plus PLOCKS P2's INITED stamp, see the
+    # module docstring above); 64 keeps headroom without going blind to a
+    # new undeclared writer.
+    fine, transient, remaining = compare_runtime(a, raw, got, mutable_ranges)
     ok &= fine
+    changes = (f"{transient} declared mutable byte(s) and {remaining} other byte(s)"
+               if mutable_ranges else f"{len(diff)} byte(s)")
     print(f"  [{'PASS' if fine else 'FAIL'}] verify_dram_boot: {label} at 0x{a:08x} == linked "
-          f"runtime ({n:,} B) except {len(transient)} named Part-state byte(s), "
-          f"{len(scene_transient)} exact MIDI SCENES/PLOCKS initialization byte(s) and "
-          f"{remaining} other byte(s) the runtime wrote itself"
+          f"runtime ({n:,} B) except {changes} the runtime wrote itself"
           + (f" at +{diff[0]:#x}.." if diff else ""))
-    if not scene_state_ok:
-        print('  [FAIL] verify_dram_boot: MIDI SCENES/PLOCKS initialization differs from its exact expected state')
 sys.exit(0 if ok else 1)
