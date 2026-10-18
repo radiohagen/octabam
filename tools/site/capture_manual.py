@@ -211,6 +211,14 @@ def capture_midi_loopback(p,r):
     shot(p,'midi-loopback','channel-both','MIDI NOTE SETUP: CHAN 1B indicates both destinations.',r)
 
 
+def capture_midi_loopback_translation(p,r):
+    press(p,'midi');press(p,'t1');p.chord('func','pg_playback')
+    press_encoder(p,0)
+    shot(p,'midi-loopback-translation','off','RE-MAP OFF: reference and range controls are inactive.',r)
+    enc(p,0,4);enc(p,0,4);enc(p,1,4)
+    shot(p,'midi-loopback-translation','internal','DEST BOTH, RE-MAP INT: C4 maps to 84 internally, within ±12; external notes stay raw.',r)
+
+
 def prepare(remix,project,assignments):
     label='manual-features' if remix.startswith('../') else remix
     work=OUT/label;work.mkdir(parents=True,exist_ok=True)
@@ -261,7 +269,7 @@ def prepare(remix,project,assignments):
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('groups',nargs='+',choices=['core','features','inserts','bus','extras','machines','probes','midi-loopback'])
+    ap.add_argument('groups',nargs='+',choices=['core','features','inserts','bus','extras','machines','probes','midi-loopback','midi-loopback-translation'])
     cfg=Path.home()/'.octabam_project'
     ap.add_argument('--project',default=os.environ.get('OT_PROJECT') or (cfg.read_text().strip() if cfg.is_file() else ''))
     a=ap.parse_args();OUT.mkdir(parents=True,exist_ok=True)
@@ -269,6 +277,7 @@ def main():
         assignments=[]
         if group=='core': jobs=[('octabam-core',capture_core,[])]
         elif group=='midi-loopback':jobs=[('midi-loopback',capture_midi_loopback,[])]
+        elif group=='midi-loopback-translation':jobs=[('midi-loopback-translation',capture_midi_loopback_translation,[])]
         elif group=='features':
             # A scratch selection: THR and REC_TRIG_MUTE share a hook and cannot coexist.
             scratch=OUT/'features.py'

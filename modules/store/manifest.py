@@ -23,8 +23,14 @@ EVENTS = (
     "bankcopy", "tocs1", "fromcs1", "partsaved", "partclear",
 )
 
+# Checked lifecycle phases already used by the integrated Harmony client.
+CHECKED_EVENTS = ('bankw_guard', 'bankcopy_guard', 'bankcopy_done')
+EXTRA_EVENTS = (*CHECKED_EVENTS, 'newproj_post')
+
 # (module key, symbol prefix, events handled). Table order is run order.
 CLIENTS = (
+    ('MIDI LOOPBACK TRANSLATION', 'lt', ('loadall_post', 'loadmask_post',
+         'newproj', 'newproj_post', 'bankw_guard', 'bankcopy_guard', 'bankcopy_done', 'fromcs1')),
     ("PLOCKS P2", "plk", ("loadall_pre", "loadmask_pre", "newproj", "bankw_pre",
                           "bankcopy", "tocs1", "fromcs1")),
     ("KITS", "kits", ("loadall_pre", "loadall_post", "loadmask_pre", "loadmask_post",
@@ -37,18 +43,30 @@ CLIENTS = (
 
 
 # A client's number in the refusal registry (store_refuse) and in ans_tab.
-CLIENT_IDS = {"PLOCKS P2": 0, "KITS": 1, "MIDI SCENES": 2}
+CLIENT_IDS = {"PLOCKS P2": 0, "KITS": 1, "MIDI SCENES": 2, 'MIDI LOOPBACK TRANSLATION': 3}
 
 
 def store_inc(modules):
+    translation = 'MIDI LOOPBACK TRANSLATION' in modules
     out = ["ev_ctl:", "        .long   kits_level" if "KITS" in modules else "        .long   0",
            "name_tab:", "        .long   nm_plk, nm_kits, nm_scn",
            'nm_plk: .asciz "P2LK%02d.WORK"', 'nm_kits: .asciz "KITS.WORK"', 'nm_scn: .asciz "SCENES.WORK"',
            ".balign 2", "ans_tab:"]
+    if translation:
+        out.insert(0, '.set STORE_LT,1')
+        out[4] = '        .long nm_plk, nm_kits, nm_scn, nm_lt'
+        out.insert(-2, 'nm_lt: .asciz "LBNT%02d.WORK"')
     for key, _prefix, _events in sorted(CLIENTS, key=lambda c: CLIENT_IDS[c[0]]):
+        if key == 'MIDI LOOPBACK TRANSLATION' and not translation:
+            continue
         pre = {k: p for k, p, _e in CLIENTS}[key]
         out.append(f"        .long   {pre}_st_answer" if key in modules else "        .long   0")
-    for ev in EVENTS:
+    selected = {ev for key, _, handled in CLIENTS if key in modules for ev in handled}
+    extra = [ev for ev in EXTRA_EVENTS if ev in selected]
+    out[0:0] = [f'.set STORE_{ev.upper()},1' for ev in extra]
+    if selected.intersection(CHECKED_EVENTS):
+        out.insert(0, '.set STORE_CHECKED,1')
+    for ev in (*EVENTS, *extra):
         out.append(f"ev_{ev}:")
         for key, prefix, handled in CLIENTS:
             if key in modules and ev in handled:

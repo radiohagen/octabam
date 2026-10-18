@@ -74,6 +74,7 @@ nav:
       - Page 2 Scene Locks: reference/modules/scenes-p2.md
   - MIDI and USB:
       - MIDI Loopback: reference/modules/midi-loopback.md
+      - MIDI Loopback Translation: reference/modules/midi-loopback-translation.md
       - USB: reference/modules/usb.md
       - CC Map: reference/modules/cc-map.md
       - CC Feedback: reference/modules/cc-feedback.md

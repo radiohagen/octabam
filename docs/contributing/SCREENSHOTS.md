@@ -59,6 +59,7 @@ Groups and what each captures, from the `shot(...)` calls:
 | `extras` | one test remix per module (character-txtr, testgen, sidechain-compressor, miniverb, tapeecho, vocoder, wave) | setup and main page of each |
 | `machines` | `analog-bassdrum`, `octatrick` | analog-bassdrum, synth, direct-jump |
 | `midi-loopback` | `midi-loopback` | midi-loopback (EXT/INT/BOTH windows and CHAN indicators) |
+| `midi-loopback-translation` | `midi-loopback-translation` | RE-MAP OFF and internal mapping with symmetric range |
 | `probes` | `cfmeter` | CF METER |
 
 The project is `--project`, `OT_PROJECT`, or the path in

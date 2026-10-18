@@ -650,5 +650,21 @@
       "source": "emulator panel UART; composed-plane pixel equality checked",
       "firmware_sha256": "3dd6d81365bca25e2346e057a6481410c1f413f788b1ea272218ae6f14d08592"
     }
+  },
+  "midi-loopback-translation": {
+    "off": {
+      "image": "midi-loopback-translation/off.png",
+      "caption": "RE-MAP OFF: reference and range controls are inactive.",
+      "remix": "midi-loopback-translation",
+      "source": "emulator panel UART",
+      "firmware_sha256": "fc576d8f46f9876bd7ed5baba060445345b95cb8e0cf84ddbfb9c02448b012b1"
+    },
+    "internal": {
+      "image": "midi-loopback-translation/internal.png",
+      "caption": "DEST BOTH, RE-MAP INT: C4 maps to 84 internally, within \u00b112; external notes stay raw.",
+      "remix": "midi-loopback-translation",
+      "source": "emulator panel UART",
+      "firmware_sha256": "fc576d8f46f9876bd7ed5baba060445345b95cb8e0cf84ddbfb9c02448b012b1"
+    }
   }
 }
