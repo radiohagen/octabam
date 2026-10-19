@@ -106,6 +106,7 @@ from the card (section 5).
 
 | module | author | what it does | proof |
 |---|---|---|---|
+| [**HARMONY FOLLOW**](modules/harmony-follow/README.md) | [radiohagen](https://github.com/radiohagen/octatrack-modules) | Single transport and successful-note dispatcher for Harmony and Follow. | `make check` |
 | [**HARMONY PLOCKS**](modules/harmony-plocks/README.md) | [radiohagen](https://github.com/radiohagen/octatrack-modules) | Shared editing and pattern/track copy hooks for Harmony and PLOCKS P2. | `make check` |
 | [**KITS**](modules/kits/README.md) | [sambanks](https://github.com/sambanks) | 255 Kits per project: PART = LOAD KIT, FUNC+PART = SAVE KIT (MKI: FUNC+MIDI, then FUNC+BANK); each pattern plays its Kit through the stock Part slots. Replaces the earlier Octakit implementation. | on hardware: Sam's MKII (image A6, 6 Oct 2026): importing Octakit-format kit files, ems-octakit #5, STOP/PTN+TRIG/PLAY with the Rytm, a rejected bank file, power cycles; `verify_kits` under the port |
 | [**MIDI PART STATE**](modules/midi-part-state/README.md) | [radiohagen](https://github.com/radiohagen/octatrack-modules) | Shared native Part settings and coherent copy/clear publication; no KITS dependency. | port-gated |
@@ -120,7 +121,7 @@ from the card (section 5).
 |---|---|---|---|
 | [**CC FEEDBACK**](modules/cc-feedback/README.md) | [sambanks](https://github.com/sambanks) | Every knob value change is transmitted as its CC (page 1: 16-45; page 2: CC MAP's 62-73), so a controller's encoders follow the unit. | on hardware: cursory testing on Sam's MKII (owner report, 16 Oct 2026); `verify_ccfeedback` (Unicorn) and `verify_set` (the port's MIDI OUT bytes) |
 | [**CC MAP**](modules/cc-map/README.md) | [sambanks](https://github.com/sambanks) | MIDI CC 62-67 drive the FX2 engine's page-2 slots 6-11; CC 68-73 the FX1 station's. | on hardware: Sam's MKII (image 96, 13 Sep 2026) |
-| [**MIDI FOLLOW**](modules/midi-follow/README.md) | [radiohagen](https://github.com/radiohagen/octatrack-modules) | RFOL selects a source; press D for FIXED/GRAV/SOURCE register, OCT/OFFS and TRIG/LIVE updates. | port-gated |
+| [**MIDI FOLLOW**](modules/midi-follow/README.md) | [radiohagen](https://github.com/radiohagen/octatrack-modules) | RFOL follows source notes; press D for FIXED/GRAV/SOURCE register, OCT/OFFS and TRIG/LIVE updates. | port-gated |
 | [**MIDI HARMONY**](modules/midi-harmony/README.md) | [radiohagen](https://github.com/radiohagen/octatrack-modules) | Scale-degree roots, generated chords and CHORD PLAY using native ARP KEY; optional MIDI Follow. | port-gated |
 | [**MIDI LOOPBACK**](modules/midi-loopback/README.md) | [radiohagen](https://github.com/radiohagen/octatrack-modules) | Press CHAN for per-Part EXT/INT/BOTH routing of MIDI-track notes and controls. | port-gated |
 | [**MIDI LOOPBACK SCENES**](modules/midi-loopback-scenes/README.md) | [radiohagen](https://github.com/radiohagen/octatrack-modules) | Compose MIDI Loopback destinations with MIDI Scenes CC output and USB MIDI. | `make check` |

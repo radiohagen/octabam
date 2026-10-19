@@ -1,7 +1,7 @@
 # MIDI Follow
 
-Each MIDI track can follow another MIDI track's chord root while keeping its
-own rhythm, velocity and note length. By default, FIXED octave 3 with TRAN=0 uses MIDI notes 36–47:
+Each MIDI track can follow another MIDI track's logical note set while keeping its
+own rhythm, velocity and note length. By default, FIXED octave 3 with TRAN=0 uses MIDI notes 36–47 for the root:
 C → F → G gives 36 → 41 → 43. The follower's TRAN adds a signed semitone
 offset after its register choice. Scale Quantizer is not required.
 
@@ -73,17 +73,22 @@ Chains resolve to their final source: T3 → T2 → T1 follows T1's root.
 - Root means the source's first NOTE, with its stock transpose/scale processing;
   it does not infer the root from a chord inversion. C–E–G arp notes leave the
   bass on C. A new F–A–C chord moves it to F.
-- A configured follower is monophonic once its source has a known root:
-  NOTE2–4 are suppressed. Before the first eligible source trigger it passes
-  through unchanged.
+- A HARM OFF source publishes its effective NOTE1–4 pitch set. A HARM OFF
+  follower uses those intervals around its selected register and TRAN; its
+  own NOT2–4 do not add another chord. A HARM NOTE/CHORD source publishes only
+  its resolved degree root, never its generated chord. A HARM NOTE/CHORD
+  follower generates its own notes from that root. Without Harmony selected,
+  both source and follower use the native HARM OFF rule. Before the first
+  eligible source trigger, native playback passes through unchanged.
 - The next follower trig uses the selected source's latest root and the receiver's register choice. A held bass
   keeps its original note-off, including when RFOL changes or switches OFF.
 - The follower's NOTE does not set an interval: use TRAN. Its live value,
   including parameter locks, is added after root selection without an additional
   scale correction. These are chromatic semitones, not scale degrees; +7 is
   always a perfect fifth, even when that pitch falls outside the source scale.
-  Pitches outside MIDI 0–127 are suppressed instead of wrapped. Existing stock
-  absent/invalid-note gates still apply before the follower replacement.
+  Pitches outside MIDI 0–127 are suppressed instead of wrapped. Before stock
+  scans the chord slots, Follow enables only slots backed by valid source notes;
+  their final pitches still pass through stock note ownership and release.
 - A dependency chain uses the ultimate source root plus the final follower's
   own register choice and TRAN; intermediate followers' offsets do not accumulate.
 - Ordinary same-tick source trigs are captured before any track emits, so
@@ -102,7 +107,7 @@ Chains resolve to their final source: T3 → T2 → T1 follows T1's root.
   full-firmware emulator tests; unusual mute/plays-free modes remain untested
   on hardware.
 
-On its own, MIDI Follow supplies bass-root following. MIDI Harmony optionally
+On its own, MIDI Follow copies native one to four note sets. MIDI Harmony optionally
 adds live keyboard chords and follower chords/arp, as described below. Audio
 following and live transposition of a running pattern are outside its scope.
 Shared output channels have ownership stress coverage; physical MIDI timing
@@ -113,17 +118,24 @@ requires instrument validation.
 The module uses the linked ColdFire pattern from `modules/repitch` and the
 stock NOTE descriptor, drawer and encoder dispatch. No DSP code is added.
 
-- `0x4009f986`: before the output loop, capture eligible ordinary chord roots
+- `0x4009f986`: before the output loop, capture eligible ordinary note sets
   for all tracks. Uses the stock trigger mask, enabled-track checks,
   output channel and velocity. The mute mask is intentionally left to stock
   output handling. Original NOTE lanes already contain the locks.
 - `0x4009fb00`: capture each eligible source event, including arp ticks, from
   the original NOTE lane, not the arp's scratch output. Apply the stock
-  transpose and scale correction.
+  transpose and scale correction. Enable source-backed N2–4 slots before
+  stock skips absent follower slots.
 - `0x4009fb80`: resolve a follower's source, add its live TRAN (`a5+0x22c`,
-  biased by 64), and replace its scratch pitch before
+  biased by 64), and replace each scratch pitch with the source's native
+  effective interval or its Harmony root before
   stock note ownership and release bookkeeping (`0x4009fbbc` / `0x4009fd04`).
   Chained resolution has a defensive eight-hop bound.
+- `0x4009c3d4` / `0x4009c4d4`: reset the GRAV register on transport
+  start/resume. EUCLID uses these spans too, so both modules need a
+  shared-hook bridge for one remix.
+- `0x4009fbb2` / `0x4009fcfa`: commit GRAV after a successful sequenced
+  note-on while stock retains release bookkeeping.
 - NOTE SETUP's unused D slot is labelled RFOL and enabled. Its encoder callback
   at `0x400bc64e` points to the module; its formatter prints OFF/T1–T8.
   The drawer detour at `0x40036674` reads RFOL from the selected native Part.
@@ -137,7 +149,9 @@ is reserved; response and Loopback bits are untouched. This is greenfield,
 without legacy migration. UI reads use the selected Part;
 playback uses each MIDI track's playing Part through MIDI PART STATE.
 `bf_roots[8]` holds the source's bass pitch or 0xff (unknown), and
-`bf_pitches[8]` retains full MIDI root pitches. These histories are runtime-only.
+`bf_pitches[8]` retains full MIDI root pitches. `bf_intervals[8][3]` holds
+effective source N2–4 offsets from that root, with 0x80 for absent voices.
+These histories are runtime-only.
 Harmony calls `bf_register` before applying the receiver's TRAN; its adapter
 also publishes live keyboard root octaves into `bf_pitches`.
 Native Part operations own persistence, with or without KITS. The generic
@@ -225,3 +239,10 @@ project copy, `verify_midi_follow_response_port.py --project DIR` checks LIVE
 response through physical panel events and MIDI output. Combined Harmony
 settings/persistence coverage lives in `verify_midi_harmony_port.py --settings-only`,
 and NOTE SETUP confirmation in `verify_midi_setup_port.py`.
+
+## Harmony event composition
+
+Follow works without Harmony. When both are selected, HARMONY FOLLOW overrides
+their four shared event sites with Follow's dispatcher, which calls both consumers
+once. Harmony has its own dispatcher for standalone use. Part State owns no
+transport or successful-note hook. No saved setting or storage layout changes.

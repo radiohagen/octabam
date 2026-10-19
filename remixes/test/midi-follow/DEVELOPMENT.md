@@ -2,7 +2,8 @@
 
 Stock effects plus [MIDI FOLLOW](../../../modules/midi-follow/README.md).
 MIDI NOTE SETUP knob D adds **RFOL: OFF / T1–T8**, independently per track.
-Followers play bass roots at MIDI notes 36–47; sources may play chords or arps.
+Followers place source roots at MIDI notes 36–47 and carry the source's native
+N2–4 intervals; sources may play chords or arps.
 All tracks default OFF. Settings are RAM-only; no Scale Quantizer dependency.
 Experimental, emulator testing only; no hardware claim.
 

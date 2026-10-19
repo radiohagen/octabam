@@ -1,7 +1,7 @@
 """Shared virtual-project fixture and MIDI capture decoder for module gates."""
 import re
 
-def fixture(source, dest, arp=False, leader=0, offsets=None):
+def fixture(source, dest, arp=False, leader=0, offsets=None, voices=False):
     import ab_fixture
     from hw import ot_project as otp
     ab_fixture.prepare(source, dest)
@@ -58,6 +58,12 @@ def fixture(source, dest, arp=False, leader=0, offsets=None):
                                 data[lock+3] = 68  # F + A: first NOTE remains root
                             if t == 1 and s == 8:
                                 data[lock+3] = 71  # extra fifth suppressed in bass mode
+                            if voices and t == leader:
+                                data[lock+3:lock+6] = bytes((68, 71, 76))
+                            if voices and t == 1:
+                                # Follow must supply all voices even when the
+                                # receiver's own N2-4 slots are absent.
+                                data[lock+3:lock+6] = bytes((255, 255, 255))
         otp._bank_write(dest, int(path.stem[4:]), mutate, guard=False)
     for path in dest.glob('project.*'):
         raw = re.sub(rb'\[SAMPLE\].*?\[/SAMPLE\]\r?\n', b'', path.read_bytes(), flags=re.S)

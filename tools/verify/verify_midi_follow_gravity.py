@@ -22,8 +22,8 @@ def choose(pc, previous, home):
 def main():
     subprocess.run([sys.executable,str(ROOT/'modules/midi-follow/generate.py'),'--check'],check=True)
     m=Machine(symbols);u=m.uc;s=m.sym
-    for address,name in ((0x4009c3d4,'mp_start_a'),(0x4009c4d4,'mp_start_b'),
-                         (0x4009fbb2,'mp_sent_a'),(0x4009fcfa,'mp_sent_b')):
+    for address,name in ((0x4009c3d4,'bf_start_a'),(0x4009c4d4,'bf_start_b'),
+                         (0x4009fbb2,'bf_sent_a'),(0x4009fcfa,'bf_sent_b')):
         assert bytes(u.mem_read(address,6))==b'\x4e\xf9'+s[name].to_bytes(4,'big')
     if '--negative-control' in sys.argv:
         def skip_commit(uc,pc,size,data):
@@ -46,10 +46,10 @@ def main():
             assert (state<=address and address+size<=state+16
                     or m.stack-256<=address and address+size<=m.stack), ('query write',hex(address),size)
         return result
-    def sent(t=1,velocity=100,live=0,hook='mp_sent_a'):
+    def sent(t=1,velocity=100,live=0,hook='bf_sent_a'):
         u.mem_write(0x400d807e,bytes((velocity,)))
         u.mem_write(0x46c77b1e+10*t,bytes((live,)))
-        m.call(hook,stop=0x4009fbb8 if hook=='mp_sent_a' else 0x4009fd00,
+        m.call(hook,stop=0x4009fbb8 if hook=='bf_sent_a' else 0x4009fd00,
                regs={UC_M68K_REG_D7:t})
     m.call('bf_source_set',1,1);m.call('bf_mode_set',1,1);m.call('bf_home_set',1,2)
     root(35);begin();assert query()==35;sent()
@@ -72,7 +72,7 @@ def main():
             assert query()==want,(home,note,previous,want,query())
             for _ in range(3):assert query()==want
             if rng.randrange(4):
-                sent(hook='mp_sent_b');previous=want
+                sent(hook='bf_sent_b');previous=want
                 assert query()==want,'commit must not recompute this event'
             cases+=1
     # Independent receiving tracks, reset boundaries and remembered controls.
@@ -82,7 +82,7 @@ def main():
     for t in range(1,8):begin(t);assert query(t)==35;sent(t)
     root(0)
     for t in range(1,8):begin(t);assert query(t)==36;sent(t)
-    for hook,stop in (('mp_start_a',0x4009c3da),('mp_start_b',0x4009c4da)):
+    for hook,stop in (('bf_start_a',0x4009c3da),('bf_start_b',0x4009c4da)):
         m.call(hook,stop=stop)
         for t in range(1,8):assert query(t)==24
     # Same-slot native Part replacement invalidates history without saving it.

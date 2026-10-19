@@ -87,24 +87,26 @@ mp_native_init:
     cmpi.l #0x100a4ece,%d0
     bcc.s .pool_source
     cmpi.l #0x1001614e,%d0
-    bcc.w rp_native_copy
+    bcc.w .pool_copy
     add.l 12(%sp),%d0
     cmpi.l #0x1001614e,%d0
-    bhi.w rp_native_copy
+    bhi.w .pool_copy
 .pool_source:
     move.l 8(%sp),%d0
     cmpi.l #0x100a4ece,%d0
     bcc.s .pool_no_copy
     cmpi.l #0x1001614e,%d0
-    bcc.w rp_native_copy
+    bcc.w .pool_copy
     add.l 12(%sp),%d0
     cmpi.l #0x1001614e,%d0
-    bhi.w rp_native_copy
+    bhi.w .pool_copy
 .pool_no_copy:
     .endif
     move.l %d2,-(%sp)
     move.l 8(%sp),%a1
     jmp 0x4002089e
+.pool_copy:
+    jmp rp_native_copy
 .init_stock:
     lea -88(%sp),%sp
     movem.l %d2-%d7/%a2-%a6,(%sp)

@@ -6,7 +6,7 @@ Part, retained-memory and shared-hook integration those features require.
 It adds no synths or ARP templates.
 
 - Scales extends KEY in MIDI ARP SETUP to seven modes in twelve keys.
-- Follow lets a MIDI track follow another track’s root/register, with FIXED,
+- Follow lets a MIDI track follow another track’s notes/register, with FIXED,
   GRAV and SOURCE register modes and independent range controls.
 - Harmony adds degree roots, chords and Chord Play using the native KEY.
   NOTE MAIN E sets ACC in scale degrees, with independent step overrides;
@@ -32,3 +32,14 @@ receipt for the image hash and completed tests.
 The original upstream selections remain available. The separate Scales review
 branch is the first module-sized author-adapter contribution; the full
 integration is used for combined acceptance, not one giant upstream PR.
+
+With HARM OFF (or Harmony absent), Follow carries all effective source N1–4
+pitches into the follower's register, including when the follower's own N2–4
+slots are empty. A HARM NOTE/CHORD source supplies only its resolved degree:oct
+root as Note 1. A HARM NOTE/CHORD follower generates its own notes from that root.
+
+Select HARMONY FOLLOW alongside both modules. This bridge gives their register
+history and accumulator one notification per transport or successful-note event.
+Part State supplies persistence; it owns no transport or note-output hooks.
+The bridge adds no controls or stored fields. EUCLID still needs a separate
+transport bridge before it can share an image with Follow.

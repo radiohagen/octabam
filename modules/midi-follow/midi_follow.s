@@ -1,7 +1,7 @@
 /* OS 1.40C. Routing settings belong to native Parts; root history is volatile. */
     .text
     .include "remix.inc"
-    .global bf_capture, bf_note, bf_roots, bf_pre_capture
+    .global bf_capture, bf_note, bf_roots, bf_pre_capture, bf_latch_extra, bf_seed_extras
     .global bf_encoder, bf_draw_value, bf_format, bf_select
 
 /* Before the stock output loop: latch eligible ordinary triggers for ALL
@@ -48,7 +48,14 @@ bf_pre_capture:
 .rotate:
     sub.l %d0,%d1
 .pre_latch:
+    move.l %d1,-(%sp)
     bsr.w bf_latch
+    tst.l %d0
+    beq.s .pre_latch_done
+    move.l (%sp),%d1
+    bsr.w bf_latch_extra
+.pre_latch_done:
+    addq.l #4,%sp
 .pre_next:
     lea 32(%a5),%a5
     lea 68(%a4),%a4
@@ -89,6 +96,7 @@ bf_capture:
     move.l -64(%fp),%d1
     bsr.w bf_latch
 .capture_done:
+    bsr.w bf_seed_extras
     movem.l (%sp),%d0-%d2/%a0
     lea 16(%sp),%sp
     move.l %d7,%d4
@@ -97,21 +105,20 @@ bf_capture:
     jmp 0x4009fb08
 
 /* Original chord NOTE, never arp scratch; d1 = stock scale rotation.
- * Clobbers d0-d2/a0 only. Transpose arithmetic matches stock byte wrapping.
+ * Return 1 only when a fresh logical root was captured. The native extras
+ * use bf_effective too, so their intervals match the source's sounded notes.
  */
 bf_latch:
     clr.l %d0
     move.b 0x220(%a5),%d0
-    bmi.w .latch_return
+    bmi.w .latch_invalid
     .ifdef HAVE_HARMONY
     move.l %d1,-(%sp)
     move.l %d7,%d1
     jsr mh_prepare
     move.l (%sp)+,%d1
-    .ifdef HAVE_HARMONY
     cmpi.l #127,%d0
-    bhi.w .latch_return
-    .endif
+    bhi.w .latch_invalid
     move.l %d0,-(%sp)
     move.l %d1,-(%sp)
     move.l %d7,%d0
@@ -124,6 +131,29 @@ bf_latch:
 .latch_native_scale:
     move.l (%sp)+,%d0
     .endif
+    bsr.w bf_effective
+    cmpi.l #127,%d0
+    bhi.s .latch_invalid
+    lea bf_pitches,%a0
+    move.b %d0,(%a0,%d7.l) /* retain octave before bass reduction */
+.root_reduce:
+    cmpi.l #12,%d0
+    blt.s .latch
+    subi.l #12,%d0
+    bra.s .root_reduce
+.latch:
+    addi.l #36,%d0
+    lea bf_roots,%a0
+    move.b %d0,(%a0,%d7.l)
+    moveq #1,%d0
+    rts
+.latch_invalid:
+    moveq #0,%d0
+    rts
+
+/* d0 native pitch before TRAN, d1 stock scale rotation, d7 source track.
+ * Return 0..127, or 256 when the native note would not sound. */
+bf_effective:
     clr.l %d2
     move.b 0x22c(%a5),%d2
     add.l %d2,%d0
@@ -134,7 +164,7 @@ bf_latch:
     add.l %d2,%d0
     andi.l #255,%d0
     tst.b %d0
-    bmi.w .latch_return
+    bmi.w .effective_invalid
     .ifdef HAVE_SCALES
     move.l %d1,-(%sp)
     move.l %d0,-(%sp)
@@ -175,7 +205,7 @@ bf_latch:
     add.l %d2,%d0
     andi.l #255,%d0
     tst.b %d0
-    bmi.w .latch_return
+    bmi.w .effective_invalid
 .root_mod:
     .ifdef HAVE_HARMONY
     move.l %d1,-(%sp)
@@ -183,18 +213,109 @@ bf_latch:
     jsr mh_quant /* Root snap is independent of the selected chord quality. */
     move.l (%sp)+,%d1
     .endif
+    cmpi.l #127,%d0
+    bhi.s .effective_invalid
+    rts
+.effective_invalid:
+    move.l #256,%d0
+    rts
+
+/* A native source offers its three effective extra notes as signed intervals
+ * from its effective root. Harmony NOTE/CHORD offers only its logical root;
+ * its generated voices never enter Follow. 0x80 is an absent voice. */
+bf_latch_extra:
+    lea -28(%sp),%sp
+    movem.l %d0-%d5/%a0,(%sp)
+    move.l %d1,%d5
+    .ifdef HAVE_HARMONY
+    move.l %d7,%d0
+    jsr mh_active
+    andi.l #3,%d0
+    bne.s .extra_clear
+    .endif
+    moveq #0,%d4
+.extra_next:
+    moveq #0,%d0
+    move.b 0x220(%a5),%d0
+    moveq #0,%d1
+    lea 0x220(%a5),%a0
+    move.b 3(%a0,%d4.l),%d1
+    tst.b %d1
+    bmi.s .extra_absent
+    add.l %d1,%d0
+    subi.l #64,%d0
+    move.l %d5,%d1
+    bsr.w bf_effective
+    cmpi.l #127,%d0
+    bhi.s .extra_absent
     lea bf_pitches,%a0
-    move.b %d0,(%a0,%d7.l) /* retain octave before the legacy bass reduction */
-.root_reduce:
-    cmpi.l #12,%d0
-    blt.s .latch
-    subi.l #12,%d0
-    bra.s .root_reduce
-.latch:
-    addi.l #36,%d0
-    lea bf_roots,%a0
-    move.b %d0,(%a0,%d7.l)
-.latch_return:
+    moveq #0,%d2
+    move.b (%a0,%d7.l),%d2
+    sub.l %d2,%d0
+    bra.s .extra_store
+.extra_absent:
+    moveq #-128,%d0
+.extra_store:
+    move.l %d7,%d2
+    add.l %d7,%d2
+    add.l %d7,%d2
+    add.l %d4,%d2
+    lea bf_intervals,%a0
+    move.b %d0,(%a0,%d2.l)
+    addq.l #1,%d4
+    cmpi.l #3,%d4
+    bne.s .extra_next
+    bra.s .extra_done
+.extra_clear:
+    move.l %d7,%d2
+    add.l %d7,%d2
+    add.l %d7,%d2
+    lea bf_intervals,%a0
+    moveq #-128,%d0
+    move.b %d0,(%a0,%d2.l)
+    move.b %d0,1(%a0,%d2.l)
+    move.b %d0,2(%a0,%d2.l)
+.extra_done:
+    movem.l (%sp),%d0-%d5/%a0
+    lea 28(%sp),%sp
+    rts
+
+/* Stock skips an absent follower chord slot before reaching bf_note. Make
+ * only source-backed slots valid before that loop; bf_note supplies their
+ * final pitches and stock still owns every note-on and note-off. */
+bf_seed_extras:
+    tst.b -4(%fp)
+    bmi.s .seed_done
+    move.l %d7,%d0
+    jsr bf_source_resolve
+    cmp.l %d7,%d0
+    beq.s .seed_done
+    move.l %d0,%d2
+    .ifdef HAVE_HARMONY
+    move.l %d7,%d0
+    jsr mh_active
+    andi.l #3,%d0
+    bne.s .seed_done
+    .endif
+    move.l %d2,%d0
+    add.l %d2,%d0
+    add.l %d2,%d0
+    lea bf_intervals,%a0
+    adda.l %d0,%a0
+    moveq #0,%d1
+.seed_next:
+    move.b (%a0,%d1.l),%d0
+    cmpi.b #0x80,%d0
+    beq.s .seed_advance
+    tst.b -3(%fp,%d1.l)
+    bpl.s .seed_advance
+    move.b -4(%fp),%d0
+    move.b %d0,-3(%fp,%d1.l)
+.seed_advance:
+    addq.l #1,%d1
+    cmpi.l #3,%d1
+    bne.s .seed_next
+.seed_done:
     rts
 
 /* d7 track, d4 chord slot, a2 scratch pitch. The same scratch byte is
@@ -212,19 +333,21 @@ bf_note:
     andi.l #3,%d0
     bne.w .restore /* Harmony has already generated the follower chord before arp. */
     .endif
+    tst.l %d4
+    bne.s .root_ready
     tst.b (%a2)
-    bmi.s .restore
+    bmi.w .restore
+.root_ready:
     move.l %d7,%d0
     jsr bf_source_resolve
     cmp.l %d7,%d0
     beq.s .restore
 .resolved:
+    move.l %d0,%d2
     move.l %d7,%d1
     jsr bf_register
     cmpi.l #256,%d0
     beq.s .restore
-    tst.l %d4
-    bne.s .follower_extra
     /* TRAN is the follower's signed semitone offset (including step locks).
      * Read the original live lane; scratch has already been transposed and
      * scale-corrected by stock. Do not add that processing a second time.
@@ -233,6 +356,35 @@ bf_note:
     move.b 0x22c(%a5),%d1
     subi.l #64,%d1
     add.l %d1,%d0
+    tst.l %d4
+    beq.s .follower_bounds
+    tst.b -4(%fp)
+    bmi.s .follower_extra
+    .ifdef HAVE_HARMONY
+    move.l %d2,-(%sp)
+    move.l %d0,-(%sp)
+    move.l %d2,%d0
+    jsr mh_active
+    andi.l #3,%d0
+    move.l %d0,%d1
+    move.l (%sp)+,%d0
+    move.l (%sp)+,%d2
+    tst.l %d1
+    bne.w .follower_extra
+    .endif
+    move.l %d2,%d1
+    add.l %d2,%d1
+    add.l %d2,%d1
+    add.l %d4,%d1
+    subq.l #1,%d1
+    lea bf_intervals,%a0
+    moveq #0,%d2
+    move.b (%a0,%d1.l),%d2
+    cmpi.b #0x80,%d2
+    beq.s .follower_extra
+    extb.l %d2
+    add.l %d2,%d0
+.follower_bounds:
     cmpi.l #127,%d0
     bhi.s .follower_extra      /* also rejects negative pitches, no wrapping */
     move.b %d0,(%a2)
@@ -369,6 +521,9 @@ bf_roots:
 
     .global bf_pitches
 bf_pitches: .space 8,0xff /* absolute source roots, independently of receiver register */
+
+    .global bf_intervals
+bf_intervals: .space 24,0x80 /* three effective source notes per track, relative to root */
 
 /* d0 physical encoder, d1 raw movement -> d0 choice delta.
  * Stock fixed-point detent accumulator; four counts per choice, at most one

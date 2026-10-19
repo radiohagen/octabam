@@ -59,7 +59,7 @@ def machine_gate(image):
         written_addresses.add(address)
         # Only module state, scratch output, the displaced stock write and
         # a bounded stack frame may change during these machine-code calls.
-        allowed = tuple((sym[name],sym[name]+size) for name,size in (('bf_history',128),('bf_response_context',64),('bf_response_anchor',32),('bf_response_seen',32),('bf_response_pool',32))) + ((root, root + 8), (sym["bf_pitches"], sym["bf_pitches"] + 8), *tuple((m.part_address(t,3),m.part_address(t,3)+1) for t in range(8)),
+        allowed = tuple((sym[name],sym[name]+size) for name,size in (('bf_history',128),('bf_response_context',64),('bf_response_anchor',32),('bf_response_seen',32),('bf_response_pool',32),('bf_intervals',24))) + ((root, root + 8), (sym["bf_pitches"], sym["bf_pitches"] + 8), *tuple((m.part_address(t,3),m.part_address(t,3)+1) for t in range(8)),
                    *tuple((0x100a4ece+0x4e2+t*36+3,0x100a4ece+0x4e2+t*36+4) for t in range(8)),
                    (0x400e21e0+0x95048,0x400e21e0+0x95049),
                    (0x400e21e0+0x9b332,0x400e21e0+0x9b336),
@@ -82,11 +82,12 @@ def machine_gate(image):
     def note(track, slot, value, transpose=64):
         before = [0x12340000 + i for i in range(16)]
         before[4], before[7], before[10], before[15] = slot, track, pitch, stack
-        before[13] = 0x47002000
+        before[13], before[14] = 0x47002000, 0x47004000
         uc.reg_write(UC_M68K_REG_SR, 0x2700)
         for reg, val in zip(REGS, before):
             uc.reg_write(reg, val)
         uc.mem_write(pitch - 1, bytes((0xa5, value, 0x5a)))
+        uc.mem_write(before[14] - 4, b'\x30')
         uc.mem_write(before[13] + 0x22c, bytes((transpose,)))
         arrivals.clear()
         uc.emu_start(SITE, 0, count=3000)
@@ -225,7 +226,9 @@ def machine_gate(image):
         uc.reg_write(UC_M68K_REG_A7, stack)
         arrivals.clear()
         before = [uc.reg_read(r) for r in REGS]
-        uc.emu_start(0x4009f986, 0, count=4000)
+        # The composed Harmony path reaches 4,350 instructions in this
+        # eight-track fixture; keep a bounded allowance above that path.
+        uc.emu_start(0x4009f986, 0, count=5000)
         assert arrivals == [0x4009f98c], ('pre-capture did not finish',hex(uc.reg_read(UC_M68K_REG_PC)))
         before[8] = 0x80006676  # displaced lea
         assert [uc.reg_read(r) for r in REGS] == before
@@ -334,12 +337,14 @@ def port_case(image, project, arp=False, leader=0, enabled=True, live_change=Non
         if held_boundary:
             # This deliberately truncated run proves the live-change instant
             # falls inside an active bass note, rather than between notes.
-            assert (2, 36 if label == 'patched' else 48) in held, (label, held)
+            native_first = next(e[2] for e in results['stock'] if e[:2] == ('on', 2)) if label == 'patched' else next(e[2] for e in events if e[:2] == ('on', 2))
+            assert (2, 36 if label == 'patched' else native_first) in held, (label, held)
         else:
             assert not held, ('hanging notes', label, held)
     stock, patched = results['stock'], results['patched']
     if held_boundary:
-        assert [e[2] for e in patched if e[:2] == ('on', 2)] == [48, 36, 36]
+        native_first = next(e[2] for e in stock if e[:2] == ('on', 2))
+        assert [e[2] for e in patched if e[:2] == ('on', 2)] == [native_first, 36, 36]
         print('  [ok] port UART: bass C is still held at frame 1500, the live RFOL change boundary')
         return dict(status='pass', intentionally_truncated=True, image_sha256=hashes)
     if not enabled:
@@ -361,16 +366,23 @@ def port_case(image, project, arp=False, leader=0, enabled=True, live_change=Non
         assert leader_notes == [60, 65, 69, 67]
     assert [e[2] for e in stock if e[:2] == ('on', 3)] == [72, 74, 76]
     bass = [e for e in patched if e[:2] == ('on', bass_ch)]
-    expected = ([48, 36, 36, 48, 48, 55, 48] if live_change == 'off' else
-                [48, 36, 36, 38, 38, 40] if live_change == 'source' else
-                [48, 36, 36, 41, 43, 43])
+    first_native = next(e[2] for e in stock if e[:2] == ('on', bass_ch))
+    expected = ([first_native, 36, 36, first_native, first_native,
+                 first_native + 7, first_native] if live_change == 'off' else
+                [first_native, 36, 36, 38, 38, 40] if live_change == 'source' else
+                [first_native, 36, 40, 43, 36, 40, 43, 41, 45, 48,
+                 43, 47, 50, 43, 47, 50] if arp else
+                [first_native, 36, 36, 41, 45, 43, 43])
     if offsets is not None:
         assert not live_change and not arp and not held_boundary
-        expected = [n + offsets.get(step, 7) for step, n in zip((0, 2, 3, 6, 8, 10), expected)]
+        expected = [first_native, 36 + offsets.get(2, 7),
+                    36 + offsets.get(3, 7), 41 + offsets.get(6, 7),
+                    45 + offsets.get(6, 7), 43 + offsets.get(8, 7),
+                    43 + offsets.get(10, 7)]
         # Prove the fixture's base setting and P-locks are active in stock too.
         stock_expected = []
         for step in (0, 2, 3, 6, 8, 10):
-            pitch = 48 + offsets.get(step, 7)
+            pitch = 47 + offsets.get(step, 7)
             stock_expected.append(pitch)
             if step == 8:
                 stock_expected.append(pitch + 7)
@@ -380,7 +392,10 @@ def port_case(image, project, arp=False, leader=0, enabled=True, live_change=Non
     # F starts while the old C bass is still held; its release stays C.
     f = patched.index(('on', leader_ch, 65, 90+leader))
     held_pitch = 36 + offsets.get(3, 7) if offsets is not None else 36
-    assert patched.index(('off', bass_ch, held_pitch, 0), f) < patched.index(('on', bass_ch, expected[3], 91), f)
+    first_follower_f = (first_native if live_change == 'off' else
+                        38 if live_change == 'source' else
+                        41 + (offsets.get(6, 7) if offsets is not None else 0))
+    assert patched.index(('off', bass_ch, held_pitch, 0), f) < patched.index(('on', bass_ch, first_follower_f, 91), f)
     print(f'  [ok] port UART ({work.name}): independent rhythm, C/F/G, same-step order, held-note release, other tracks and stored banks')
     return dict(status='pass', leader_notes=leader_notes, bass_notes=[e[2] for e in bass], image_sha256=hashes)
 

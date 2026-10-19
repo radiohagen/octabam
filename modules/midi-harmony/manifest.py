@@ -16,6 +16,7 @@ MODULE = Module(
     doc='Scale-degree roots, generated chords and CHORD PLAY using native ARP KEY; optional MIDI Follow.',
     requires=('MIDI PART STATE','STORE','MIDI SRAM'),
     linked=(Linked('chordpart', 'modules/midi-harmony/chord-part.s', dram=True),
+            Linked('harmonytransport', 'modules/midi-harmony/transport.s', dram=True),
             Linked('harmonyownership', 'modules/midi-harmony/ownership.s', dram=True),
             Linked('harmonysettings', 'modules/midi-harmony/settings.s', dram=True, include=follow_inc),
             Linked('midiharmony', 'modules/midi-harmony/harmony.s', dram=True, include=follow_inc),
@@ -75,6 +76,10 @@ MODULE = Module(
         Poke(0x400d43aa, bytes.fromhex('00000080'), bytes.fromhex('00000054'), 'Native Part DEG range 0..83')),
     claims=Claims(part_window=tuple((0x4e2+36*t+f, 1, 'Harmony Part setting') for t in range(8) for f in (5,16,18,19))),
     detours=(
+        Detour(0x4009c3d4, bytes.fromhex('23c0800065b8'), 'harmonytransport', 'mh_start_a', 'reset Harmony accumulator on transport start'),
+        Detour(0x4009c4d4, bytes.fromhex('23c0800065b8'), 'harmonytransport', 'mh_start_b', 'reset Harmony accumulator on transport resume'),
+        Detour(0x4009fbb2, bytes.fromhex('7339400d807c'), 'harmonytransport', 'mh_sent_a', 'advance Harmony accumulator after successful note-on'),
+        Detour(0x4009fcfa, bytes.fromhex('7139400d807c'), 'harmonytransport', 'mh_sent_b', 'advance Harmony accumulator after ownership replacement'),
         *(Detour(addr, bytes.fromhex('41f946c78d70'), 'harmonyownership', symbol,
                  'track-owned generated keyboard release slot') for addr,symbol in (
                      (0x4009eab4,'mh_key_slot_on'), (0x4009eaea,'mh_key_slot_arp'),

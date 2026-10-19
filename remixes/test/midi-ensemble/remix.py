@@ -5,7 +5,7 @@ REMIX = Remix(
     proof_note='',
     doc='Scales, Follow and Harmony with KITS, MIDI SCENES and upstream P2 retention and track-local Harmony.',
     modules=('STORE', 'KITS', 'MIDI SCENES', 'MIDI SRAM', 'MIDI PART STATE',
-             'MIDI FOLLOW', 'MIDI SCALES', 'MIDI HARMONY', 'HARMONY PLOCKS',
+             'MIDI FOLLOW', 'MIDI SCALES', 'MIDI HARMONY', 'HARMONY FOLLOW', 'HARMONY PLOCKS',
              'SCENES P2', 'PLOCKS P2',
              'FILTER', 'EQUALIZER', 'DJ EQ', 'PHASER', 'FLANGER', 'CHORUS',
              'SPATIALIZER', 'COMB FILTER', 'COMPRESSOR', 'LO-FI', 'DELAY',

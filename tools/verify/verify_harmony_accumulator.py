@@ -124,29 +124,62 @@ def main():
         assert event()==(48 if policy&2 else 53)
         m.c('ha_transport_c')
         assert event()==(48 if policy&1 else 50 if policy&2 else 55)
-    for hook,continuation in (('mp_start_a',0x4009c3da),('mp_start_b',0x4009c4da)):
+    # Enter the installed firmware detour, not an uninstalled helper with the
+    # same behavior. Both standalone Harmony and the Follow bridge must notify
+    # every selected consumer exactly once.
+    with_follow = 'bf_register_sent' in s
+    events = {
+        'start_a': (0x4009c3d4, 0x4009c3da),
+        'start_b': (0x4009c4d4, 0x4009c4da),
+        'sent_a': (0x4009fbb2, 0x4009fbb8),
+        'sent_b': (0x4009fcfa, 0x4009fd00),
+    }
+    for name, (site, _) in events.items():
+        expected = s[('bf_' if with_follow else 'mh_') + name]
+        assert bytes(u.mem_read(site, 6)) == b'\x4e\xf9' + expected.to_bytes(4, 'big'), name
+        s['installed_' + name] = site
+
+    def installed(name, d0=0, regs=None, notify=True):
+        callbacks = (['ha_transport_c'] if name.startswith('start') else ['ha_note_sent'])
+        if with_follow:
+            callbacks += ['bf_register_reset' if name.startswith('start') else 'bf_register_sent']
+        counts = {symbol: 0 for symbol in callbacks}
+        def count_callback(uc, pc, size, data):
+            for symbol in callbacks:
+                if pc == s[symbol]:
+                    counts[symbol] += 1
+        token = u.hook_add(UC_HOOK_CODE, count_callback)
+        try:
+            result = m.call('installed_' + name, d0, stop=events[name][1], regs=regs)
+        finally:
+            u.hook_del(token)
+        assert counts == {symbol: int(notify) for symbol in callbacks}, (name, counts)
+        return result
+
+    for hook in ('start_a', 'start_b'):
         setting(0,7,reset=1,base=9)
         assert event()==48 and event()==50
         saved={UC_M68K_REG_D1:0x12345678,UC_M68K_REG_A0:m.scratch,UC_M68K_REG_A1:m.scratch+32}
-        assert m.call(hook,1,stop=continuation,regs=saved)==1
+        assert installed(hook,1,regs=saved)==1
         assert all(u.reg_read(reg)==value for reg,value in saved.items())
         assert u.reg_read(UC_M68K_REG_A7)==m.stack
         assert bytes(u.mem_read(0x800065b8,4))==b'\0\0\0\1'
         assert event()==48
     # Actual successful-send continuations: velocity zero and live arp pools
     # cannot consume a sequenced event. Register/stack ABI executes as linked.
-    setting(0,7,base=9)
-    m.c('ha_fire_c',0,0,0,0)
-    u.mem_write(0x46c77b1e,b'\0');u.mem_write(0x400d807c,b'\x90\x30\0')
-    m.call('mp_sent_a',stop=0x4009fbb8,regs={UC_M68K_REG_D7:0})
-    assert event(sound=False)==48
-    u.mem_write(0x400d807e,b'\x64');u.mem_write(0x46c77b1e,b'\1')
-    m.call('mp_sent_b',stop=0x4009fd00,regs={UC_M68K_REG_D7:0})
-    assert event(sound=False)==48
-    u.mem_write(0x46c77b1e,b'\0')
-    m.call('mp_sent_a',stop=0x4009fbb8,regs={UC_M68K_REG_D7:0})
-    assert event(sound=False)==50
-    print('[ok] inherited/OFF, silent occurrences, reset policies and successful-send guards',flush=True)
+    for hook in ('sent_a', 'sent_b'):
+        setting(0,7,base=9)
+        m.c('ha_fire_c',0,0,0,0)
+        u.mem_write(0x46c77b1e,b'\0');u.mem_write(0x400d807c,b'\x90\x30\0')
+        installed(hook,regs={UC_M68K_REG_D7:0},notify=False)
+        assert event(sound=False)==48
+        u.mem_write(0x400d807e,b'\x64');u.mem_write(0x46c77b1e,b'\1')
+        installed(hook,regs={UC_M68K_REG_D7:0},notify=False)
+        assert event(sound=False)==48
+        u.mem_write(0x46c77b1e,b'\0')
+        installed(hook,regs={UC_M68K_REG_D7:0})
+        assert event(sound=False)==50
+    print('[ok] installed event hooks: one callback per selected consumer; silent/live guards, reset policies and register ABI',flush=True)
     # All 16 states survive a dense same-step checkpoint, including OFF.
     expected=bytearray()
     for lane in range(128):

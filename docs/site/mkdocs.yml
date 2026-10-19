@@ -80,6 +80,7 @@ nav:
       - MIDI Loopback Scenes: reference/modules/midi-loopback-scenes.md
       - MIDI Part State: reference/modules/midi-part-state.md
       - MIDI Sram: reference/modules/midi-sram.md
+      - Harmony Follow: reference/modules/harmony-follow.md
       - Harmony Plocks: reference/modules/harmony-plocks.md
       - USB: reference/modules/usb.md
       - CC Map: reference/modules/cc-map.md

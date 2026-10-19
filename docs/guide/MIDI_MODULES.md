@@ -10,13 +10,23 @@ as the working surface. You can select the features separately in a remix.
 | Module | Player decision | What remains your own |
 |---|---|---|
 | [MIDI Scales](../../modules/midi-scales/README.md) | Which key and mode should constrain the notes? | Your notes, rhythm, velocity and arp |
-| [MIDI Follow](../../modules/midi-follow/README.md) | Which track supplies this track's harmonic root? | Receiver rhythm, register, transpose and instrument |
+| [MIDI Follow](../../modules/midi-follow/README.md) | Which track supplies this track's notes or harmonic root? | Receiver rhythm, register, transpose and instrument |
 | [MIDI Harmony](../../modules/midi-harmony/README.md) | How should one root become a note or chord? | Root sequence, quality locks, voicing and performance gestures |
 
 Scales extends the native KEY choice to seven diatonic modes in all twelve
 keys. Follow selects a track by RFOL, independently of its output channel.
 Harmony stores roots as degrees, generates chords and provides CHORD PLAY.
 None requires an audio effect or a separate MIDI processor.
+
+With source HARM OFF, Follow carries all effective N1–4 notes. With source HARM
+NOTE/CHORD, it carries only the resolved degree:oct root as Note 1; generated
+source chord tones are ignored. A follower with HARM OFF plays the supplied
+set, even if its own NOT2–4 slots are empty. A follower with HARM NOTE/CHORD
+uses the supplied root to generate its own notes. Harmony absent behaves as OFF.
+
+The combined selections include HARMONY FOLLOW, which shares transport and
+successful-note events between the modules. It adds no panel controls or stored
+settings. Part State remains responsible for native Part persistence.
 
 ## Start with a chord track and a bass
 

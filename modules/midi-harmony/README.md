@@ -82,6 +82,15 @@ Copy/paste/undo includes them; clearing step locks restores inheritance.
 Configuration survives save/reload and retained restart; running offsets are
 volatile and start at zero after project load or power-on.
 
+## MIDI Follow
+
+When both modules are selected, include [HARMONY FOLLOW](../harmony-follow/README.md)
+to share transport and successful-note events. Follow supplies a source note set.
+A HARM OFF source supplies N1–4; a HARM NOTE/CHORD source supplies only its
+resolved degree:oct root as Note 1. HARM OFF on the follower plays the supplied
+set. HARM NOTE/CHORD on the follower generates its own notes from that root.
+The source's generated chord voices are ignored.
+
 ## Chord Play
 
 With HARM CHORD, select **CHORD PLAY** using FUNC + UP/DOWN.

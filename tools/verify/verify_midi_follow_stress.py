@@ -25,6 +25,7 @@ def machine(seed=20261008, steps=12000):
     u, s = m.uc, m.sym
     rng = random.Random(seed)
     lane = m.scratch+0x1000
+    frame = m.scratch+0x3000
     graphs = [list(range(2,9))+[0], [0]+list(range(1,8))]
     # Every possible order of the longest acyclic chain: all track positions.
     count = 0
@@ -59,6 +60,7 @@ def machine(seed=20261008, steps=12000):
         m.follow_write('source',bytes(graph),0)
         u.mem_write(s['bf_pitches'],bytes(roots))
         u.mem_write(s['bf_roots'],bytes(36+n%12 if n<128 else 255 for n in roots))
+        u.mem_write(s['bf_intervals'],bytes((0x80,))*24)
         modes = [rng.choice((0,2)) for _ in range(8)]
         fixed = [rng.randrange(11) for _ in range(8)]
         offsets = [rng.randrange(-2,3) for _ in range(8)]
@@ -77,10 +79,12 @@ def machine(seed=20261008, steps=12000):
                     pitch = (root+12*offsets[t] if modes[t] else root%12+12*fixed[t])+tran
                     expected = pitch if slot==0 and 0<=pitch<128 else 255
                 u.mem_write(m.scratch,bytes((original,)))
+                u.mem_write(frame-4,bytes((original,))*4)
                 u.mem_write(lane+0x22c,bytes((64+tran,)))
                 m.call('bf_note',stop=0x4009fb86 if expected<128 else 0x4009fd2a,
                        regs={UC_M68K_REG_D7:t,UC_M68K_REG_D4:slot,
-                             UC_M68K_REG_A2:m.scratch,UC_M68K_REG_A5:lane})
+                             UC_M68K_REG_A2:m.scratch,UC_M68K_REG_A5:lane,
+                             UC_M68K_REG_A6:frame})
                 assert u.mem_read(m.scratch,1)[0]==expected,(seed,graph,t,slot,original,tran,expected)
                 assert all(m.stack-192<=a and a+n<=m.stack+4 or a==m.scratch and n==1 for a,n in m.writes),m.writes
                 outputs += 1

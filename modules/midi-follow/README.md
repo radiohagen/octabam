@@ -1,7 +1,8 @@
 # MIDI Follow
 
-Makes one MIDI track follow another track's root notes while keeping its own
-rhythm, velocity and note length. Use it for a bassline that follows a chord progression.
+Makes one MIDI track follow another track's notes while keeping its own
+rhythm, velocity and note length. It can copy a native four-note chord or
+provide a root for the follower's own Harmony arrangement.
 
 ## Use
 
@@ -17,8 +18,8 @@ rhythm, velocity and note length. Use it for a bassline that follows a chord pro
 | REG: FIXED | Uses the source pitch class in OCT 0–10; default octave 3. |
 | REG: GRAV | Ignores source octave; balances small movements with a preference for OCT 0–10. Default octave 3. |
 | REG: SOURCE | Uses the source's full root pitch, shifted by OFFS −2 to +2. Default 0. |
-| UPDT: TRIG | Takes the latest root at the follower's next programmed note. |
-| UPDT: LIVE | Also updates a held follower note when the source root changes. |
+| UPDT: TRIG | Takes the latest logical source notes at the follower's next programmed note. |
+| UPDT: LIVE | Also shifts held follower notes when the source root changes. |
 
 Each mode remembers its own value in the same C control. FIXED is the default;
 RFOL starts OFF and UPDT starts TRIG. Octave names use C0 = MIDI 0.
@@ -39,8 +40,15 @@ ordinary pattern changes alone retain it.
 ## Musical behavior
 
 - RFOL OFF uses native notes. Before a source root is available, playback is unchanged.
-- A source chord or arp supplies its root, not each generated tone. A follower
-  without Harmony plays one root and suppresses NOTE2–4.
+- With HARM OFF on the source, its effective NOTE and NOT2–4 form the followed
+  note set. A follower with HARM OFF (or no Harmony module) plays that set in
+  its selected register, with its own TRAN. Its stored NOT2–4 do not add notes.
+- With HARM NOTE or CHORD on the source, only its resolved `degree:oct` root
+  is followed. Generated source chord and arp tones are not copied.
+- With HARM NOTE or CHORD on the follower, Harmony uses the followed root and
+  generates that track's own notes, quality and voicing.
+- LIVE shifts currently held notes when the source root moves. A change to
+  native NOT2–4 with the same root takes effect at the follower's next trig.
 - Several tracks can follow one source. Chains use the ultimate source and
   the final follower's settings; intermediate transpositions do not accumulate.
   The selector prevents self-following and cycles.
@@ -57,6 +65,8 @@ RFOL, REG, all three remembered values and UPDT are native Part settings per tra
 Runtime roots and held notes are not saved. Requires **MIDI Part State**;
 Harmony, Scales and KITS are optional. The greenfield packed format reuses
 the existing Follow fields; no additional persistent bytes or step data.
+EUCLID shares the transport start/resume detours and needs a shared-hook
+bridge before it can be selected with Follow.
 Re-enter register settings from an earlier Follow build; there is no migration.
 
 Stock 1.40C preserves the source-track number but resets the mode, response

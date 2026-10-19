@@ -46,7 +46,7 @@ class InterruptMaskTrace:
 
 def symbols():
     raw = subprocess.check_output(['m68k-elf-nm', str(ROOT/'out/platform/runtime/runtime.elf')], text=True)
-    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [Tt] ((?:hd|mh|bf|ms)_\w+)$',raw,re.M)}
+    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [TtBbDdAa] ((?:hd|mh|bf|ms|ch|mp|ha)_\w+)$',raw,re.M)}
 
 class Machine:
     def __init__(self, symbol_loader=symbols, artifact_root=None):
