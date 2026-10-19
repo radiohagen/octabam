@@ -105,8 +105,10 @@ mp_native_init:
     move.l %d2,-(%sp)
     move.l 8(%sp),%a1
     jmp 0x4002089e
+    .ifdef HAVE_MIDI_SRAM
 .pool_copy:
     jmp rp_native_copy
+    .endif
 .init_stock:
     lea -88(%sp),%sp
     movem.l %d2-%d7/%a2-%a6,(%sp)
