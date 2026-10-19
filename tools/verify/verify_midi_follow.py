@@ -226,7 +226,9 @@ def machine_gate(image):
         uc.reg_write(UC_M68K_REG_A7, stack)
         arrivals.clear()
         before = [uc.reg_read(r) for r in REGS]
-        uc.emu_start(0x4009f986, 0, count=4000)
+        # The composed Harmony path reaches 4,350 instructions in this
+        # eight-track fixture; keep a bounded allowance above that path.
+        uc.emu_start(0x4009f986, 0, count=5000)
         assert arrivals == [0x4009f98c], ('pre-capture did not finish',hex(uc.reg_read(UC_M68K_REG_PC)))
         before[8] = 0x80006676  # displaced lea
         assert [uc.reg_read(r) for r in REGS] == before
