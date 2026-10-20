@@ -106,7 +106,7 @@ def _label(m) -> str:
     }
     if m.name in names:
         return title_case(names[m.name])
-    acronyms = {"USB", "MIDI", "CC", "FX1", "FX2", "DSP", "CPU", "CF", "LFO", "LOFI2", "BRAIN"}
+    acronyms = {"USB", "MIDI", "CC", "FX1", "FX2", "DSP", "CPU", "CF", "LFO", "LOFI2", "BRAIN", "SRAM"}
     words = m.key.replace("_", " ").split()
     return title_case(" ".join(word if word in acronyms else word.lower() for word in words))
 

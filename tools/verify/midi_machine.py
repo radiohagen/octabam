@@ -44,6 +44,8 @@ def dram_map_size(layout):
 
 
 class Machine:
+    def instruction_limit(self, name):
+        return 20000
     def __init__(self, symbol_loader, artifact_root=None):
         self.sym=symbol_loader(); self.uc=Uc(UC_ARCH_M68K,UC_MODE_BIG_ENDIAN)
         out = artifact_root or ROOT/'out'
@@ -86,6 +88,6 @@ class Machine:
         u.reg_write(UC_M68K_REG_D0,d0);u.reg_write(UC_M68K_REG_D1,d1)
         if a0 is not None:u.reg_write(UC_M68K_REG_A0,a0)
         for r,v in (regs or {}).items():u.reg_write(r,v)
-        u.emu_start(self.sym[name],0,count=20000)
+        u.emu_start(self.sym[name],0,count=self.instruction_limit(name))
         assert self.arrival in self.stops,(name,hex(u.reg_read(UC_M68K_REG_PC)))
         return u.reg_read(UC_M68K_REG_D0)
