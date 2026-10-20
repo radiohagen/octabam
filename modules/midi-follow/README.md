@@ -74,4 +74,15 @@ and octave fields. After saving that bank on stock, Follow returns as **FIXED,
 octave 0, TRIG**, with a remembered SOURCE offset of **-2 octaves**. Keep a
 separate project copy to preserve these settings.
 
+## Verification and limits
+
+Measured in the ColdFire emulator: native one-to-four-note following,
+register and TRAN behavior, source order, mute handling, LIVE updates,
+Part changes and balanced note releases. The linked-code gates also check
+cycle rejection, register preservation and bounded memory writes.
+
+Physical MIDI timing and behavior on an MKI/MKII remain unverified. The
+emulator results support an expectation of matching device behavior; they
+do not establish it. No hardware flash or acceptance is claimed.
+
 [Detailed behavior, implementation and verification](DEVELOPMENT.md).

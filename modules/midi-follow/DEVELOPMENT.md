@@ -179,7 +179,7 @@ Native transport start/resume resets all history. Playing Part/epoch and
 source/mode/home changes invalidate the affected receiver; unrelated UI
 Parts and ordinary pattern changes do not.
 
-Run `python3 modules/midi-follow/upstream/modules/midi-follow/generate.py --check` for generated assembly,
+Run `python3 modules/midi-follow/generate.py --check` for generated assembly,
 `verify_midi_follow_gravity.py` for linked policy/lifecycle/packing, and
 `verify_midi_follow_gravity_port.py --project DIR` for physical panel events
 and full-firmware MIDI output. These are emulator proofs, not hardware tests.
@@ -239,10 +239,3 @@ project copy, `verify_midi_follow_response_port.py --project DIR` checks LIVE
 response through physical panel events and MIDI output. Combined Harmony
 settings/persistence coverage lives in `verify_midi_harmony_port.py --settings-only`,
 and NOTE SETUP confirmation in `verify_midi_setup_port.py`.
-
-## Harmony event composition
-
-Follow works without Harmony. When both are selected, HARMONY FOLLOW overrides
-their four shared event sites with Follow's dispatcher, which calls both consumers
-once. Harmony has its own dispatcher for standalone use. Part State owns no
-transport or successful-note hook. No saved setting or storage layout changes.
