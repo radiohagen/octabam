@@ -106,3 +106,28 @@ new prompt on a unit.
 With COPY PROJECT in the remix, LEVEL (control 6) scrolls that module's
 project LISTPOP only (`M_CBS == name_fp`, the same gate `kits_level` uses
 for KITS' own lists). Other stock LISTPOPs are left to stock / `kits_level`.
+
+## Guarded Harmony saves
+
+MIDI Harmony is an optional STORE client. It receives `loadall_post`,
+`loadmask_post`, `newproj`, `newproj_post`, `bankw_guard`, `bankcopy_guard`,
+`bankcopy_done`, `tocs1` and `fromcs1`. Existing client order is preserved.
+
+`newproj_post` runs after the native new-project routine. The three checked
+phases return d0: a negative result stops the operation and returns through
+the native error path. `bankw_guard` runs before native bank writes and
+`bankw_pre`. `bankcopy_guard` runs before copying anything. `bankcopy_done`
+runs after successful native copying and the existing `bankcopy` callbacks.
+Both copy notifications are skipped after a native copy failure.
+
+Checked callbacks receive the same original arguments even if an earlier
+callback clobbers registers. For copy guards, d0 is the destination and d1
+the source; the done phase also receives the native result in d2. Bank-write
+guards receive the bank mask in d1. Callbacks must balance the stack.
+A done-phase error cannot undo completed copies: these phases are ordered,
+not transactional. Optional code and tables are omitted when unused.
+
+The new checked phases and native-failure behavior are emulator-tested by
+`verify_store_copy.py` and Harmony's save/load gates; they have not been
+qualified on hardware. Earlier STORE hardware evidence covers the earlier
+implementation only.
