@@ -1,11 +1,15 @@
-# Bass Follow test remix
+# MIDI Follow test remix
 
-Stock effects plus [MIDI FOLLOW](../../../modules/midi-follow/README.md).
-MIDI NOTE SETUP knob D adds **RFOL: OFF / T1–T8**, independently per track.
-Followers place source roots at MIDI notes 36–47 and carry the source's native
-N2–4 intervals; sources may play chords or arps.
-All tracks default OFF. Settings are RAM-only; no Scale Quantizer dependency.
-Experimental, emulator testing only; no hardware claim.
+Selects MIDI Follow and MIDI Part State with stock audio effects. No standard
+remix selection is changed. Harmony and Scales are not required or selected.
 
-Build/check: `make check REMIX=midi-follow`. The module README describes the
-optional virtual-project/panel tests and the prototype's limitations.
+Run `make check REMIX=midi-follow` for the standalone image gates. The
+[module developer notes](../../../modules/midi-follow/DEVELOPMENT.md) describe
+routing, register, response and optional project-based emulator checks.
+
+Settings are saved in the native Part. RFOL defaults OFF; when enabled, FIXED
+register defaults to octave 3. Other register modes and TRIG/LIVE updates are
+available through the FOLLOW window.
+
+Hardware testing remains outstanding. Emulator results do not establish
+physical MIDI timing or external-instrument behavior.

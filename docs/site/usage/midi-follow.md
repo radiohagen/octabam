@@ -20,19 +20,24 @@ source rest retains the last notes. Source mute silences its output while
 allowing its notes to drive followers. Give source and follower separate MIDI
 channels while checking the result.
 
-## Storage and Composition
+## Storage and compatibility
 
-RFOL, register choices and UPDT live in each native Part. Fresh Parts default
-to RFOL OFF, FIXED octave 3 and TRIG. Select **MIDI PART STATE** with Follow;
-the standalone test remix does so. Harmony is optional. With Harmony NOTE or
-CHORD on the source, only its resolved degree:oct root is followed. With
-Harmony NOTE or CHORD on the follower, that track generates its own chord
-from the followed root. The combined Harmony image needs the separate MIDI
-Part State to MIDI SRAM long-branch fix before it can link.
-EUCLID uses Follow's transport start/resume sites, so that combination needs
-a shared-hook bridge and is currently refused.
+RFOL, register choices and UPDT are saved in each Part. Fresh Parts default
+to RFOL OFF, FIXED octave 3 and TRIG. MIDI Follow requires **MIDI Part State**.
+Harmony is optional, and the standalone Follow remix works without it.
+MIDI Follow cannot currently be combined with **EUCLID**.
 
-Stock 1.40C loads the source-track number but resets Follow's mode, response
-and octave fields when saving the bank. Keep a project backup before returning
-to stock. This module has emulator MIDI-output checks; hardware behavior has
-not been verified.
+In a remix with Harmony/Follow integration, a source with HARM NOTE or CHORD
+supplies only its resolved degree:oct root. A follower with HARM NOTE or CHORD
+generates its own notes from that root. Generated source chord and arp notes
+are not copied.
+
+Stock 1.40C preserves the source-track number but resets Follow's register and
+update settings when saving the bank. Returning to Follow after that save
+uses FIXED octave 0 and TRIG, with SOURCE offset reset to −2 octaves. Keep a
+separate project copy before saving in stock firmware.
+
+## Testing status
+
+MIDI Follow has been tested in the emulator. **Hardware testing is still to
+be done**, including physical MIDI output, timing and note releases.

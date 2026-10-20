@@ -107,8 +107,7 @@ Chains resolve to their final source: T3 → T2 → T1 follows T1's root.
   full-firmware emulator tests; unusual mute/plays-free modes remain untested
   on hardware.
 
-On its own, MIDI Follow copies native one to four note sets. MIDI Harmony optionally
-adds live keyboard chords and follower chords/arp, as described below. Audio
+On its own, MIDI Follow copies native one to four note sets. Optional Harmony integration adds live keyboard roots and follower chords/arp. Audio
 following and live transposition of a running pattern are outside its scope.
 Shared output channels have ownership stress coverage; physical MIDI timing
 requires instrument validation.
@@ -132,8 +131,8 @@ stock NOTE descriptor, drawer and encoder dispatch. No DSP code is added.
   stock note ownership and release bookkeeping (`0x4009fbbc` / `0x4009fd04`).
   Chained resolution has a defensive eight-hop bound.
 - `0x4009c3d4` / `0x4009c4d4`: reset the GRAV register on transport
-  start/resume. EUCLID uses these spans too, so both modules need a
-  shared-hook bridge for one remix.
+  start/resume. EUCLID also owns these spans; the manifest rejects that
+  combination. Resolving this conflict is outside the standalone module.
 - `0x4009fbb2` / `0x4009fcfa`: commit GRAV after a successful sequenced
   note-on while stock retains release bookkeeping.
 - NOTE SETUP's unused D slot is labelled RFOL and enabled. Its encoder callback
@@ -152,8 +151,6 @@ playback uses each MIDI track's playing Part through MIDI PART STATE.
 `bf_pitches[8]` retains full MIDI root pitches. `bf_intervals[8][3]` holds
 effective source N2–4 offsets from that root, with 0x80 for absent voices.
 These histories are runtime-only.
-Harmony calls `bf_register` before applying the receiver's TRAN; its adapter
-also publishes live keyboard root octaves into `bf_pitches`.
 Native Part operations own persistence, with or without KITS. The generic
 MIDI sender is not hooked. The existing DRAM platform reserves about 10 MB of sample RAM;
 this small module shares that reserve when composed with other DRAM modules.
@@ -181,7 +178,7 @@ Parts and ordinary pattern changes do not.
 
 Run `python3 modules/midi-follow/generate.py --check` for generated assembly,
 `verify_midi_follow_gravity.py` for linked policy/lifecycle/packing, and
-`verify_midi_follow_gravity_port.py --project DIR` for physical panel events
+`verify_midi_follow_gravity_port.py --project DIR` for emulated panel events
 and full-firmware MIDI output. These are emulator proofs, not hardware tests.
 
 ## Root update timing: TRIG / LIVE
@@ -216,7 +213,7 @@ receiver keyboard notes.
 `tools/verify/verify_midi_follow_response.py` checks linked machine code,
 release deadlines, silence gates and MIDI ownership. The companion
 `tools/verify/verify_midi_follow_response_port.py --project /path/to/project`
-operates physical encoder D and captures the full firmware's MIDI output.
+operates emulated encoder D and captures the full firmware's MIDI output.
 These tests do not establish physical MIDI latency or external-synth timing.
 
 
@@ -236,6 +233,6 @@ This exercises linked ColdFire code, not physical outgoing-MIDI timing.
 Run `make check REMIX=midi-follow` for the standalone module. The manifest
 runs linked routing, register, response and graph stress checks. With a prepared
 project copy, `verify_midi_follow_response_port.py --project DIR` checks LIVE
-response through physical panel events and MIDI output. Combined Harmony
-settings/persistence coverage lives in `verify_midi_harmony_port.py --settings-only`,
-and NOTE SETUP confirmation in `verify_midi_setup_port.py`.
+response through emulated panel events and captured MIDI output. Hardware
+validation of boot, controls, persistence, MIDI timing and note releases remains
+outstanding. Optional Harmony integration is verified separately.
