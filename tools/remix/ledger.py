@@ -125,6 +125,26 @@ def _overlap(a_start, a_len, b_start, b_len) -> bool:
     return a_start < b_start + b_len and b_start < a_start + a_len
 
 
+def _sram_overlaps(windows):
+    """Overlapping index pairs, in the original declaration/reporting order.
+
+    Sparse pools can declare thousands of separate windows. Once a window
+    ends before the next start, it cannot collide with any later window.
+    Keep same-owner collisions and the existing half-open overlap rule.
+    """
+    active = []
+    pairs = []
+    for index in sorted(range(len(windows)), key=lambda i: windows[i][0]):
+        start, length = windows[index][:2]
+        active = [other for other in active
+                  if windows[other][0] + windows[other][1] > start]
+        for other in active:
+            if _overlap(*windows[other][:2], start, length):
+                pairs.append((max(index, other), min(index, other)))
+        active.append(index)
+    return [(earlier, later) for later, earlier in sorted(pairs)]
+
+
 def check(selected) -> list[str]:
     """Return a list of collisions among these modules. Empty means clean."""
     problems: list[str] = []
@@ -212,14 +232,14 @@ def check(selected) -> list[str]:
                 dsp_hooks[(pl, _pin)] = m.name
 
     # ---- on-chip SRAM windows (Claims.sram) --------------------------------
-    sram: list[tuple[int, int, str, str]] = []
-    for m in selected:
-        for base, length, what in (m.claims.sram if m.claims else ()):
-            for b2, l2, owner, w2 in sram:
-                if _overlap(b2, l2, base, length):
-                    clash("on-chip SRAM", f"{owner}'s {w2}", f"{m.name}'s {what}",
-                          f"0x{max(b2, base):08x}..")
-            sram.append((base, length, m.name, what))
+    sram = [(base, length, m.name, what)
+            for m in selected
+            for base, length, what in (m.claims.sram if m.claims else ())]
+    for earlier, later in _sram_overlaps(sram):
+        b2, _, owner, w2 = sram[earlier]
+        base, _, name, what = sram[later]
+        clash("on-chip SRAM", f"{owner}'s {w2}", f"{name}'s {what}",
+              f"0x{max(b2, base):08x}..")
 
     # ---- ColdFire caves and hook sites ------------------------------------
     caves: list[tuple[int, int, str, str]] = []
