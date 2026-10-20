@@ -29,7 +29,7 @@ def machine_gate():
             u.mem_write(m.stack+4,m.scratch.to_bytes(4,'big')+raw.to_bytes(4,'big'))
             m.call('ms_format')
             result=bytes(u.mem_read(m.scratch,10))
-            assert result[:5].split(b'\0')[0].decode()==['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][key]
+            assert result[:5].split(b'\0')[0].decode()==['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][key], (key, mode, raw, result)
             assert result[5:].split(b'\0')[0].decode()==['MAJ','DOR','PHR','LYD','MIX','MIN','LOC'][mode]
             assert bytes(u.mem_read(m.scratch-1,1))==bytes(u.mem_read(m.scratch+10,1))==b'\xa5'
     for raw in [0,85,127,255]:
