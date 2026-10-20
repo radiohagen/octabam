@@ -16,6 +16,7 @@ from unicorn.m68k_const import *
 from verify_harmony_degree_codec import MODES
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+SOURCE = ROOT / 'modules/midi-harmony/upstream/modules/midi-harmony'
 SIZE = 131
 NONE = 255
 
@@ -37,14 +38,14 @@ def decode(code, scale):
 
 
 def main():
-    subprocess.run(['python3', str(ROOT / 'modules/midi-harmony/upstream/modules/midi-harmony/generate.py'), '--check'], check=True)
+    subprocess.run(['python3', str(SOURCE / 'generate.py'), '--check'], check=True)
     with tempfile.TemporaryDirectory(prefix='harmony-degree-roots-') as tmp:
         out = pathlib.Path(tmp)
         objects = []
         for unit in ('codec', 'roots'):
             obj = out/f'{unit}.o'
             subprocess.run(['m68k-elf-as', '-mcpu=54455', '-o', str(obj),
-                            str(ROOT/f'modules/midi-harmony/{unit}.s')], check=True)
+                            str(SOURCE / f'{unit}.s')], check=True)
             objects.append(str(obj))
         subprocess.run(['m68k-elf-ld', '-Ttext=0x47000000', '-e', 'hd_roots_reset_c',
                         '-o', str(out/'roots.elf'), *objects], check=True)
