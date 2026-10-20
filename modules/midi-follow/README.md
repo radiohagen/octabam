@@ -1,8 +1,8 @@
 # MIDI Follow
 
 Makes one MIDI track follow another track's notes while keeping its own
-rhythm, velocity and note length. It can copy a native four-note chord or
-provide a root for the follower's own Harmony arrangement.
+rhythm, velocity and note length. It follows the source's native N1–4 notes
+and preserves their intervals in the follower's selected register.
 
 ## Use
 
@@ -39,13 +39,8 @@ ordinary pattern changes alone retain it.
 ## Musical behavior
 
 - RFOL OFF uses native notes. Before a source root is available, playback is unchanged.
-- Without Harmony, or with HARM OFF, the source supplies its NOTE and NOT2–4
-  pitches. The follower plays that set in its selected register, with its own
+- The source supplies its NOTE and NOT2–4 pitches. The follower plays that set in its selected register, with its own
   TRAN. Its stored NOT2–4 do not add notes.
-- With HARM NOTE or CHORD on the source, only its resolved `degree:oct` root
-  is followed. Generated source chord and arp tones are not copied.
-- With HARM NOTE or CHORD on the follower, Harmony uses the followed root and
-  generates that track's own notes, quality and voicing.
 - LIVE shifts currently held notes when the source root moves. A change to
   native NOT2–4 with the same root takes effect at the follower's next trig.
 - Several tracks can follow one source. Chains use the ultimate source and
@@ -55,17 +50,13 @@ ordinary pattern changes alone retain it.
   lets its root progression continue driving followers.
 - Same-tick source trigs are captured before followers play. An earlier
   microtimed follower trig uses the preceding root.
-- With Harmony, the follower keeps its own chord shape and voicing. It inherits
-  the source's effective KEY; that KEY is read-only on the follower.
 
 ## Storage and stock firmware
 
 RFOL, REG, all three remembered values and UPDT are native Part settings per track.
 Runtime roots and held notes are not saved. Requires **MIDI Part State**;
-Harmony, Scales and KITS are optional. MIDI Follow cannot currently be
-combined with **EUCLID**. Harmony behavior described above requires a remix
-that includes the Harmony/Follow integration; the standalone Follow remix
-does not include Harmony.
+Scales and KITS are optional. MIDI Follow cannot currently be combined
+with **EUCLID**.
 
 Stock 1.40C preserves the source-track number but resets the mode, response
 and octave fields. After saving that bank on stock, Follow returns as **FIXED,

@@ -24,13 +24,7 @@ channels while checking the result.
 
 RFOL, register choices and UPDT are saved in each Part. Fresh Parts default
 to RFOL OFF, FIXED octave 3 and TRIG. MIDI Follow requires **MIDI Part State**.
-Harmony is optional, and the standalone Follow remix works without it.
 MIDI Follow cannot currently be combined with **EUCLID**.
-
-In a remix with Harmony/Follow integration, a source with HARM NOTE or CHORD
-supplies only its resolved degree:oct root. A follower with HARM NOTE or CHORD
-generates its own notes from that root. Generated source chord and arp notes
-are not copied.
 
 Stock 1.40C preserves the source-track number but resets Follow's register and
 update settings when saving the bank. Returning to Follow after that save
