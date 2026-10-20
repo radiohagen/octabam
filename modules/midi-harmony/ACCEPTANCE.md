@@ -1,4 +1,4 @@
-# Harmony degree hardware acceptance
+# Harmony hardware acceptance
 
 Use the packaged image and a complete copy of a project. Skip KITS and MIDI
 SCENES steps in selections without those modules.
@@ -13,7 +13,8 @@ Automated checks do not establish hardware timing or hardware acceptance.
   One detent advances one scale position; degree 7 advances to degree 1 in the
   next tonic octave. FUNC + A changes only the octave, including on held
   steps and Scene root locks. Hold a trig to edit its degree; push A to unlock it.
-- In HARM CHORD, D is CHRD. In HARM NOTE, D/E/F are inactive.
+- In HARM CHORD, D is CHRD. In HARM NOTE, D/F are inactive.
+  E remains ACC in both modes; hold trigs to edit or toggle its step locks.
 - ARP KEY selects the tonic and scale. KEY OFF uses C major as the reference
   for degrees. Without a selected scale, TRI retains its major chord recipe.
 - OFF restores the native NOTE page. NOT2–4 retain their native stored values.
@@ -30,7 +31,7 @@ the music already in a Part or sequence.
 
 ## Acceptance sequence
 
-1. Change RFOL/HARM on NOTE SETUP and press YES; confirm both remain set.
+1. Change HARM on NOTE SETUP and press YES; confirm it remains set.
    On a MIDI track, choose C minor, HARM CHORD and CHRD TRI. Program three
    trigs with `1:3`, `4:3`, `5:3`. Confirm Cm–Fm–Gm.
 2. Change KEY to D minor. Confirm Dm–Gm–Am and unchanged DEG values. Return
@@ -50,7 +51,7 @@ the music already in a Part or sequence.
    copy it and clear it. Switch banks. Confirm the intended degree defaults
    and explicit root locks stay attached to the correct data.
    With KITS, save two Kits with different DEG/CHRD defaults, HARM, KEY,
-   voicing and Follow settings. Unlocked trigs must inherit the incoming Kit;
+   voicing settings. Unlocked trigs must inherit the incoming Kit;
    explicit DEG and CHRD locks remain pattern data. Load, undo, copy, clear,
    quick-save and reload the Kits, including one from another bank.
    Specifically, load D-minor OFF over C-minor CHORD with an explicit `1:3`:
@@ -62,10 +63,14 @@ the music already in a Part or sequence.
    notes and after changing the selected track.
 8. Save the project, reload it, use Save To New, and power-cycle after an
    unsaved current-bank edit. Confirm both DEG and CHRD, then play the result.
-9. With Follow, test sources before and after the follower in track order,
-   muted sources, TRIG/LIVE response, source-relative octave and an arp.
-   Before the first known source root, the follower uses its own degree under
-   the effective source KEY. Selecting a different source preserves degrees.
+9. Set ACC +1, LOW 0 and HIGH 7. Repeat a short pattern and confirm each
+   step starts unshifted, then advances independently. Lock one step OFF and
+   another -1; clear those locks and confirm default inheritance. Test WRAP,
+   BOUNC, HOLD and ZERO at both limits, and NONE/START/PAT/BOTH reset policies.
+   Rests and suppressed steps must not advance; arp repeats must not advance
+   twice. Save/reload and retained restart must keep settings and locks while
+   starting runtime offsets at zero. In HARMONY, check CHORD/ACCUM navigation,
+   all four displayed encoders, and inactive E/F positions.
 10. Switch HARM OFF and compare ordinary note editing, NOT2–4, recording,
     copying and playback with the current firmware on the original project.
 11. With MIDI SCENES, assign scenes A/B and hold each scene while turning MIDI NOTE
@@ -82,6 +87,9 @@ the music already in a Part or sequence.
 Record the displayed build, device model, receiving synth, steps performed,
 actual notes and any timing or release issue. Retain the exact failing project
 copy and its companion files if a case fails.
+
+MIDI Follow integration needs a separate bridge and is outside this PR's
+acceptance scope.
 
 ## Storage and boundaries
 
