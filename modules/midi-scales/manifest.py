@@ -6,12 +6,12 @@ import runpy
 _SOURCE = pathlib.Path(__file__).resolve().parent / 'upstream/modules/midi-scales/manifest.py'
 MODULE = runpy.run_path(str(_SOURCE), run_name='remix_manifest_midi_scales')['MODULE']
 # Standalone author build at its original placement; checked on every build.
-# A variant of this module needs its own reference.
+# Harmony resolves cross-module symbols and is checked by composed image gates.
 _REFERENCE = (0x40a955e0, 'e265a08d11b72cc6806c6ac5212969b828c28e2c34681ae088c686e51db8c806')
 MODULE = dataclasses.replace(
     MODULE, author_url='https://github.com/radiohagen/octatrack-modules',
     linked=tuple(dataclasses.replace(
-        unit, reference=_REFERENCE,
+        unit, reference=lambda modules: None if "MIDI HARMONY" in modules else _REFERENCE,
         include=(lambda modules, remix, source=unit.include: source(modules)) if unit.include else None,
     ) for unit in MODULE.linked),
 )

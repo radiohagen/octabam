@@ -825,5 +825,42 @@
       "source": "emulator panel UART",
       "firmware_sha256": "3f208b1219b80976754360f3df0ddce569130aad207b4530da43ba17e21c7029"
     }
+  },
+  "midi-harmony": {
+    "setup": {
+      "image": "midi-harmony/setup.png",
+      "caption": "MIDI NOTE SETUP: HARM CHORD enables degree roots and generated chords.",
+      "remix": "midi-harmony",
+      "source": "emulator panel UART",
+      "firmware_sha256": "52eea628e90d9ae6c95622c0a1d1ff67a4b076b423a47276d14c696c23900e00"
+    },
+    "voicing": {
+      "image": "midi-harmony/voicing.png",
+      "caption": "HARMONY: VOIC, SPRD, ROOT and SIZE controls.",
+      "remix": "midi-harmony",
+      "source": "emulator panel UART",
+      "firmware_sha256": "52eea628e90d9ae6c95622c0a1d1ff67a4b076b423a47276d14c696c23900e00"
+    },
+    "accumulator": {
+      "image": "midi-harmony/accumulator.png",
+      "caption": "HARMONY ACCUM: degree limits, boundary behavior and reset policy.",
+      "remix": "midi-harmony",
+      "source": "emulator panel UART",
+      "firmware_sha256": "52eea628e90d9ae6c95622c0a1d1ff67a4b076b423a47276d14c696c23900e00"
+    },
+    "degrees": {
+      "image": "midi-harmony/degrees.png",
+      "caption": "MIDI NOTE: DEG and CHRD replace root and chord-tone editing while HARM is active.",
+      "remix": "midi-harmony",
+      "source": "emulator panel UART",
+      "firmware_sha256": "52eea628e90d9ae6c95622c0a1d1ff67a4b076b423a47276d14c696c23900e00"
+    },
+    "chord-play": {
+      "image": "midi-harmony/chord-play.png",
+      "caption": "CHORD PLAY: lower trig keys play roots; upper keys select chord variations.",
+      "remix": "midi-harmony",
+      "source": "emulator panel UART",
+      "firmware_sha256": "52eea628e90d9ae6c95622c0a1d1ff67a4b076b423a47276d14c696c23900e00"
+    }
   }
 }
