@@ -239,3 +239,10 @@ project copy, `verify_midi_follow_response_port.py --project DIR` checks LIVE
 response through physical panel events and MIDI output. Combined Harmony
 settings/persistence coverage lives in `verify_midi_harmony_port.py --settings-only`,
 and NOTE SETUP confirmation in `verify_midi_setup_port.py`.
+
+## Harmony event composition
+
+Follow works without Harmony. When both are selected, HARMONY FOLLOW overrides
+their four shared event sites with Follow's dispatcher, which calls both consumers
+once. Harmony has its own dispatcher for standalone use. Part State owns no
+transport or successful-note hook. No saved setting or storage layout changes.
