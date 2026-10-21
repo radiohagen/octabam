@@ -903,7 +903,7 @@ def main():
     _rig = ("FILTER", "SPATIALIZER", "EQUALIZER", "PHASER", "FLANGER", "CHORUS",
                  "PLATE REV", "SPRING REV", "DARK REV", "COMPRESSOR", "LO-FI",
                  "DJ EQ", "COMB FILTER")
-    _want = {"midi-harmony": (), "harmony-midi": (), "harmony-scenes": (),
+    _want = {"midi-follow": (), "midi-harmony-follow": (), "midi-harmony": (), "harmony-midi": (), "harmony-scenes": (),
              "midi-loopback": (), "midi-scales": (), "mods": (), "ata-write-guard": (), "octabam-core": (), "usb-out-tracks-main-cue": ("PLATE REV",), "usb-out-tracks": (), "usb-out-master": (),
              "usb-out-tracks-post": (),
              "remix-switch": (), "remix-switch-trace": (),   # REMIX SWITCH's park in dead vectors, no region words
@@ -935,6 +935,7 @@ def main():
              "vocoder": ("PLATE REV", "DJ EQ"),   # VOCODER runs in PLATE's words; DJ EQ out so the tables sit in X
              "vocoder-usb": ("PLATE REV", "DJ EQ"),   # the vocoder remix + USB MIDI and USB AUDIO (ColdFire, no DSP words)
              "euclid": ("SPATIALIZER", "FLANGER", "CHORUS", "COMB FILTER"),
+             "shared-events": ("SPATIALIZER", "FLANGER", "CHORUS", "COMB FILTER"),
              "rig": _rig,
              "character-txtr": _rig,   # octabam-bus with the TXTR station
              "octabam-bus": _rig,
@@ -975,7 +976,7 @@ def main():
     _probe.write_text(
         "from remix.schema import Remix\n\n"
         "REMIX = Remix(name='_selftest_scattered', doc='scratch',\n"
-        "              modules=('EUCLID', 'MINIVERB', 'PLATE REV'),\n"
+        "              modules=('SEQUENCER EVENTS', 'EUCLID', 'MINIVERB', 'PLATE REV'),\n"
         "              fallback='NONE',\n"
         "              fx1=('FILTER', 'EQUALIZER', 'DJ EQ', 'PHASER',\n"
         "                   'SPATIALIZER', 'COMPRESSOR', 'LO-FI',\n"
