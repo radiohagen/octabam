@@ -7,6 +7,17 @@ from remix.schema import Gate
 SOURCE = Path(__file__).resolve().parent / '../midi-loopback/upstream/modules/midi-part-state/manifest.py'
 MODULE = runpy.run_path(str(SOURCE), run_name='remix_manifest_midi_part_state')['MODULE']
 
+# The original copy unit branches directly to SRAM with a signed 16-bit
+# displacement. Larger compositions can place the units more than 32 KiB
+# apart. Use the author's existing local-branch/absolute-jump correction;
+# the remaining Part State units keep their original source and pin.
+COPY_SOURCE = (Path(__file__).resolve().parent /
+               '../midi-harmony/upstream/modules/midi-part-state/part-copy.s').resolve()
+MODULE = dataclasses.replace(MODULE, linked=tuple(
+    dataclasses.replace(unit, source=str(COPY_SOURCE))
+    if unit.label == 'midipartcopy' else unit for unit in MODULE.linked
+))
+
 # Cold-entry unit is independently linkable; enforce its author reference
 # on every build. The mutually linked DRAM units use the combined oracle.
 MODULE = dataclasses.replace(MODULE, linked=tuple(

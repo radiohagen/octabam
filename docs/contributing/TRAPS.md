@@ -1148,3 +1148,14 @@ Publish only `resident_link.own_exports(exports, imports)` at both resident
 registration and relink. `test_linked_defsyms.py` checks import exclusion; the
 combined shared-events image exercises final descriptor resolution. The isolated
 build correction also preserves all 24 refhash artifacts against its baseline.
+
+<a id="trap-cross-unit-branch"></a>
+### A relative branch to another unit depends on module order
+
+Part State's conditional `bcc.w`/`bhi.w` branches to SRAM's `rp_native_copy`
+failed with `R_68K_PC16` when HARM and Follow separated the units by more than
+32 KiB. Keep conditional branches inside the unit and use an absolute jump
+from a local trampoline for the cross-unit transfer. The author's corrected
+copy unit preserves registers and condition codes. The `midi-harmony-follow`
+selection retains the formerly failing order; independent author assembly and
+native Part-copy/activation gates verify the corrected unit.

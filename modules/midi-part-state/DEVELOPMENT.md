@@ -64,6 +64,12 @@ NOTE SETUP staging hook is omitted from this standalone contribution.
 
 Pinned source: the `modules/midi-loopback/upstream` submodule gitlink.
 Review both modules in that narrow author history alongside these adapters.
+The copy unit alone uses `modules/midi-harmony/upstream`'s authored correction:
+four conditional branches target a nearby trampoline, which jumps absolutely
+to SRAM. This preserves the copy contract when module order puts the units
+more than 32 KiB apart. No SRAM means the conditional block is omitted as before.
+`verify_harmony_reference.py` independently assembles this unit, including
+activation-cell addresses derived from the pinned resident entry source.
 The cold-entry reference is enforced at build time; the combined cross-unit
 runtime reference is enforced by `verify_midi_loopback_reference.py`. A native
 source build and the adapter build are compared at the same upstream base.
