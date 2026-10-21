@@ -40,16 +40,22 @@ def main():
                     args = ['-I', str(folder)]
                 if unit.label == 'midipartcopy':
                     # Resolve the author's activation cells independently of
-                    # the installed runtime. The adapter's cold-entry reference
-                    # pins this resident unit at 0x400d6b80.
+                    # the installed runtime. The reference address is only the
+                    # author's oracle; other resident modules can move the unit.
+                    # Use its installed native-entry detour for the placement,
+                    # and independently assembled offsets for the cells.
                     entry = folder / 'entry.o'
                     subprocess.run(['m68k-elf-as', '-mcpu=5407', '-o', str(entry),
                                     str(author / 'modules/midi-part-state/entry.s')], check=True)
                     rows = subprocess.check_output(['m68k-elf-nm', str(entry)], text=True)
                     offsets = {f[2]: int(f[0], 16) for line in rows.splitlines()
                                if len(f := line.split()) == 3 and f[1] != 'U'}
+                    image = (ROOT / 'out/mainos_bus.bin').read_bytes()
+                    hook = image[0x40020898 - 0x40000400:0x40020898 - 0x40000400 + 6]
+                    assert hook[:2] == bytes.fromhex('4ef9'), 'Part State entry detour'
+                    base = int.from_bytes(hook[2:], 'big') - offsets['mp_copy_entry']
                     for name, _default in unit.defsyms:
-                        args += ['--defsym', f'{name}=0x{0x400d6b80 + offsets[name]:x}']
+                        args += ['--defsym', f'{name}=0x{base + offsets[name]:x}']
                 obj = folder / 'author.o'
                 subprocess.run(['m68k-elf-as', '-mcpu=54455', *args, '-I', str(author),
                                 '-o', str(obj), str(author / unit.source)], check=True)
