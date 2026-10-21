@@ -1159,3 +1159,19 @@ from a local trampoline for the cross-unit transfer. The author's corrected
 copy unit preserves registers and condition codes. The `midi-harmony-follow`
 selection retains the formerly failing order; independent author assembly and
 native Part-copy/activation gates verify the corrected unit.
+
+<a id="trap-inherited-locks"></a>
+### Inherited locks can invalidate a panel or MIDI probe
+
+A stress project copied from a performance template retained scene locks on
+FX2 slot 1. BusDelay and BusVerb consequently read REV = 36 after the test
+sent CC 41 = 50 and 30: the scene correctly overrode the Part knob. Clearing
+step locks alone cannot isolate a CC probe. `stress_project.py` clears native
+scene parameter cells in its generated copy and verifies that they are empty.
+
+Conversely, the PLOCKS display journey creates its own step locks and assumes
+an empty first pattern. Clearing only trig 1 left dense fixture locks behind;
+even the stock reference failed its expected encoder values. The verifier now
+clears the copied first audio pattern's masks and locks before building its
+scenario. Preserve the source project, retain the initial failure, and check
+the stock or base-image control before attributing such a failure to a module.

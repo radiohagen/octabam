@@ -183,6 +183,14 @@ def mutate_bank(data, bank_number, mods, fx, probed):
     bank.check_tags(data)
     for part in range(otp.NPARTS_ALL):
         base = otp.PART_BASE + part * otp.PART_STRIDE
+        # A source template may pin FX knobs through its scenes. Those locks
+        # override verify_set's CC probes even when the step lane is unlocked.
+        # Stock scene locks: Part RAM +0x662 (PARAM_PAGES.md), file header +9.
+        # Clear the 30 parameter cells, preserving each record's padding.
+        for scene in range(16):
+            for track in range(8):
+                at = base + 0x66b + (scene * 8 + track) * 32
+                data[at:at + 30] = b'\xff' * 30
         for track in range(8):
             fx1, fx2 = part_values(fx, mods, track, part)
             data[base + otp.FX1_OFF + track] = fx_id(mods, fx[0][track])
@@ -256,6 +264,10 @@ def verify(dest, mods, fx, probed):
             assert int.from_bytes(data[-2:], "big") == sum(data[0x10:-2]) & 0xffff, path
             for part in range(otp.NPARTS_ALL):
                 base = otp.PART_BASE + part * otp.PART_STRIDE
+                for scene in range(16):
+                    for track in range(8):
+                        at = base + 0x66b + (scene * 8 + track) * 32
+                        assert data[at:at + 30] == b'\xff' * 30, (path, part, scene, track)
                 for track in range(8):
                     assert data[base + otp.FX1_OFF + track] == fx_id(mods, fx[0][track])
                     assert data[base + otp.FX2_OFF + track] == fx_id(mods, fx[1][track])
