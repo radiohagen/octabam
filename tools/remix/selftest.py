@@ -938,6 +938,8 @@ def main():
              "shared-events": ("SPATIALIZER", "FLANGER", "CHORUS", "COMB FILTER"),
              "rig": _rig,
              "character-txtr": _rig,   # octabam-bus with the TXTR station
+             "midi-core": (),  # the personal MIDI layer preserves upstream effects
+             "midi-bus": _rig, "midi-inserts": _rig,
              "octabam-bus": _rig,
              "octabam-inserts": _rig,   # COMPRESSOR's id is undisturbed since SIDECHAIN_COMPRESSOR was dropped (4dacb61d)
              "stations-fx2": _rig}
