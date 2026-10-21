@@ -10,12 +10,15 @@ A remix is a named selection of modules; `make image REMIX=<name> BUILD=<n>` bui
 
 | remix | contains | proof |
 |---|---|---|
+| [`midi-bus`](midi-bus/README.md) | Upstream Bus with Scales, Follow, HARM and Loopback; shared event dispatch. | port-gated: Personal combination: hardware acceptance pending |
 | [`octabam-bus`](octabam-bus/README.md) | CORE + the delay and reverb bus (BusDelay on T1's FX2, BusVerb on T5's FX2, SEND on every other track's FX2, the stock DELAY on T8) + SPECTRUM, CHARACTER and MODULATION on FX1. | port-gated: Shared event integration: software validation; hardware acceptance pending |
 
 ## Firmware mods on the stock effects
 
 | remix | contains | proof |
 |---|---|---|
+| [`midi-core`](midi-core/README.md) | Upstream Core with Scales, Follow, HARM and Loopback; shared event dispatch. | port-gated: Personal combination: hardware acceptance pending |
+| [`midi-inserts`](midi-inserts/README.md) | Upstream Inserts with Scales, Follow, HARM and Loopback; shared event dispatch. | port-gated: Personal combination: hardware acceptance pending |
 | [`octabam-core`](octabam-core/README.md) | The core ColdFire modules on the 14 stock effects, with LOFI AMF FIX. | port-gated: Shared event integration: software validation; hardware acceptance pending |
 | [`octabam-inserts`](octabam-inserts/README.md) | CORE + SPECTRUM, CHARACTER, MODULATION, TRANSIENT and EUCLID on FX1 and FX2, LOFI2 (FX2), the stock DELAY and GATE VERB on FX2. | port-gated: Shared event integration: software validation; hardware acceptance pending |
 

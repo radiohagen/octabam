@@ -86,6 +86,7 @@ nav:
       - MIDI Follow: reference/modules/midi-follow.md
       - MIDI SRAM: reference/modules/midi-sram.md
       - MIDI Loopback: reference/modules/midi-loopback.md
+      - MIDI Loopback Scenes: reference/modules/midi-loopback-scenes.md
       - MIDI Scales: reference/modules/midi-scales.md
       - USB: reference/modules/usb.md
   - Settings:

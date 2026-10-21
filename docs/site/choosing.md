@@ -42,3 +42,8 @@ All three reserve memory for the added features: 12,895 sample and recorder
 pages against 14,602 in stock OS. Test history belongs to one image and
 setup, and the status is on each remix page. A hardware test of one module
 covers that module.
+
+## Personal MIDI variants
+
+[MIDI Core, Bus and Inserts](guide/midi-family.md) retain each upstream base
+and add Scales, Follow, HARM and Loopback with shared event dispatch.
