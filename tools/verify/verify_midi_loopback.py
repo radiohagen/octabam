@@ -553,6 +553,8 @@ def routing_port_gate(source, remix):
     (out / "card.img").write_bytes(card)
     sym = symbols()
     routes = (0, 1, 2, 0, 1, 2, 0, 1)
+    from remix import registry
+    scenes = 'MIDI SCENES' in registry.remix(remix).modules
     dumps = {k: out / (k + ".bin") for k in ("level", "note", "held", "stats")}
     cmd = [str(ROOT / "out/emu/ot_emu"), "--image", str(ROOT / "out/mainos_bus.bin"),
            "--card", str(out / "card.img"), "--set", "OCTABAM", "--project", "LOOPBACK",
@@ -571,7 +573,9 @@ def routing_port_gate(source, remix):
     for track, route in enumerate(routes):
         events = [msg for msg in midi if msg[0] & 15 == track]
         note_on, cc, note_off = [0x90 | track, 84, 100], [0xb0 | track, 46, 70], [0x90 | track, 84, 0]
-        expected = [note_on, cc, note_off]
+        # MIDI Scenes intentionally emits its locked CC before note-on.
+        # Keep each composition's exact order; neither route may duplicate it.
+        expected = [cc, note_on, note_off] if scenes else [note_on, cc, note_off]
         assert events == ([] if route == 1 else expected), (track, route, events)
         assert dumps["level"].read_bytes()[track * 2] == (70 if route else 127), (track, route)
     assert dumps["note"].read_bytes() == bytes([255] * 8)
