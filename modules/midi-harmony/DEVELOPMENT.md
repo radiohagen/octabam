@@ -138,13 +138,13 @@ This layout claims no contiguous tail SRAM. PLOCKS P2, MIDI Scenes and KITS
 retain their upstream reservations. PLOCKS P2 retains upstream storage
 and its 4,768-lock recovery limit. Its separate trig-release editor fix does
 not alter storage.
-HARMONY PLOCKS still composes their shared editing/copy hooks. The protected
+EDIT EVENTS owns their shared editing/copy hooks and calls independent clients. The protected
 fields are reverse-engineered reclamation, not an official free-space contract.
 
 There is one implementation: degree-based NOTE/CHORD, ACC, HDP4 companions
 and HMT2 own-step retention. Native OFF behavior and representation conversion
 remain. There are no legacy retention options, alternate popups or migration
-readers. All builds require MIDI SRAM, MIDI Part State and STORE.
+readers. All builds require MIDI SRAM, MIDI Part State, STORE, SEQUENCER EVENTS and EDIT EVENTS.
 
 HDP4 contains a 10,368-byte packed root/quality section, then appends
 128 ACC lanes of 37 bytes: 32 packed amount bytes followed by signed LOW,

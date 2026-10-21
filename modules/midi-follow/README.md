@@ -65,8 +65,8 @@ RFOL, REG, all three remembered values and UPDT are native Part settings per tra
 Runtime roots and held notes are not saved. Requires **MIDI Part State**;
 Harmony, Scales and KITS are optional. The greenfield packed format reuses
 the existing Follow fields; no additional persistent bytes or step data.
-EUCLID shares the transport start/resume detours and needs a shared-hook
-bridge before it can be selected with Follow.
+Select **SEQUENCER EVENTS** for transport and accepted-output notifications.
+Follow and EUCLID register independently with this platform and can be selected together.
 Re-enter register settings from an earlier Follow build; there is no migration.
 
 Stock 1.40C preserves the source-track number but resets the mode, response
