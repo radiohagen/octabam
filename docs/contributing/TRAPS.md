@@ -1134,3 +1134,17 @@ reports on a range it never watched. Rule: one comma-joined
 `--watch-mem addr,len;addr,len` argument; when a watch captures nothing,
 check what the command line actually watched before suspecting the
 runtime.
+
+<a id="trap-resident-imports"></a>
+### Resident linker imports can overwrite runtime exports
+
+A resident unit linked with `--defsym` exposes its imported symbols through
+`nm` as well as its own definitions. Republishing all of them after the final
+runtime link can replace runtime descriptor addresses with initial staging
+addresses. HARM's resident Part-state integration with EUCLID exposed this as
+a formatter-pointer failure: `CLONE_EUCLID` pointed at the staging image.
+
+Publish only `resident_link.own_exports(exports, imports)` at both resident
+registration and relink. `test_linked_defsyms.py` checks import exclusion; the
+combined shared-events image exercises final descriptor resolution. The isolated
+build correction also preserves all 24 refhash artifacts against its baseline.
