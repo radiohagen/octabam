@@ -455,9 +455,14 @@ def main():
         sys.exit("verify_plocks_p2: no FX2 page-2 slot 0 available for the fixture")
     for bankfile in sorted(copy.glob("bank*.work")):
         def usable_fx(data):
-            # record() first taps trig 1 to create it; start empty in our copy.
+            # Panel recording creates its own trigs and locks. Clear the copied
+            # first pattern, including inherited locks: clearing only trig 1
+            # leaves a stress project's ATK lock as the encoder's starting value
+            # and breaks even the unmodified-stock reference walk.
             for track in range(8):
-                data[ot_project.trac_off(0, track) + 7] &= 0xfe
+                at = ot_project.trac_off(0, track)
+                data[at:at + 64] = bytes(64)
+                data[at + 0x59:at + 0x59 + 64 * 32] = b'\xff' * (64 * 32)
             for part_index in range(ot_project.NPARTS_ALL):
                 part_start = ot_project.PART_BASE + part_index * ot_project.PART_STRIDE
                 for track in range(8):
