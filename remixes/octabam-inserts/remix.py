@@ -24,7 +24,7 @@ STATIONS = ("SPECTRUM", "CHARACTER", "MODULATION")
 
 REMIX = Remix(
     name="octabam-inserts",
-    family="mods", proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026)",
+    family="mods", proof=Proof.PORT, proof_note="Shared event integration: software validation; hardware acceptance pending",
     doc="CORE + SPECTRUM, CHARACTER, MODULATION, TRANSIENT and EUCLID on FX1 and FX2, LOFI2 (FX2), the stock DELAY and GATE VERB on FX2.",
     modules=STATIONS + ("MODE DEFAULTS", "DELAY", "GATE VERB") + INSERTS + ("LOFI2",) + CORE,
     fallback="NONE",

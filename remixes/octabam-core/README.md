@@ -34,8 +34,10 @@ remixes add effects to this set: [`octabam-inserts`](../octabam-inserts/README.m
 
 ## Where it has run
 
-Cursory testing on an MKII (owner report, 16 Oct 2026). Port gates:
-`make check REMIX=octabam-core` and the reach round.
+This revision uses EDIT EVENTS for PLOCKS P2. The shared-event revision has not run on hardware.
+
+The upstream baseline received cursory testing on an MKII (owner report,
+16 Oct 2026). Port gates: `make check REMIX=octabam-core` and the reach round.
 
 ## How to flash
 

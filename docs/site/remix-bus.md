@@ -1,5 +1,8 @@
 # Octabam Bus
 
+This revision uses the shared EDIT EVENTS platform for page-two locks. Software validation does not establish hardware acceptance for this revision.
+
+
 ![Delay Server: the DELAY box in the TEMPO window](img/busdelay/main.png)
 
 *Bus Delay, the bus effect on FX1*
@@ -110,5 +113,6 @@ Every module in the image, credited to its author:
 
 ## Where it has run
 
-Cursory testing on an MKII (owner report, 16 Oct 2026). Port gates:
+The upstream baseline received cursory testing on an MKII (owner report,
+16 Oct 2026). The shared-event revision has not run on hardware. Port gates:
 `make check REMIX=octabam-bus` and the reach round.

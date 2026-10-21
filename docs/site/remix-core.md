@@ -1,5 +1,8 @@
 # Octabam Core
 
+This revision uses the shared EDIT EVENTS platform for page-two locks. Software validation does not establish hardware acceptance for this revision.
+
+
 ![BRAIN in the main menu, added by Octabam Core](img/brain/pane.png)
 
 *BRAIN in the main menu, added by Octabam Core*
@@ -60,5 +63,6 @@ at OFF in this remix. See [USB](reference/modules/usb.md).
 
 ## Where it has run
 
-Cursory testing on an MKII (owner report, 16 Oct 2026). Port gates:
+The upstream baseline received cursory testing on an MKII (owner report,
+16 Oct 2026). The shared-event revision has not run on hardware. Port gates:
 `make check REMIX=octabam-core` and the reach round.
