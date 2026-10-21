@@ -83,6 +83,7 @@ nav:
       - CC Feedback: reference/modules/cc-feedback.md
       - CC Map: reference/modules/cc-map.md
       - MIDI Harmony: reference/modules/midi-harmony.md
+      - MIDI Follow: reference/modules/midi-follow.md
       - MIDI SRAM: reference/modules/midi-sram.md
       - MIDI Loopback: reference/modules/midi-loopback.md
       - MIDI Scales: reference/modules/midi-scales.md
@@ -92,6 +93,8 @@ nav:
       - Memory: reference/modules/memory.md
       - Persistent Buffers: reference/modules/persistent-buffers.md
       - Store: reference/modules/store.md
+      - Sequencer Events: reference/modules/sequencer-events.md
+      - Edit Events: reference/modules/edit-events.md
   - Utilities:
       - Buffer Saver: reference/modules/buffer-saver.md
       - Copy Project: reference/modules/copy-project.md

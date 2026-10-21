@@ -33,7 +33,7 @@ class InterruptMaskTrace:
 
 def symbols():
     raw = subprocess.check_output(['m68k-elf-nm', str(ROOT/'out/platform/runtime/runtime.elf')], text=True)
-    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [TtBbDdAa] ((?:hd|mh|bf|ms|ch|mp|ha)_\w+)$',raw,re.M)}
+    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [TtBbDdAa] ((?:seq|ed|hd|mh|bf|ms|ch|mp|ha)_\w+)$',raw,re.M)}
 
 
 class Machine(NativeMachine):
@@ -42,6 +42,15 @@ class Machine(NativeMachine):
 
     def __init__(self, symbol_loader=symbols, artifact_root=None):
         super().__init__(symbol_loader, artifact_root)
+        if 'bf_source_get' in self.sym:
+            # Follow extends native NOTE SETUP defaults (biased SOURCE octave
+            # and GRAV home). Read the selected image's descriptor, not a
+            # pre-Follow constant copied from the stock-only fixture.
+            for part in range(4):
+                for track in range(8):
+                    for field,descriptor in ((13,0x400d4035),(15,0x400d4037)):
+                        address=0x400e21e0+0x8ed80+part*0x18b2+0x4e2+track*36+field
+                        self.uc.mem_write(address,bytes(self.uc.mem_read(descriptor,1)))
         if 'mh_defaults' in self.sym:
             self.call('mh_defaults', stop=0x40025ace)
 

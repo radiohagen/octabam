@@ -110,3 +110,5 @@ cutoff to avoid closing-sweep overshoots, but a held cutoff reuses the exact
 coefficient instead of paying for a 24-step divide on every sample. All DSP
 state is initialized and private to the instance; no audio buffer is
 allocated.
+
+EUCLID subscribes to SEQUENCER EVENTS for PLAY and resume. Its reset remains guarded against the frame ISR; HARM and MIDI Follow can subscribe alongside it.

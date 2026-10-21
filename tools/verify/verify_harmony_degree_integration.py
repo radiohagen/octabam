@@ -9,7 +9,7 @@ from harmony_machine import Machine, ROOT
 
 def symbols():
     raw = subprocess.check_output(['m68k-elf-nm', str(ROOT/'out/platform/runtime/runtime.elf')], text=True)
-    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [TtBbDdAa] ((?:ha|hd|ch|mh|bf|ms|mp)_\w+)$',raw,re.M)}
+    return {n:int(a,16) for a,n in re.findall(r'^([0-9a-f]+) [TtBbDdAa] ((?:seq|ed|ha|hd|ch|mh|bf|ms|mp)_\w+)$',raw,re.M)}
 
 
 class DegreeMachine(Machine):

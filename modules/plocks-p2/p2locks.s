@@ -826,6 +826,8 @@ tp_out: movem.l %sp@,%d0-%d2/%a0-%a1
 | clipboard and the undo buffer takes its page 2 along, in the same
 | shape. memcpy clobbers d0, d1, a0, a1.
 plk_memcpy:
+        jmp ed_copy
+plk_copy_mirror:
         movel   %sp@(12),%d0
         cmpil   #TRK_STRIDE,%d0
         beq.s   mc_go
@@ -876,7 +878,7 @@ mc_t:   subil   #STORE,%d0
 mc_out: movem.l %sp@,%d2-%d4
         lea     %sp@(12),%sp
 mc_stock:
-        jmp     0x40020898             | stock memcpy, the caller's frame as it was
+        rts                          | EDIT EVENTS owns the native copy
 
 | p2loc: d0 = an address -> a0 = the page-2 track block that mirrors it
 | (a track's start in a bank's patterns, the clipboard or the undo
@@ -1686,3 +1688,33 @@ PATH:   .space  260
 PSRC:   .space  260
         .align  4
 IOB:    .space  IOB_LEN                 | the stock file layer's buffer
+
+        .text
+        .globl plk_ed_claim, plk_ed_handle, plk_ed_copy_pre
+plk_ed_handle:
+        jmp plk_edit
+plk_ed_claim:
+        tstl MIDITRK
+        bne.s plk_ed_no
+        tstl WINDOW
+        beq.s plk_ed_no
+        cmpil #5,%d0
+        bhi.s plk_ed_no
+        tstw HELD
+        beq.s plk_ed_no
+        movel PAGEKIND,%d0
+        subql #3,%d0
+        cmpil #1,%d0
+        bhi.s plk_ed_no
+        moveq #1,%d0
+        rts
+plk_ed_no:
+        moveq #0,%d0
+        rts
+plk_ed_copy_pre:
+        movel %d2,%sp@-
+        movel %d1,%sp@-
+        movel %d0,%sp@-
+        jsr plk_copy_mirror
+        lea %sp@(12),%sp
+        rts

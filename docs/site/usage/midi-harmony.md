@@ -69,7 +69,7 @@ play different notes there, and stock saves can reset extended settings.
 Turning HARM OFF writes resolved roots into native NOTE; it does not render
 generated chords into NOT2–4.
 
-This test selection requires MIDI Part State, MIDI SRAM and STORE. EUCLID
-uses the same transport hooks and cannot be selected with it. PLOCKS P2 and
-MIDI Follow need additional composition bridges, outside this standalone selection.
-Hardware testing remains outstanding.
+Harmony requires MIDI Part State, MIDI SRAM, STORE, SEQUENCER EVENTS and
+EDIT EVENTS. The shared system modules coordinate transport and editing with
+MIDI Follow, EUCLID and PLOCKS P2; no Harmony-specific bridge is needed.
+They add no controls or saved data. Hardware testing remains outstanding.

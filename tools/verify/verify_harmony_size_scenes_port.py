@@ -18,7 +18,7 @@ def main():
     p.freeze_candidate(p.OUT)
     raw = subprocess.check_output(['m68k-elf-nm', str(p.ROOT/'out/platform/runtime/runtime.elf')], text=True)
     sym = {f[2]: int(f[0], 16) for line in raw.splitlines() if len(f := line.split()) == 3}
-    assert all(k in sym for k in ('STORE', 'hpl_ch_memcpy', 'scn_lib', 'mh_refs'))
+    assert all(k in sym for k in ('STORE', 'ed_copy', 'scn_lib', 'mh_refs'))
     audio.symbols = sym
     results = {}
     for size in (2, 3, 4):

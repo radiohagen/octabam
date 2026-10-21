@@ -48,3 +48,5 @@ from the chooser. In Octabam Inserts only.
 | Setup | ATK / EDGE / SLEW | per OUT mode: ENV attack, GATE edge smoothing, RAND transition |
 | Setup | OUT mode | ENV, GATE, RAND, LOOP |
 | Setup | MIX | dry/wet; 0 is an exact dry passthrough |
+
+SEQUENCER EVENTS coordinates PLAY/resume notifications with other selected modules, including MIDI Follow and Harmony. EUCLID retains its own phase-reset policy.

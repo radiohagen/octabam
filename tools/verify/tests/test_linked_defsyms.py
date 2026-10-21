@@ -128,6 +128,13 @@ class ResidentReferenceTests(unittest.TestCase):
                   'other': {'callback': 0x40aa0000}}
         self.assertEqual(resident_link.resolve(self.unit(), tables), {'CALLBACK': 0x40a90000})
 
+    def test_resident_relink_cannot_republish_staging_descriptor_import(self):
+        runtime = {'CLONE_EUCLID': 0x40aaac54}
+        linked = {'entry': 0x400d6b80, 'CALLBACK': 0x40a90000,
+                  'CLONE_EUCLID': 0x40110000}
+        runtime.update(resident_link.own_exports(linked, {'CALLBACK', 'CLONE_EUCLID'}))
+        self.assertEqual(runtime, {'CLONE_EUCLID': 0x40aaac54, 'entry': 0x400d6b80})
+
     def test_missing_provider_or_symbol_never_uses_reference_default(self):
         for tables in ({}, {'provider': {}}, {'other': {'callback': 0x40a90000}}):
             with self.assertRaisesRegex(ValueError, 'does not define'):

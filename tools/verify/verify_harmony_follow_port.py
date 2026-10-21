@@ -20,6 +20,9 @@ def main():
         print('[SKIP] Harmony/Follow UART matrix: supply --project DIR or OT_PROJECT')
         return
     symbols = port.harmony.symbols()
+    if 'bf_encoder' not in symbols:
+        print('[SKIP] Follow composition: select MIDI FOLLOW')
+        return
     assert 'bf_encoder' in symbols, 'select MIDI FOLLOW'
     has_harmony = 'mh_generate' in symbols
     port.OUT = port.ROOT / 'out' / ('harmony-follow-port' if has_harmony else 'follow-no-harmony-port')

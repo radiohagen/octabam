@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Execute the linked Harmony/P2 bridge, including both stores in each case.
+"""Execute shared editing/copy events with Harmony and P2, including both stores in each case.
 
 Native memcpy executes unmodified. File and CS1 boundaries are substituted
 to isolate ownership, ordering and ABI; full firmware gates cover real I/O.
 """
 import json
+import sys
 import struct
 import subprocess
 from collections import Counter
@@ -24,7 +25,7 @@ class Combined(Files):
         super().__init__()
         nm = subprocess.check_output(['m68k-elf-nm', str(ROOT/'out/platform/runtime/runtime.elf')], text=True)
         self.sym.update({f[2]: int(f[0], 16) for f in (line.split() for line in nm.splitlines()) if len(f) == 3})
-        assert 'hpl_ch_memcpy' in self.sym, 'build a remix selecting HARMONY PLOCKS'
+        assert 'ed_copy' in self.sym, 'build a remix selecting EDIT EVENTS and PLOCKS P2'
         self.call('plk_init')
         self.call('ch_lock_init')
 
@@ -80,6 +81,12 @@ class Combined(Files):
 
 
 def main():
+    if len(sys.argv)>1:
+        from remix import registry
+        selected=registry.remix(sys.argv[1]).modules
+        if not {'MIDI HARMONY','PLOCKS P2'} <= set(selected):
+            print('[SKIP] Harmony/PLOCKS composition: select both clients')
+            return
     m = Combined(); u, s = m.uc, m.sym
     global P2SIZE
     pooled='plk_pool_encode' in s
@@ -126,7 +133,7 @@ def main():
     for dst, src in ((0x460c8122,BANK),(0x460bf218,0x460c8122),
                      (BANK+PATTERN,0x460bf218)):
         before = m.calls[0x40020898]
-        m.c('hpl_ch_memcpy',dst,src,PATTERN)
+        m.c('ed_copy',dst,src,PATTERN)
         assert m.calls[0x40020898] == before+1
         assert bytes(u.mem_read(dst,PATTERN)) == expected_native
     assert bytes(u.mem_read(s['STORE']+6144,6144)) == p2[:6144]
@@ -136,7 +143,7 @@ def main():
     for dst, src, length in ((BANK+2*PATTERN,BANK,0x91a),
                              (BANK+2*PATTERN+0x48d0,BANK+0x48d0,0x8b0)):
         before = m.calls[0x40020898]
-        m.c('hpl_ch_memcpy',dst,src,length)
+        m.c('ed_copy',dst,src,length)
         assert m.calls[0x40020898] == before+1
     assert bytes(u.mem_read(s['STORE']+12288,768)) == p2[:768]
     assert bytes(u.mem_read(s['ch_lock_table']+1024,64)) == qualities[:64]
@@ -167,11 +174,19 @@ def main():
     m.failure = None
     print('[ok] all three companion/native saves and backups; Harmony failure blocks every backup write', flush=True)
 
-    # Dispatch only: the existing component/port gates execute both editors.
-    for midi, target in ((0,'plk_edit'),(1,'ch_step_encoder')):
-        u.mem_write(0x80000012,struct.pack('>I',midi))
-        m.call('hpl_ch_step_encoder',stop=s[target])
-        assert u.reg_read(UC_M68K_REG_A7) == m.stack
+    # Enter the installed editor hook. Context chooses a handler, not just
+    # track type; ordinary audio/MIDI pages must still reach native editing.
+    s['installed_editor'] = 0x400508e4
+    for midi, page, window, modal, target in (
+            (0,3,1,0,s['plk_edit']), (1,0,0,m.scratch,s['ch_step_encoder']),
+            (0,0,0,0,0x400508ec), (1,1,0,0,0x400508ec)):
+        for addr,value in ((0x80000012,midi),(0x460d1684,page),
+                           (0x460d175c,window),(s['mh_page_win'],modal)):
+            u.mem_write(addr,struct.pack('>I',value))
+        u.mem_write(0x460d174a,b'\0\1')
+        u.mem_write(m.stack+4,struct.pack('>II',0,1))
+        m.call('installed_editor',stop=target)
+        assert u.reg_read(UC_M68K_REG_A7) == m.stack-(80 if target==0x400508ec else 0)
     before = m.calls[0x400909d8]
     m.c('store_newproj')
     assert m.calls[0x400909d8] == before+1

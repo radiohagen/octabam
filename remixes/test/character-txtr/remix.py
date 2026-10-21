@@ -19,7 +19,7 @@ REMIX = Remix(
              "TEMPO SYNC", "CC MAP", "CC FEEDBACK", "MODE DEFAULTS", "RIG HOSTS", "TEMPO BUS",
              "USB",
              "STORE", "KITS",
-             "SCENES P2", "PLOCKS P2",
+             "SCENES P2", "PLOCKS P2", "EDIT EVENTS",
              "DELAY",
              "FX2 LOCK"),
     fallback="SEND",

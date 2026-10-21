@@ -2,7 +2,7 @@
 | All stock scene/LFO writes have finished; publish into the outgoing frame.
         .text
         .balign 4
-        .global eu_frame_hook, eu_start_hook, eu_resume_hook
+        .global eu_frame_hook, eu_seq_start, eu_seq_resume
 eu_frame_hook:
         lea     -16(%sp),%sp
         movem.l %d0-%d1/%a0-%a1,(%sp)
@@ -14,16 +14,9 @@ eu_frame_hook:
 
 | A fresh PLAY resets all instances together at the same anchor the stock
 | transport sets for its first tick.
-eu_start_hook:
-        move.l  %d0,0x800065b8     | displaced: PLAYING
-        bsr.s   eu_reset_clock
-        jmp     0x4009c3da
-
-| The second PLAY path (resume) uses the same reset policy for the effect.
-eu_resume_hook:
-        move.l  %d0,0x800065b8
-        bsr.s   eu_reset_clock
-        jmp     0x4009c4da
+        .global eu_seq_start,eu_seq_resume
+eu_seq_start:
+eu_seq_resume:
 
 | The whole SR is saved after the call has pushed its return address (BSR,
 | LEA and MOVEM leave the CCR of the displaced PLAYING store alone), the

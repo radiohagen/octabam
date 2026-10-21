@@ -5,12 +5,14 @@ adapter resolves native author source paths and brings the author's NOTE SETUP
 confirmation hook into Harmony because upstream Part State does not own it.
 `verify_harmony_reference.py` independently assembles all 39 selected author
 units and compares complete relocatable objects, including relocations, with
-the installed build. The source assembly is unchanged.
+the installed build. The author callbacks now register with the shared platform modules.
 
-Three test remixes qualify the standalone module, Scales/Loopback/KITS, and
-Scales/Scenes/KITS. Loopback and Scenes require their own bridge; PLOCKS P2 and
-Follow also require composition bridges, outside this submission. EUCLID is
-explicitly incompatible at the PLAY/resume hooks. Standard remixes are unchanged.
+SEQUENCER EVENTS owns the shared transport/output hooks. EDIT EVENTS owns
+held-step dispatch and the pattern/track copy hooks. HARM, Follow, EUCLID and
+PLOCKS P2 are independent clients; the `shared-events` remix exercises all four.
+Standalone HARM, Follow, EUCLID and PLOCKS selections use the same platform path.
+Loopback and Scenes still require their own unrelated routing bridge.
+See [system contracts](../../docs/contributing/SYSTEM_EVENTS.md).
 
 The notes below preserve implementation history and earlier integration
 measurements. Their old image hashes and combined-bus results are historical,

@@ -18,3 +18,12 @@ def check_layout(label, before, before_exports, after, after_exports):
                          f"from {len(before)} to {len(after)} bytes")
     if before_exports != after_exports:
         raise ValueError(f"{label}: runtime reference link moved resident exports")
+
+
+def own_exports(exports, imports):
+    """Linker --defsym imports also appear in nm; never publish them as owners.
+
+    In particular a resident relink must not overwrite final runtime descriptor
+    addresses with the staging addresses supplied during its initial link.
+    """
+    return {name: value for name, value in exports.items() if name not in imports}

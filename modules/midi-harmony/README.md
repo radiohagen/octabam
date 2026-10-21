@@ -112,9 +112,10 @@ NOTE fields are storage mirrors and can play different pitches on stock.
 Stock also resets voicing/spread/root choices and clamps extended KEY modes
 to B Minor; saving persists those changes for the bank written.
 
-Requires **MIDI Part State**, **STORE** and **MIDI SRAM**. When combined with
-PLOCKS P2, an additional hook bridge is required; it is not included here.
-EUCLID cannot share this selection because it uses the same transport hooks. KITS libraries are per
+Requires **MIDI Part State**, **STORE**, **MIDI SRAM**, **SEQUENCER EVENTS**
+and **EDIT EVENTS**. HARM, Follow and EUCLID subscribe to shared transport
+events; HARM and PLOCKS P2 register with the shared editing/copy dispatcher.
+No Harmony-specific bridge is selected. KITS libraries are per
 project; recalling a kit supplies Part defaults while pattern locks stay with
 the patterns. See [storage](DEVELOPMENT.md#compact-harmony-storage) and [KITS](KITS.md).
 

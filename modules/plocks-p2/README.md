@@ -149,3 +149,5 @@ file routines' own entries (`0x40090504`, `0x400905d4`, `0x400909d8`,
 `0x400917c8`, `0x4008ee74`, `0x4008f180`) where this module hooks their
 call sites, so the two share no site. Its CS1 ranges (`0x100f85a0..e8`,
 `0x100ffe00..ff00`) and MIDI SCENES' (`0x100fbdf0..0x100ffe00`) sit on either side of this module's.
+
+PLOCKS P2 requires EDIT EVENTS for held-step dispatch and pattern/track copy notifications. Other selected editors register independently; no Harmony-specific bridge is needed.

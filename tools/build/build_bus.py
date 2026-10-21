@@ -1114,7 +1114,8 @@ def main():
             # Author-reference values are temporary imports, not exports other
             # units may resolve. Only the final runtime supplies these names.
             _late_names = {ref[0] for ref in _u.runtime_refs}
-            _glob = {n: v for n, v in _glob.items() if n not in _late_names}
+            from remix import resident_link
+            _glob = resident_link.own_exports(_glob, {*_late_names, *(n for n, _ in _rest)})
             _resident_links.append((_u, _at, _b, _glob, _mine, _rest, _inc, _work))
         _exports.update(_glob)
         if _at >= SAFE_CAVE_CEIL:
@@ -1535,7 +1536,7 @@ def main():
                 _defs = tuple((n, _resolved.get(n, v)) for n, v in _mine)
                 _after, _syms, _glob = _link(pathlib.Path(_u.source), _at, _u.cpu, _work,
                                             defsyms=_defs + _rest, incdir=_inc, asdefs=_defs)
-                _glob = {n: v for n, v in _glob.items() if n not in _resolved}
+                _glob = resident_link.own_exports(_glob, {*_resolved, *(n for n, _ in _rest)})
                 resident_link.check_layout(_u.label, _before, _oldglob, _after, _glob)
             except ValueError as _error:
                 sys.exit(str(_error))

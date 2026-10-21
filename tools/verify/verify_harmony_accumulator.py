@@ -135,7 +135,7 @@ def main():
         'sent_b': (0x4009fcfa, 0x4009fd00),
     }
     for name, (site, _) in events.items():
-        expected = s[('bf_' if with_follow else 'mh_') + name]
+        expected = s[{'start_a':'seq_start','start_b':'seq_resume','sent_a':'seq_sent_a','sent_b':'seq_sent_b'}[name]]
         assert bytes(u.mem_read(site, 6)) == b'\x4e\xf9' + expected.to_bytes(4, 'big'), name
         s['installed_' + name] = site
 
