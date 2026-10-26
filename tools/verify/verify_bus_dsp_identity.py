@@ -153,6 +153,7 @@ class Host:
         source = self.work / f"input_{case.blocks}.raw"
         if not source.exists():
             input_audio(source, case.blocks)
+        input_sha256 = sha(source)
         cmd = [str(self.executable), "-mem", str(self.mems[0]), "-memB", str(self.mems[1]),
                "-init", ",".join(f"{e[0]:x}" for e in self.entries),
                "-proc", ",".join(f"{e[1]:x}" for e in self.entries),
@@ -192,7 +193,11 @@ class Host:
         audio = [path.read_bytes() for path in paths]
         if any(len(data) != case.blocks * FRAMES * 2 * 4 for data in audio):
             raise RuntimeError(f"{name}: incomplete raw24 output")
-        result = dict(hashes=[hashlib.sha256(data).hexdigest() for data in audio],
+        result = dict(command=cmd, input_sha256=input_sha256,
+                      first_measured_block=512, measured_blocks=len(steady), frames_per_block=FRAMES,
+                      measured_sample_frames=len(steady) * FRAMES,
+                      measured_instruction_totals=[sum(row[c + 1] for row in steady) for c in range(2)],
+                      hashes=[hashlib.sha256(data).hexdigest() for data in audio],
                       peak=[max(map(abs, array.array("i", data))) for data in audio],
                       tail_peak=[max(map(abs, array.array("i", data[-2048*FRAMES*2*4:])))
                                  for data in audio],
@@ -229,6 +234,7 @@ def main():
     work.mkdir(parents=True, exist_ok=True)
     mods = registry.bound(registry.remix(args.remix))
     report = dict(engine=args.engine, remix=args.remix, declared_grains=args.grains,
+                  test_script_sha256=sha(Path(__file__)),
                   workflow="returns-fallback" if args.returns_fallback else "optimization",
                   baseline=dict(path=str(args.baseline), sha256=sha(args.baseline)),
                   candidate=dict(path=str(args.candidate), sha256=sha(args.candidate)),
@@ -244,6 +250,8 @@ def main():
     for case in fallback_cases() if args.returns_fallback else cases(args.engine):
         before, a = hosts[0].render(case)
         after, b = hosts[1].render(case)
+        if before["input_sha256"] != after["input_sha256"]:
+            raise RuntimeError(f"{case.name}: baseline/candidate input hashes differ")
         identical = a == b               # Full raw24 byte equality, not a WAV/hash comparison.
         delta = [x - y for x, y in zip(before["instructions_per_sample"], after["instructions_per_sample"])]
         report["cases"].append(dict(name=case.name, blocks=case.blocks, split=case.split,

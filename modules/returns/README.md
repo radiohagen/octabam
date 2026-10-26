@@ -52,3 +52,7 @@ checks include memory ownership and write bounds; exact fallback audio;
 independent returns and host dry isolation; LEVEL/mute tail continuity;
 wrong-track init; all split positions; return activation/removal; stereo
 impulse timing; current cross-core scheduling and complete-frame DSP load.
+
+The [bus optimization review](../../docs/contributing/BUS_DSP_OPTIMIZATION.md)
+records the original authorship, exact changes, measurement method, regression
+evidence and remaining acceptance requirements.

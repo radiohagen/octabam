@@ -66,6 +66,20 @@ checks the mixer snapshot to prove each mute actually arrived.
 A continuous tone on a muted source must produce no return, proving that
 muting also stops new excitation through the actual DSP decoder.
 
+`tools/verify/verify_postfader_hosts.py test/send-return-poc --image IMAGE
+--project TEMPLATE` adds four sounding-host cases: T1 and T5, each audible
+and already muted in the saved project. The tone starts on the first trig.
+Both muted hosts must retain nonzero dry DSP audio and original send
+participation while their send coefficients, wet buffers and master output
+remain zero after warm-up. Each audible counterpart must excite both buses.
+This catches an early unscaled initialization packet seeding BusVerb's DEL
+ramp during warm-up; the selected POST FADER path now defers that ramp seed
+until the first active sample. Running tails keep their existing state.
+The gate records image, emulator, script, fixture and output hashes in
+`out/postfaderhosts/results.json`. It is registered as an image gate, uses
+`out/mainos_bus.bin` by default, accepts `OT_PROJECT` instead of `--project`,
+and skips when no local template is configured or the port binary is unavailable.
+
 These checks do not establish physical DMA timing, long-tail stability,
 scene XLV behavior, cue-only use, or an instantaneous excitation cutoff.
 The integrated fixture uses MUTE MODES' stock OT setting; alternative
@@ -73,3 +87,7 @@ trigger-only and dry-cut modes have their own semantics and need separate
 qualification.
 No card or user project is edited. Historical October 13 prototype gate
 results are not evidence for this revised transient transport.
+
+The [bus optimization review](../../docs/contributing/BUS_DSP_OPTIMIZATION.md)
+records the original authorship, exact changes, measurement method, regression
+evidence and remaining acceptance requirements.

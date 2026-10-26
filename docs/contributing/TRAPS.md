@@ -1310,3 +1310,25 @@ under the port.
 cannot see the cache or the stale status, so a unit run (`load_meter.py`
 repeated, `--for 10`: `windows` near 20) is the check.
 
+
+<a name="trap-warm-send-seed"></a>
+
+### A pre-frame initialization packet can seed a send that never ramps during warm-up
+
+**A ZERO CURRENT SEND DOES NOT PROVE ITS PERSISTENT RAMP STARTED AT ZERO.**
+The optional POST FADER integration passed client-mute and silent-host tail
+checks, but an immediately sounding, saved-muted T5 still excited the wet bus.
+The real firmware sent an unscaled initialization record before `pf_frame`'s
+first tagged-zero record. BusVerb's DEL setup seeded the old value before its
+tank warm-up; the sample loop that advances the ramp did not run while warming.
+The eventual active loop therefore started with stale gain despite zero current
+controls. Adding 400 ms of source silence hid the defect.
+
+The module-selected transform keeps the existing DEL-ramp sentinel on each
+warm-up dry return. The first active call seeds the current scaled target.
+Warmed calls bypass the reset; running tails, smoothing and tank state remain
+untouched. Do not fix this by clearing a live tank or by delaying the test input.
+**Gate:** `verify_postfader_hosts` boots saved-muted T1/T5 with immediate tones,
+checks nonzero dry DSP audio, tagged-zero controls and zero wet-only buffers,
+and requires both wet buffers to sound in unmuted positive controls.
+`verify_postfader` separately checks dynamic mutes, tails and other-source gain.

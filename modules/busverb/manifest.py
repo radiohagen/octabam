@@ -81,7 +81,7 @@ MODULE = Module(
     key="REVERB SERVER",
     kind=Kind.DSP_EFFECT,
     category=Category.BUS, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.HARDWARE, proof_note="Sam's MKII",
+    proof=Proof.RENDER, proof_note="optimized path: 7 audio comparisons plus one adversarial state run; original ran on Sam's MKII; hardware acceptance of optimization pending",
     doc="Eight-line FDN reverb: ROOM/PLATE/BIG, shimmer, gate, mid/side width.",
     menu=MenuEntry(
         fx2_id=0x07,

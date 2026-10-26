@@ -37,8 +37,12 @@ def _records(data: bytes, offset: int):
     return result
 
 
-def _packed_upload(image: bytes, destination: int):
-    """Find the loader entry for exactly the address the boot call reads."""
+def unpack_payload(image: bytes, destination: int) -> bytes:
+    """Return the image's unique, length/checksum-verified loader payload.
+
+    The destination can name either a DSP upload or the ColdFire runtime.
+    No ambient build artifact supplies bytes to this extraction.
+    """
     entries = set()
     start = 0
     while True:
@@ -73,7 +77,12 @@ def _packed_upload(image: bytes, destination: int):
         raise ValueError("depacked DSP payload length mismatch")
     if roll(raw) != raw_hash:
         raise ValueError("depacked DSP payload checksum mismatch")
-    return _records(raw, 0)
+    return raw
+
+
+def _packed_upload(image: bytes, destination: int):
+    """Decode the payload at exactly the address the DSP boot call reads."""
+    return _records(unpack_payload(image, destination), 0)
 
 
 def _upload(image: bytes, payload: str):

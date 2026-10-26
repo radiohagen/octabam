@@ -166,6 +166,7 @@ moment it costs real work, and add its line here.
 - [The harness's dispatcher model is not the dispatcher](docs/contributing/TRAPS.md#trap-dispatcher-model) — measure dispatcher facts under the port.
 - [An effect's `init` must preserve r1](docs/contributing/TRAPS.md#trap-init-r1) — `verify_init_regs` refuses; zero through r5.
 - [A host guard must preserve the proc call flag in A](docs/contributing/TRAPS.md#trap-proc-a) — compare in B; split-block renders catch double LFO advancement.
+- [A pre-frame packet can seed a send that never ramps during warm-up](docs/contributing/TRAPS.md#trap-warm-send-seed) — keep the first-active sentinel; `verify_postfader_hosts` starts muted hosts with immediate audio.
 - [A frozen image can acquire the current build's DSP window code](docs/contributing/TRAPS.md#trap-frozen-dsp) — frozen-image gates use `image_dsp`, which unpacks the supplied image itself.
 - [A slot can draw a knob and publish nothing](docs/contributing/TRAPS.md#trap-knob-publish) — panel and DSP are separate; `docs/firmware/PARAM_PAGES.md`.
 - [Flash cycles are expensive](docs/contributing/TRAPS.md#trap-flash) — render locally and measure first.
