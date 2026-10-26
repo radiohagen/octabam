@@ -165,6 +165,8 @@ moment it costs real work, and add its line here.
 - [The emulated load's part is not the part that plays](docs/contributing/TRAPS.md#trap-otemu-part) — write fixtures into every part of every bank.
 - [The harness's dispatcher model is not the dispatcher](docs/contributing/TRAPS.md#trap-dispatcher-model) — measure dispatcher facts under the port.
 - [An effect's `init` must preserve r1](docs/contributing/TRAPS.md#trap-init-r1) — `verify_init_regs` refuses; zero through r5.
+- [A host guard must preserve the proc call flag in A](docs/contributing/TRAPS.md#trap-proc-a) — compare in B; split-block renders catch double LFO advancement.
+- [A frozen image can acquire the current build's DSP window code](docs/contributing/TRAPS.md#trap-frozen-dsp) — frozen-image gates use `image_dsp`, which unpacks the supplied image itself.
 - [A slot can draw a knob and publish nothing](docs/contributing/TRAPS.md#trap-knob-publish) — panel and DSP are separate; `docs/firmware/PARAM_PAGES.md`.
 - [Flash cycles are expensive](docs/contributing/TRAPS.md#trap-flash) — render locally and measure first.
 - [The unit misbehaves](docs/contributing/TRAPS.md#trap-failure-modes) — `docs/contributing/FAILURE_MODES.md` first; add new failures the moment they are seen.

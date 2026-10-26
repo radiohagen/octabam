@@ -47,6 +47,15 @@ def transform(name: str, src: str) -> str:
         and     #>$7f0000,a""", """        move    x:(r6),a                ; POST FADER: original DEL participation
         and     #>$800000,a""")
     if name == "DELAY SERVER":
+        # The note shares REV's tagged word. Clean A2 before the shift:
+        # cleaning afterwards cannot undo the sign bits shifted into A1.
+        src = _once(src, """        move    x:(r6+$1),a
+        and     #>$7f00,a               ; the note, bits 8-15
+        asr     #$8,a,a""", """        move    x:(r6+$1),a
+        and     #>$7f00,a               ; POST FADER: held note, no tag
+        move    a1,x0
+        move    x0,a                    ; clean A2 BEFORE shifting the note
+        asr     #$8,a,a""")
         src = _once(src, """        move    x:(r6),a                ; AUX (slot 0): the host's own send
         and     #>$7f0000,a             ; knob field only""", """        move    x:(r6),a                ; POST FADER: original DEL participation
         and     #>$800000,a""")

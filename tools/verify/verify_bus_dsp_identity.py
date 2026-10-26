@@ -3,13 +3,20 @@
 
     python3 tools/verify/verify_bus_dsp_identity.py BASE.bin CAND.bin --engine delay
     python3 tools/verify/verify_bus_dsp_identity.py BASE2.bin CAND2.bin --engine delay --grains 2
+    python3 tools/verify/verify_bus_dsp_identity.py OPT.bin ROUTED.bin --returns-fallback
 
 Build both images separately with the same remix and grain count. This gate
 never builds an image or changes a source; generated dumps stay under out/.
 --grains records the caller's declared build configuration; it does not infer
 the grain count from a binary. Repeat with an independently built two-grain
-pair to cover that substitution. --remix supplies the images' module IDs and
-knob schema, which must match both images.
+pair to cover that substitution. --returns-fallback compares a plain optimized
+bus image with POST FADER + RETURNS selected but no running RETURNS instance.
+It gives the candidate equivalent tagged send controls, feeds all four sources,
+and checks every mode with whole and split blocks. This also catches a host
+guard corrupting the dispatcher flag or a tagged REV corrupting a held note.
+--remix supplies the images' module IDs and knob schema, which must match
+both images. DSP uploads are extracted from each supplied image itself;
+ambient build metadata is never injected.
 
 The shipping A/B payloads run together, with a SEND feeding each server.
 Every instance's raw24 stream (signed int32 containers) must match byte for
@@ -33,6 +40,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 import toolpath  # noqa: E402,F401
 import send_probe  # noqa: E402
+from image_dsp import dump_mem  # noqa: E402
 from remix import registry  # noqa: E402
 
 FRAMES, FS, BLOCKS = 16, 8388607, 8192
@@ -93,6 +101,15 @@ def cases(engine):
     return result
 
 
+def fallback_cases():
+    """Equivalent controls across plain and routed images; no live return client."""
+    return [Case(f"fallback_mode{mode}_split{split}", {
+                REVERB: {"MODE": mode, "SHMR": 0, "DEL": 83, "REV": 97},
+                DELAY: {"MODE": mode, "DEL": 83, "REV": 97},
+                "SEND": {"DEL": 83, "REV": 97}}, split=split)
+            for mode in range(3) for split in (0, 1, 7, 15)]
+
+
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -113,10 +130,11 @@ def input_audio(path, blocks):
 
 
 class Host:
-    def __init__(self, image, tag, work, mods, executable, keep_raw):
+    def __init__(self, image, tag, work, mods, executable, keep_raw, *, post_fader=False, inmask=10):
         self.tag, self.work, self.mods = tag, work, mods
         self.executable, self.keep_raw = executable, keep_raw
-        self.mems = [send_probe.dump_mem(image, work / f"{tag}_{p}.mem", p) for p in "AB"]
+        self.post_fader, self.inmask = post_fader, inmask
+        self.mems = [dump_mem(image, work / f"{tag}_{p}.mem", p) for p in "AB"]
         self.entries = [send_probe.entry_points(self.mems[core], mods[key].menu.fx2_id)
                         for key, core in SPECS]
 
@@ -139,11 +157,22 @@ class Host:
                "-init", ",".join(f"{e[0]:x}" for e in self.entries),
                "-proc", ",".join(f"{e[1]:x}" for e in self.entries),
                "-inst", "4", "-core", "0,0,1,1", "-alloc", "1,3,1,3", "-r7", "2,5,2,5",
-               "-audioidx", "0,1,2,3", "-audio", "9000", "-inmask", "10",
+               "-audioidx", "0,1,2,3", "-audio", "9000", "-inmask", str(self.inmask),
                "-frames", str(FRAMES), "-blocks", str(case.blocks), "-in", str(source),
                "-stereo", "-out", str(raw), "-meter", str(meter)]
         for values in parameters:
             cmd += ["-params", ",".join(map(str, values))]
+        if self.post_fader:
+            # The transient tag says the original knob participates; the
+            # coefficient remains identical to the untagged baseline. Raw
+            # words also preserve the delay REV held-note byte at zero.
+            if any(knob in ("DEL", "REV") for _, _, knob, _ in case.events):
+                raise ValueError("tagged fallback controls must stay constant")
+            for inst, ((key, _), values) in enumerate(zip(SPECS, parameters)):
+                slots = [self.mods[key].knob_map()[knob] for knob in ("DEL", "REV")]
+                cmd += ["-pword", ",".join(
+                    f"{inst}:{slot:x}={(values[slot] << 16) | (0x800000 if values[slot] else 0):x}"
+                    for slot in slots)]
         if case.events:
             events = [f"{block}:{inst}:{self.mods[SPECS[inst][0]].knob_map()[knob]}={value}"
                       for block, inst, knob, value in case.events]
@@ -165,6 +194,8 @@ class Host:
             raise RuntimeError(f"{name}: incomplete raw24 output")
         result = dict(hashes=[hashlib.sha256(data).hexdigest() for data in audio],
                       peak=[max(map(abs, array.array("i", data))) for data in audio],
+                      tail_peak=[max(map(abs, array.array("i", data[-2048*FRAMES*2*4:])))
+                                 for data in audio],
                       instructions_per_sample=[sum(row[c + 1] for row in steady) / len(steady) / FRAMES
                                                for c in range(2)],
                       max_block_instructions=[max(row[c + 1] for row in steady) for c in range(2)])
@@ -178,6 +209,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("baseline", type=Path)
     ap.add_argument("candidate", type=Path)
+    ap.add_argument("--returns-fallback", action="store_true",
+                    help="12 mode/split cases with equivalent tagged candidate sends and all sources fed")
     ap.add_argument("--engine", choices=("delay", "reverb", "all"), default="all")
     ap.add_argument("--remix", default="bus")
     ap.add_argument("--grains", type=int, choices=(2, 4), default=4)
@@ -196,14 +229,19 @@ def main():
     work.mkdir(parents=True, exist_ok=True)
     mods = registry.bound(registry.remix(args.remix))
     report = dict(engine=args.engine, remix=args.remix, declared_grains=args.grains,
+                  workflow="returns-fallback" if args.returns_fallback else "optimization",
                   baseline=dict(path=str(args.baseline), sha256=sha(args.baseline)),
                   candidate=dict(path=str(args.candidate), sha256=sha(args.candidate)),
                   host=dict(path=str(args.host), sha256=sha(args.host)),
                   meter_unit="executed DSP instructions; not hardware cycles", cases=[], controls=[])
-    hosts = [Host(image, tag, work, mods, args.host, args.keep_raw)
+    hosts = [Host(image, tag, work, mods, args.host, args.keep_raw,
+                  post_fader=args.returns_fallback and tag == "candidate",
+                  inmask=15 if args.returns_fallback else 10)
              for tag, image in (("baseline", args.baseline), ("candidate", args.candidate))]
+    report["extraction"] = dict(script_sha256=sha(ROOT / "tools/harness/image_dsp.py"),
+                                records={h.tag: [sha(m) for m in h.mems] for h in hosts})
     saved = {}
-    for case in cases(args.engine):
+    for case in fallback_cases() if args.returns_fallback else cases(args.engine):
         before, a = hosts[0].render(case)
         after, b = hosts[1].render(case)
         identical = a == b               # Full raw24 byte equality, not a WAV/hash comparison.
@@ -223,7 +261,15 @@ def main():
     def differs(first, second, stream):
         return saved[first]["hashes"][stream] != saved[second]["hashes"][stream]
 
-    if args.engine in ("delay", "all"):
+    if args.returns_fallback:
+        for mode in range(3):
+            name = f"fallback_mode{mode}_split0"
+            for stream, label in ((0, "reverb"), (2, "delay")):
+                control(f"fallback MODE {mode}: {label} has a nonzero tail",
+                        saved[name]["tail_peak"][stream] > 0)
+        control("fallback GRAIN differs from CLEAN", differs("fallback_mode0_split0", "fallback_mode1_split0", 2))
+        control("fallback REVERSE differs from CLEAN", differs("fallback_mode0_split0", "fallback_mode2_split0", 2))
+    elif args.engine in ("delay", "all"):
         control("CLEAN has signal", saved["delay_clean"]["peak"][2] > 0)
         control("TONE is live", differs("delay_clean", "delay_tone", 2))
         control("GRAIN is live", differs("delay_clean", "delay_grain", 2)
@@ -232,7 +278,7 @@ def main():
                 and saved["delay_reverse"]["peak"][2] > 0)
         control("unknown MODE falls back to CLEAN", not differs("delay_clean", "delay_unknown", 2))
         control("delay automation changes audio", differs("delay_held", "delay_automation", 2))
-    if args.engine in ("reverb", "all"):
+    if not args.returns_fallback and args.engine in ("reverb", "all"):
         control("reverb has signal", saved["reverb_mode1"]["peak"][0] > 0)
         for mode in (0, 2):
             control(f"reverb MODE {mode} is live", differs(f"reverb_mode{mode}", "reverb_mode1", 0)
