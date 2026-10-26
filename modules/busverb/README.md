@@ -291,3 +291,7 @@ pointers; n1 is the line stride, n4–n6 table strides and taps.
 - Modal prominence (8–11 dB over the local envelope) is monotonic in total
   delay; total delay read at SIZE max is the lever and it is spent.
 - Change one thing per flash.
+
+The [bus optimization review](../../docs/contributing/BUS_DSP_OPTIMIZATION.md)
+records the original authorship, exact changes, measurement method, regression
+evidence and remaining acceptance requirements.

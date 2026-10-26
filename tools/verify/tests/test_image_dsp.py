@@ -81,6 +81,10 @@ class ImageDspTests(unittest.TestCase):
         image,_=packed(upload(self.a),upload(self.b))
         self.assertEqual(self.run_dump(image,'A'),self.a)
         self.assertEqual(self.run_dump(image,'B'),self.b+self.shared)
+    def test_generic_payload_is_not_parsed_as_dsp_records(self):
+        raw=bytes(range(256))+b'ColdFire runtime, not a DSP upload'
+        image,_=packed(raw,upload(self.b))
+        self.assertEqual(image_dsp.unpack_payload(image,0x48b00000),raw)
     def test_other_destination_is_not_a_fallback(self):
         image,_=packed(upload(self.a),upload(self.b));pointer(image,'A',0x48d00000)
         with self.assertRaisesRegex(ValueError,'0 matching'):

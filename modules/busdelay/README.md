@@ -200,3 +200,7 @@ before it); cost 24 words, 6 cycles per sample by the pricer (1,001 ->
 
 `dsp_host` renders payload B only under `rig_render.py` (both cores); the
 DEV hatch (`make render-delay`) places the delay out of region in payload A.
+
+The [bus optimization review](../../docs/contributing/BUS_DSP_OPTIMIZATION.md)
+records the original authorship, exact changes, measurement method, regression
+evidence and remaining acceptance requirements.

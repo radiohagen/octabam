@@ -16,7 +16,7 @@ _BLANK = Param(b"", None, active=False)
 MODULE = Module(
     name="returns", key="RETURNS", kind=Kind.DSP_CLIENT,
     category=Category.BUS, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.CHECK, proof_note="212 exact DSP cases verify installed bytes, gain/mix, freshness and track/core guards; hardware acceptance pending",
+    proof=Proof.PORT, proof_note="212 exact DSP cases and integrated firmware audio checks; hardware acceptance pending",
     doc="Independent DLY/VRB return levels on T8; into the master input or MAIN.",
     menu=MenuEntry(fx2_id=0x1b, donor_desc=0x400d4772,
                    abbr=b"RETN", fullname=b"Returns", build_tag=False),
