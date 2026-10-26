@@ -2413,6 +2413,13 @@ mkgo:""",
             "; DNOTE_OVERRIDE", "        move    #>%d,a" % int(dnote_env))
         print(f"  *** DNOTE OVERRIDE: BusDelay MIDI note word forced to {int(dnote_env)} ***")
 
+    # Optional bus modules own their transport/routing edits. The static
+    # pricer uses this same path, before memory-address substitutions.
+    from remix import bus_source
+    send_src = bus_source.transform("SEND", send_src, REMIX)
+    reverb_src = bus_source.transform("REVERB SERVER", reverb_src, REMIX)
+    delay_src = bus_source.transform("DELAY SERVER", delay_src, REMIX)
+
     # ---- XBUS=1: move the bus scratch into the SHARED window ---------------
     if os.environ.get("XBUS") == "1":
         # Overridable so the next round is a one-liner, not a code edit.

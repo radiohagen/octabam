@@ -1,6 +1,6 @@
 """RIG HOSTS -- a new part is born hosted: T1's FX2 = BusDelay, T5's =
-BusVerb, T8's (the master) = the stock DELAY (Echo Freeze, for its beat
-repeat), every other track's = SEND.
+BusVerb, T8's (the master) = RETURNS when selected, otherwise the stock
+DELAY (Echo Freeze), every other track's = SEND.
 
 Three detours in the part-defaults initialiser (0x40005638), the routine
 that gives a new part FX1 = FILTER and FX2 = DELAY per track with DELAY's
@@ -27,14 +27,14 @@ H = bytes.fromhex
 def ids_inc(modules, remix):
     """The four ids the unit writes, from the manifests. The stock DELAY
     need not be in the remix (its dispatch stays stock either way), so its
-    id comes from the registry."""
+    id comes from the registry. A remix carrying RETURNS assigns it to T8."""
     from remix import registry
     every = dict(registry.modules()); every.update(modules)
     return f"        .set    FX2_IDS, {idspace.fx2_ids(remix):#x}\n" + "".join(f"        .set    {name}, {every[key].menu.fx2_id}\n"
                    for name, key in (("ID_DELAY", "DELAY SERVER"),
                                      ("ID_VERB", "REVERB SERVER"),
                                      ("ID_SEND", "SEND"),
-                                     ("ID_ECHO", "DELAY")))
+                                     ("ID_ECHO", "RETURNS" if "RETURNS" in remix.modules else "DELAY")))
 
 
 MODULE = Module(
@@ -43,7 +43,7 @@ MODULE = Module(
     kind=Kind.CF_PATCH,
     category=Category.BUS, author="sambanks", author_url="https://github.com/sambanks",
     proof=Proof.HARDWARE, proof_note="cursory testing on Sam's MKII (owner report, 16 Oct 2026); " "a new project born hosted under the port",
-    doc="A new part is born hosted: T1 FX2 = BusDelay, T5 = BusVerb, T8 = the stock DELAY, the rest SEND.",
+    doc="A new part is born hosted: T1 FX2 = BusDelay, T5 = BusVerb, T8 = RETURNS when selected or stock DELAY, the rest SEND.",
     linked=(Linked("righosts", "modules/rig-hosts/righosts.s", include=ids_inc, dram=True),),
     detours=(
         Detour(0x4000567E, H("41f9400d47ad15903800" "41f9400d4ad1226f004413500008"), "righosts", "fx_ids",

@@ -51,6 +51,29 @@ engines' knobs (TEMPO BUS). Turning a MODE on the panel re-defaults the
 knobs around it (MODE DEFAULTS). The FX2 chooser cannot change a track's
 effect (FX2 LOCK).
 
+### Optional post-fader sends and T8 returns
+
+The `send-return-poc` test remix adds POST FADER and RETURNS to the current
+bus rig. DEL and REV follow the source track's LEVEL, mute and solo. A
+muted track retains its original send's normalization share, so the other
+tracks do not become louder. Changing a DEL or REV knob from zero still
+changes participation. Existing repeats and reverb continue to decay;
+the normal send smoothing applies when new input stops.
+
+RETURNS puts separate DLY and VRB return controls on T8's FX2. With MASTER
+TRACK enabled, both returns enter T8 before FX1 and LEVEL. With MASTER
+TRACK disabled, they enter MAIN directly. T1 and T5 keep their engine FX2
+slots, but their dry track level no longer controls the shared wet returns.
+Muting either host therefore leaves other tracks' returns audible. Muting
+the master itself still affects the complete mix.
+
+This combination is opt-in and requires hardware acceptance; the required
+host setup above remains the hardware-qualified setup for the default
+remix. POST FADER follows the mixer's LEVEL/mute/solo snapshot, not scene
+XLV, CUE gain or AMP VOL. See the module references for
+[POST FADER](reference/modules/post-fader.md) and
+[RETURNS](reference/modules/returns.md).
+
 ## FX1
 
 | effect | in place of | modes |
