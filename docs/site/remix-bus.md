@@ -51,6 +51,10 @@ engines' knobs (TEMPO BUS). Turning a MODE on the panel re-defaults the
 knobs around it (MODE DEFAULTS). The FX2 chooser cannot change a track's
 effect (FX2 LOCK).
 
+The current BusDelay/BusVerb optimization candidate has passed exact local
+audio comparisons, with separate checks of DSP state. Its hardware acceptance
+is pending; earlier reports from Sam's unit describe the original engines.
+
 ### Optional post-fader sends and T8 returns
 
 The `send-return-poc` test remix adds POST FADER and RETURNS to the current
@@ -58,7 +62,8 @@ bus rig. DEL and REV follow the source track's LEVEL, mute and solo. A
 muted track retains its original send's normalization share, so the other
 tracks do not become louder. Changing a DEL or REV knob from zero still
 changes participation. Existing repeats and reverb continue to decay;
-the normal send smoothing applies when new input stops.
+the normal send smoothing applies when new input stops. A host saved muted
+also starts with zero wet excitation, including during engine warm-up.
 
 RETURNS puts separate DLY and VRB return controls on T8's FX2. With MASTER
 TRACK enabled, both returns enter T8 before FX1 and LEVEL. With MASTER

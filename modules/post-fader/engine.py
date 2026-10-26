@@ -43,6 +43,18 @@ def transform(name: str, src: str) -> str:
         and     #>$7fff00,a
         move    a1,y1                   ; remove stale negative A2
         move    y1,a""")
+        # The firmware can send an unscaled initialization record before
+        # pf_frame runs. DEL setup precedes the tank warmup, but the sample
+        # loop that advances its ramp does not run while warming. Keep the
+        # existing sentinel until processing starts, so the first real
+        # sample seeds from its current scaled target, not the init record.
+        # Once warm, this branch is never entered and running tails/ramp
+        # smoothing are untouched.
+        src = _once(src, """        bra     dry                     ; output stays dry until warm
+warmdone:""", """        move    #>$ffffff,a            ; POST FADER: defer DEL seed until warm
+        move    a,y:>$09f4
+        bra     dry                     ; output stays dry until warm
+warmdone:""")
         return _once(src, """        move    x:(r6),a                ; DEL
         and     #>$7f0000,a""", """        move    x:(r6),a                ; POST FADER: original DEL participation
         and     #>$800000,a""")

@@ -32,7 +32,13 @@ FIXTURES = (("baseline", 100), ("muted", 100), ("faded", 100), ("solo", 100),
 RETURNS_RB = ((1, (0x80003190, 0x80003590), 0, "T1"), (0, (0x80003390, 0x80003790), 0, "T5"))
 
 
-def stage(template, remix, tag, t7, audio):
+def stage(template, remix, tag, t7, audio, *, source_track=2, mute_mask=None):
+    """Stage one owned fixture; optional source/mute overrides serve host checks.
+
+    The default remains a T2-only source with the original tag-based T7 mute.
+    mute_mask seeds the saved project before DSP initialization, allowing a
+    zero-excitation check without residual send smoothing from an earlier level.
+    """
     d = OUT / tag
     shutil.rmtree(d, ignore_errors=True)
     (d / "project").mkdir(parents=True)
@@ -53,8 +59,8 @@ def stage(template, remix, tag, t7, audio):
         # move the knobs the records are checked against
         for pat in range(16):
             for t in range(8):
-                if t != 1:
-                    # Clear sample triggers on every source except T2. This
+                if t != source_track - 1:
+                    # Clear sample triggers except the selected source. This
                     # makes T7's changed fader unable to change dry audio.
                     start = otp.trac_off(pat, t)
                     data[start:start+8] = bytes(8)
@@ -83,7 +89,7 @@ def stage(template, remix, tag, t7, audio):
                             f"MIDI_TRIG_CH{track+1}={track}".encode(), raw)
         assert count == 1, "fixture needs eight track MIDI channel settings"
     # Own the mute state; do not rely on an arbitrary user's template.
-    mute = 64 if tag == "muted" else 0
+    mute = mute_mask if mute_mask is not None else (64 if tag == "muted" else 0)
     raw, nm = re.subn(rb"(?m)^TRACK_MUTE_MASK=\d+", f"TRACK_MUTE_MASK={mute}".encode(), raw)
     raw, ns = re.subn(rb"(?m)^TRACK_SOLO_MASK=\d+", (b"TRACK_SOLO_MASK=2" if tag == "solo" else b"TRACK_SOLO_MASK=0"), raw)
     assert nm == ns == 1, "fixture must contain audio mute/solo masks"
@@ -97,7 +103,12 @@ def stage(template, remix, tag, t7, audio):
         sys.exit(f"verify_postfader: stage_card {tag} failed:\n{r.stdout[-800:]}{r.stderr[-800:]}")
 
 
-def run(image, tag):
+def run(image, tag, *, mute_track=None, mute_frame=None, dsp_peek=None):
+    """Run a frozen image; optional MIDI target/timing and end-state DSP peeks.
+
+    Omitted options preserve the ten-case gate's existing MIDI behavior.
+    dsp_peek uses ot_emu's core:space:address,count list for focused diagnostics.
+    """
     d = OUT / tag
     cmd = [str(EMU), "--image", str(image), "--card", str(d / "card.img"), "--set", "OCTABAM",
            "--project", "PF", "--sequencer", "--internal-clock", "--frames", str(FRAMES),
@@ -105,14 +116,17 @@ def run(image, tag):
            "--poke", "0x80000049=1",       # audio CC input enabled
            "--block-dump", str(d / "blocks.dump"),
            "--mem-dump", f"0x80000000,0x8000={d / 'sram.bin'}"]
-    if tag.startswith("tail_t") or tag == "source_muted":
-        track = int(tag[6:]) if tag.startswith("tail_t") else 2
-        # The continuous source starts before its mute, and both engines
-        # are still warming when it is cut: their eventual wet must be 0.
-        when = MUTE_FRAME if tag.startswith("tail_t") else 64
+    if mute_track is not None or tag.startswith("tail_t") or tag == "source_muted":
+        track = mute_track if mute_track is not None else (int(tag[6:]) if tag.startswith("tail_t") else 2)
+        # source_muted cuts the T2 fixture before it can excite the warmed
+        # buses. Tail fixtures and explicit overrides have separate timing
+        # and expectations; an arbitrary warm-up mute need not imply wet=0.
+        when = mute_frame if mute_frame is not None else (MUTE_FRAME if tag.startswith("tail_t") else 64)
         midi = d / "mute.midi"
         midi.write_text(f"{when} {0xaf+track:02X} 31 7F\n")
         cmd += ["--midi", str(midi)]
+    if dsp_peek:
+        cmd += ["--dsp-peek", dsp_peek]
     with open(d / "run.txt", "w") as f:
         r = subprocess.run(cmd, cwd=ROOT, stdout=f, stderr=subprocess.STDOUT)
     return tag, r.returncode

@@ -31,7 +31,7 @@ MODULE = Module(
     key="POST FADER",
     kind=Kind.CF_PATCH,
     category=Category.BUS, author="sanderlegit", author_url="https://github.com/sanderlegit",
-    proof=Proof.PORT, proof_note="6144 hook cases, held-note DSP comparisons and 10 firmware audio cases passed; hardware acceptance pending",
+    proof=Proof.PORT, proof_note="6144 hook cases, held-note DSP comparisons, 10 firmware audio cases and 4 sounding-host cases passed; hardware acceptance pending",
     doc="The bus sends follow LEVEL, mute and solo while keeping each original send's "
         "normalization share; muting a source leaves other sources' gain unchanged.",
     linked=(Linked("postfader", "modules/post-fader/postfader.s", dram=True, include=ids_inc),),
@@ -43,5 +43,6 @@ MODULE = Module(
     requires=("SEND",),
     gates=(Gate("tools/verify/verify_postfader_hook.py", venv=True, stage="image"),
            Gate("tools/verify/verify_postfader_dsp.py", stage="image"),
-           Gate("tools/verify/verify_postfader.py", venv=True),),
+           Gate("tools/verify/verify_postfader.py", venv=True),
+           Gate("tools/verify/verify_postfader_hosts.py", venv=True, stage="image"),),
 )

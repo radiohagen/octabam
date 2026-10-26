@@ -56,7 +56,7 @@ MODULE = Module(
     key="DELAY SERVER",
     kind=Kind.DSP_EFFECT,
     category=Category.BUS, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.HARDWARE, proof_note="Sam's MKII",
+    proof=Proof.RENDER, proof_note="optimized path: 72 audio comparisons plus two adversarial state runs; original ran on Sam's MKII; hardware acceptance of optimization pending",
     doc="Multi-mode delay: CLEAN / pitched GRAIN cloud / REVERSE, tape wow.",
     menu=MenuEntry(
         fx2_id=0x06,

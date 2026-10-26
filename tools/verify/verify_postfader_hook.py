@@ -4,6 +4,8 @@
 The stock builder is stubbed only in this micro gate so records can be varied
 independently. verify_postfader.py covers the real builder and DSP audio.
 """
+import argparse
+import hashlib
 import json
 import pathlib
 import runpy
@@ -15,6 +17,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 import toolpath  # noqa: E402,F401
 from remix import registry
+from remix.platform_build import UNCACHED
+from image_dsp import unpack_payload
 from unicorn import Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN, UC_HOOK_CODE
 from unicorn import m68k_const as reg
 
@@ -24,7 +28,12 @@ BASE, STACK, MIX = 0x40000400, 0x40fff000, 0x80006000
 
 
 def main():
-    remix = registry.remix(sys.argv[1])
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument('remix')
+    ap.add_argument('--image', type=pathlib.Path, default=ROOT / 'out/mainos_bus.bin')
+    ap.add_argument('--receipt', type=pathlib.Path)
+    args = ap.parse_args()
+    remix = registry.remix(args.remix)
     if 'POST FADER' not in remix.modules:
         print('[ -- ] no POST FADER'); return
     mods = registry.bound(remix)
@@ -33,19 +42,35 @@ def main():
     delay = mods['DELAY SERVER'].menu.fx2_id if 'DELAY SERVER' in remix.modules else None
     verb = mods['REVERB SERVER'].menu.fx2_id if 'REVERB SERVER' in remix.modules else None
     if remix.fallback == 'SEND': selected.add(0)
-    image = (ROOT / 'out/mainos_bus.bin').read_bytes()
-    symbols = subprocess.check_output(['m68k-elf-nm', str(ROOT / 'out/platform/runtime/runtime.elf')], text=True)
+    image = args.image.read_bytes()
+    elf = ROOT / 'out/platform/runtime/runtime.elf'
+    layout_path = ROOT / 'out/platform/layout.json'
+    symbols = subprocess.check_output(['m68k-elf-nm', str(elf)], text=True)
     target = next(int(f[0], 16) for line in symbols.splitlines()
                   if len(f := line.split()) == 3 and f[2] == 'pf_frame')
     assert image[HOOK-BASE:END-BASE] == b'\x4e\xb9' + target.to_bytes(4, 'big')
+    layout = json.loads(layout_path.read_text())
+    # The loader writes through the uncached alias; code executes at base.
+    runtime = unpack_payload(image, layout['base'] + UNCACHED)
+    assert layout['base'] <= target < layout['base'] + len(runtime), 'hook is outside image runtime'
+    assert layout['runtime_end'] == layout['base'] + len(runtime), 'runtime layout does not match image'
     u = Uc(UC_ARCH_M68K, UC_MODE_BIG_ENDIAN)
     u.ctl_set_cpu_model(reg.UC_CPU_M68K_CFV4E)
     u.mem_map(0x40000000, 0x1000000); u.mem_map(0x80000000, 0x10000)
     u.mem_write(BASE, image)
-    layout = json.loads((ROOT / 'out/platform/layout.json').read_text())
-    u.mem_write(layout['base'], (ROOT / 'out/platform/runtime/runtime.bin').read_bytes())
+    u.mem_write(layout['base'], runtime)
     exercise(u, send, delay, verb, selected, 'installed hook')
     synthetic_ids()
+    receipt = dict(image=str(args.image.resolve()), image_sha256=hashlib.sha256(image).hexdigest(),
+                   runtime_base=layout['base'], runtime_bytes=len(runtime),
+                   runtime_sha256=hashlib.sha256(runtime).hexdigest(), hook_target=target,
+                   layout_sha256=hashlib.sha256(layout_path.read_bytes()).hexdigest(),
+                   symbols_elf_sha256=hashlib.sha256(elf.read_bytes()).hexdigest(),
+                   installed_cases=2048, synthetic_cases=4096, passed=True)
+    print('[ok] image-bound runtime: ' + receipt['runtime_sha256'])
+    if args.receipt:
+        args.receipt.parent.mkdir(parents=True, exist_ok=True)
+        args.receipt.write_text(json.dumps(receipt, indent=2) + '\n')
 
 
 def exercise(u, send, delay, verb, selected, label):
