@@ -35,6 +35,16 @@ off and the output is mono to both channels.
 
 ## Measured
 
+- The 26 Oct 2026 optimization shares GRAIN's distance, window gain and
+  fractional-position calculation between L and R. Each channel still
+  interpolates its own audio and accumulates it in the original order.
+  Four-grain static loop cost falls from 975 to 777; two-grain from 669
+  to 563. These are the static model's counts, not measured chip load.
+  The focused `tools/verify/verify_bus_dsp_identity.py` compares supplied
+  baseline/candidate images as raw 24-bit audio and records executed
+  instruction counts. The 8192-instruction DMA read-back pad is retained;
+  emulator identity does not establish physical DMA timing.
+
 - CLEAN and REVERSE bit-identical across the `verify_delay` cases (defaults,
   PING 0/127, TIME 0/127, FDBK+TONE, split, WET 0, wow, the unknown-mode
   fallback); `verify-bus` 28/28 (GRAIN, REVERSE, PING and the reverb's other arms were added to the gate 23 Sep 2026).

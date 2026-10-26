@@ -169,7 +169,9 @@ MODULE = Module(
     # whole span (base+0x800 + count*80, 256 blocks), and the port census
     # (verify_set, OCTABAM89_setgate bank 2, 900 frames) saw non-zero writes
     # in +0x0800-0x0FFF, 0x2000-0x43FF, 0x4500-0x45FF and 0x4800-0x57FF.
-    claims=Claims(owns_fx2_buffers=True, dsp_ranges=(
+    claims=Claims(owns_fx2_buffers=True,
+                  reserved_private_y=tuple(range(0x0e00, 0x0e27)),
+                  dsp_ranges=(
         DspRange("y", 0x0800, 0x5000, "shimmer, pre-delay, allpasses, tank state, bloom",
                  half_relative=True),)),
     harness=Harness(layout_char="R", is_server=True),

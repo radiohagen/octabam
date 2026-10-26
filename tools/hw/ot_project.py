@@ -4,7 +4,7 @@
     python3 tools/hw/ot_project.py report PROJECT_DIR
     python3 tools/hw/ot_project.py set-gain PROJECT_DIR SLOT DB      # e.g. 12 -3.5
     python3 tools/hw/ot_project.py apply PROJECT_DIR PLAN.json       # {"12": -3.5, ...}
-    python3 tools/hw/ot_project.py host PROJECT_DIR [REMIX]            # the locked rig: T1 BusDelay, T5 BusVerb, T8 stock DELAY, the rest SEND, then defaults
+    python3 tools/hw/ot_project.py host PROJECT_DIR [REMIX]            # the locked rig: T1 BusDelay, T5 BusVerb, T8 RETURNS or stock DELAY, the rest SEND, then defaults
     python3 tools/hw/ot_project.py stamp-defaults PROJECT_DIR REMIX [--all] [--keep-mode]
         # replaced ids only (the stations); --all = every module of ours
         # including the engines (after a slot re-layout); --keep-mode keeps
@@ -778,13 +778,19 @@ def set_fx(pdir, which_slot, track, which, page=None, page2=None, guard=True):
 
 def host_rig(pdir, remix_name, guard=True):
     """The locked rig's FX2 assignment in every part of every bank: T1 =
-    DELAY SERVER, T5 = REVERB SERVER, T8 = the stock DELAY, every other
-    track SEND; then the
+    DELAY SERVER, T5 = REVERB SERVER, T8 = RETURNS when selected (otherwise
+    the stock DELAY), every other track SEND; then the
     engines' and stations' defaults (stamp-defaults --all --keep-mode). The
     engines have no chooser row since image 52 (22 Sep 2026), so this is
     how a project comes to host them."""
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1])); import toolpath  # noqa: E402,F401
+    from remix import registry
+    remix = registry.remix(remix_name)
+    modules = registry.bound(remix)
+    t8 = "RETURNS" if "RETURNS" in remix.modules else "DELAY"
     for t in range(1, NTRACKS + 1):
-        set_fx(pdir, "fx2", t, {1: "DELAY SERVER", 5: "REVERB SERVER", 8: "DELAY"}.get(t, "SEND"), guard=guard)
+        key = {1: "DELAY SERVER", 5: "REVERB SERVER", 8: t8}.get(t, "SEND")
+        set_fx(pdir, "fx2", t, modules[key].menu.fx2_id, guard=guard)
     stamp_defaults(pdir, remix_name, replaced_only=False, guard=guard, keep_mode=True)
 
 

@@ -57,6 +57,8 @@ nav:
   - Bus Setup:
       - FX2 Lock: reference/modules/fx2-lock.md
       - Mode Defaults: reference/modules/mode-defaults.md
+      - Post Fader: reference/modules/post-fader.md
+      - Returns: reference/modules/returns.md
       - Rig Hosts: reference/modules/rig-hosts.md
       - Tempo Sync: reference/modules/tempo-sync.md
   - Machines and Sequencer:
