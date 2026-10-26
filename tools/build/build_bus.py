@@ -3173,10 +3173,13 @@ mkgo:""",
                 continue
             if _texts[_k].count("; HOSTGUARD\n") != 1:
                 sys.exit(f"{_k}: more than one ; HOSTGUARD marker")
+            # A is the dispatcher's split-call flag. The engine saves it
+            # before advancing block-rate state; clobbering it here made
+            # both halves advance the reverb LFO. B is scratch at entry.
             _texts[_k] = _texts[_k].replace("; HOSTGUARD\n", """
-        move    r7,a
+        move    r7,b
         move    #>$6200,x0
-        cmp     x0,a
+        cmp     x0,b
         bne     hostquit                ; not the host slot: exact dry pass
 """, 1) + """
 hostquit:

@@ -39,7 +39,9 @@ off and the output is mono to both channels.
   fractional-position calculation between L and R. Each channel still
   interpolates its own audio and accumulates it in the original order.
   Four-grain static loop cost falls from 975 to 777; two-grain from 669
-  to 563. These are the static model's counts, not measured chip load.
+  to 563. The raw-audio fixtures save 184 executed instructions per sample
+  with four grains and 98 with two; CLEAN saves six and REVERSE two.
+  These are static/emulator counts, not measured chip load.
   The focused `tools/verify/verify_bus_dsp_identity.py` compares supplied
   baseline/candidate images as raw 24-bit audio and records executed
   instruction counts. The 8192-instruction DMA read-back pad is retained;
