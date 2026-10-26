@@ -93,12 +93,13 @@
 ;                       is the PITCH decode's f park before the makeup lands)
 ;   r7+$3e/$3f          GRAIN rstep (read advance per sample, Q9) / 2^(32-k)
 ;                       (per block)
-;   r7+$40..$4b         GRAIN line-L records: s, w, acc x 4 grains
+;   r7+$40..$4b         GRAIN shared stereo records: s, w, acc x 4 grains
 ;                       (persistent, latched at each grain's own wrap;
 ;                       cleared by the warm-up)
-;   r7+$4c..$57         GRAIN line-R records. Until 23 Sep 2026 the SIZE
-;                       decode wrote the REVERSE lag cap to raw $56 (grain
-;                       3's window multiplier) every block, in every mode
+;   r7+$4c..$57         GRAIN per-sample cache: distance, window gain, frac
+;                       x 4 grains. L writes every live entry before R reads
+;                       it. Formerly duplicate line-R s/w/acc records; until
+;                       23 Sep 2026 the SIZE decode also wrote raw $56
 ;   r7+$58/$59          this sample's scatter / window-multiplier candidates
 ;   r7+$5a/$5b          GRAIN makeup's run value / its per-sample step
 ;   r7+$5c              SCTR, knob<<16 (per block)
@@ -573,8 +574,8 @@ dwarmc:
 ; window (AGENTS.md, the a0 trap), and it is why the two-grain build is the
 ; better-checked of the two.
 ;
-; GRAIN's PERSISTENT latches: eight scatters, eight window multipliers and
-; eight read advances, each re-latched at its own grain's wrap. A garbage
+; GRAIN's PERSISTENT latches: four scatters, four window multipliers and
+; four read advances, shared by L/R and re-latched at each grain's wrap. A garbage
 ; scatter subtracts straight into a read address and a garbage multiplier
 ; is a garbage window for one grain-life, so both start at 0.
         move    b,y:>$090a              ; the latched MIDI note starts at NONE.
@@ -1503,23 +1504,17 @@ rskipr:
         mpy     x0,y1,a
         move    n6,b                    ; x_in
         add     b,a
-        move    a,x0                    ; limit
-        move    x0,a
-        move    a,y:(r1)+               ; LineL write, advance
+        move    a,y:(r1)+               ; limiting LineL write, advance
 
         move    x:(r7+$23),a            ; skipR (REVERSE-32K): no R write, it
         tst     a                       ; would land in the mono ring's upper half
         bne     rskipw
-        move    y0,a                    ; fbIntoR
-        move    a,x0
+        move    y0,x0                   ; fbIntoR (already a limited 24-bit value)
         mpy     x0,y1,a                 ; * FDBK
-        move    n6,b
-        move    b,x0                    ; x_in
+        move    n6,x0                   ; x_in (already a limited 24-bit value)
         move    x:(r7+$37),y1           ; 1 - PING
         mac     x0,y1,a                 ; + the direct input's share
-        move    a,x0                    ; limit
-        move    x0,a
-        move    a,y:(r2+n2)             ; LineR write (phase + base)
+        move    a,y:(r2+n2)             ; limiting LineR write (phase + base)
         move    (r2)+                   ; advance the phase
 rskipw:
 
@@ -1620,15 +1615,18 @@ gmode:
         add     x0,a
         move    a,x:(r7-$1b)
 ; ---- READER, line L: four grains, rolled -----------------------------------
-; Records of THREE words at raw $40: s (latched scatter), w (window
-; multiplier, 0 = muted), acc (read advance, Q14.9). Every latch is a Tcc
+; Shared stereo records of THREE words at raw $40: s (latched scatter), w
+; (window multiplier, 0 = muted), acc (read advance, Q14.9). The old L/R
+; records were identical: both cleared at warm-up, then given the same phase,
+; scatter, window candidate and read step. Compute their control values once
+; and cache distance/gain/fraction at raw $4c for R's separate audio reads.
+; Each channel keeps its original interpolation and limiting sum order.
+; Every latch is a Tcc
 ; reading the ONE `tst` of this grain's phase, with nothing but moves between
 ; them; the `add` that advances acc comes AFTER the last of them. The phase
 ; cursor walks r6 by G/4 per trip; the wet sum accumulates in n6; b is the
 ; latch register, then acc, then frac, then t0.
-        move    r7,a                    ; records at raw $40 = r7 - 9
-        sub     #>$9,a                  ; (r7 is rebased by $49 here)
-        move    a,r4                    ; (m4 is linear from the block preamble)
+        lua     (r7-$9),r4              ; records at raw $40 (r7 rebased by $49)
         move    n1,n5                   ; this line's base for the reads
         clr     a
         move    a,n6                    ; wet L = 0
@@ -1683,6 +1681,12 @@ gmode:
                                         ; at the oldest sample: a flat spot,
                                         ; not a wrap)
         move    a,x0
+; r4 already points to the next persistent record: +9 reaches this grain's
+; cache at raw $4c + 3*grain. All three values fit in 24 bits; no rounding
+; changes here. The two-grain build writes and reads only its first two rows.
+        move    x0,x:(r4+$9)            ; distance, shared by both lines
+        move    y1,x:(r4+$a)            ; window gain
+        move    b,x:(r4+$b)             ; interpolation fraction
         move    r1,a                    ; the line's write pointer
         sub     #>1,a                   ; the line write above advanced it
         sub     x0,a                    ; W - dist
@@ -1727,66 +1731,16 @@ gvlz:
         mpy     x0,y1,b
 ; GRAINMK
         move    b,x:(r7+$32)            ; wet L
-; ---- READER, line R: the same four grains on the R records ---------------
-        move    r7,a                    ; records at raw $4c = r7 + 3
-        add     #>$3,a                  ; (r7 is rebased by $49 here)
-        move    a,r4
-        move    x:(r7-$17),a
-        move    a,r6                    ; cursor = age (grain 0's phase)
+; ---- READER, line R: cached control, independent line audio --------------
+        lua     (r7+$3),r4              ; cache at raw $4c (r7 rebased by $49)
         move    n2,n5                   ; this line's base for the reads
         clr     a
         move    a,n6                    ; wet R = 0
 ; GRAINCNT
         do      #4,>gvrz
-        move    r6,a                    ; this grain's phase
-        tst     a                       ; Z SET == its wrap
-        move    a,x1                    ; phase, kept for the distance
-        move    x:(r7+$f),x0           ; candidate scatter
-        move    x:(r4),b
-        teq     x0,b
-        move    b,x:(r4)+               ; s
-        move    b,y0                    ; s
-        move    x:(r7+$10),x0           ; candidate multiplier (0 = muted)
-        move    x:(r4),b
-        teq     x0,b
-        move    b,x:(r4)+               ; w
-        move    b,y1                    ; w, the window multiplier
-        move    #$0,x0 
-        move    x:(r4),b
-        teq     x0,b                    ; acc restarts at the wrap
-        move    x:(r7-$1b),x0           ; rstep, this sample's
-        add     x0,b                    ; acc += rstep
-        move    b,x:(r4)+               ; -> the next record
-        move    a,x0                    ; phase
-        mpy     x0,y1,a                 ; a0 = wrap(2*phase/G), signed Q23
-        move    a0,x0
-        move    x0,a                    ; reloaded clean: A2 consistent
-        abs     a
-        move    a,y1                    ; the window gain
-        move    b,a                     ; acc
-        asr     #$9,a,a                 ; integer samples advanced
-        move    a1,x0
-        move    b,a
-        and     #>$1ff,a                ; the fraction
-        asl     #$e,a,a                 ; -> Q23
-        move    a,b                     ; frac
-        move    x:(r7-$e),a            ; lag + G + 2
-        sub     x0,a                    ; - advance
-        add     y0,a                    ; + s
-        add     x1,a                    ; + phase = dist: W moves one sample
-                                        ; per sample, so a distance that does
-                                        ; not grow with the phase reads an
-                                        ; octave up at unity
-        move    #>$2,x0
-        cmp     x0,a                    ; never the head's own slot ...
-        tlt     x0,a
-        move    #>$7fff,x0                                                 ; @B
-        move    #>$3fff,x0                                                 ; @DEV
-        cmp     x0,a                    ; ... and never past the line's end
-        tgt     x0,a                    ; (a low pitch on a long grain pins
-                                        ; at the oldest sample: a flat spot,
-                                        ; not a wrap)
-        move    a,x0
+        move    x:(r4)+,x0              ; distance from the shared control pass
+        move    x:(r4)+,y1              ; window gain
+        move    x:(r4)+,b               ; interpolation fraction
         move    r2,a                    ; the line's write pointer
         sub     #>1,a                   ; the line write above advanced it
         sub     x0,a                    ; W - dist
@@ -1810,12 +1764,6 @@ gvlz:
         move    n6,a
         add     x0,a
         move    a,n6                    ; wet +=
-        move    x1,a                    ; next grain: a quarter further round
-        move    x:(r7-$10),x0
-        add     x0,a
-        move    x:(r7-$11),x0
-        and     x0,a
-        move    a1,r6                   ; a1 straight in (the loop top reads r6 back)
 gvrz:
 ; ---- wet R -------------------------------------------------------------
         move    n6,a
