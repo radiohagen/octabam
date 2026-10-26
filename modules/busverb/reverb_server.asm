@@ -1992,6 +1992,12 @@ tankend:
         move    x0,a                    ; A2-clean
         move    a,y:>$0905
         move    a,x1                    ; parked for the int/frac splits below
+; Only the read heads are dispensable at exact-zero SHMR. Keep the filters,
+; buffer writes and both phases above live so re-enabling sees the same tail.
+; Test the glided gain, not the knob: a turn to zero must finish its glide.
+        move    x:(r7+$0e),a
+        tst     a
+        beq     shquiet
 ; frac_total = wobble frac + read-phase frac, carry out:
         move    x:(r7+$21),a           ; line-0 LFO offset (x MOD depth)
         and     #>$3,a                  ; sub-word bits of the sample offset
@@ -2161,6 +2167,7 @@ shd1:
         move    x:(r7+$15),x0           ; is never read here)
         add     x0,a
         move    a,x:(r7+$15)            ; tank input, with the octave folded in
+shquiet:
 ; SHIMMER_END
 
 ; ---- feedback and write back (ROLLED, 8-line) ----------------------------
