@@ -15,6 +15,15 @@ the 32K re-layout, the crackle, the voicing rounds up to 16 Sep 2026) is
 `git show 666b6154:docs/effects/REVERB.md`. ✅ measured on the unit, 🟡
 harness only.
 
+The 26 Oct 2026 optimization skips shimmer interpolation and windowing only
+when its **glided** gain is exactly zero. Its write buffer, filters and both
+phases continue advancing, so switching shimmer back on retains the same
+state. Raw 24-bit comparison against the original engine passed all three
+modes, active shimmer and automated SHMR/SHFT/MODE changes, including a
+split block. With shimmer off the fixture saves about 111 executed
+instructions per sample; active shimmer adds three for the guard. These
+are emulator instruction counts, not hardware utilization measurements.
+
 ## Knobs
 
 Since 26 Sep 2026 the host page draws DEL and REV only (the remix's

@@ -82,11 +82,17 @@ def bank_worst(rows, mods, fx1=(), stock_fx1_keys=()):
     Returns (total, [(name, count), ...]).
     """
     cyc = {r["name"]: r["cycles"] for r in rows}
+    # A fixed-frame mix hook runs once outside the FX slot dispatcher. It
+    # must not disappear when a dearer insert wins the slot envelope. Add
+    # it once on top; this is conservative when its payload is not the one
+    # with the worst slot mix (this model does not split that mix by core).
+    fixed = {r["name"] for r in rows if r.get("fixed_hook")}
     servers = sorted((m for m in mods if m["server"] and m["stem"] in cyc),
                      key=lambda m: -cyc[m["stem"]])
     # An FX1-ONLY module (Claims.fx1_only: an FX2 instance runs dry, 12 Sep
     # 2026) never costs an FX2 slot; it is charged on the FX1 slots below.
     others = sorted((m for m in mods if not m["server"] and m["stem"] in cyc
+                     and m["stem"] not in fixed
                      and not m.get("fx1_only")),
                     key=lambda m: -cyc[m["stem"]])
     picks = []
@@ -106,12 +112,13 @@ def bank_worst(rows, mods, fx1=(), stock_fx1_keys=()):
     # inheriting the stock row when the remix leaves stock's FX1 list
     # alone: SPECTRUM on FILTER's id is on FX1 whether or not
     # anyone typed it, so it is priced x4 like anything else there.
-    fx1_mods = [m for m in mods if m["stem"] in cyc
+    fx1_mods = [m for m in mods if m["stem"] in cyc and m["stem"] not in fixed
                 and (m["key"] in fx1
                      or (not fx1 and m.get("replaces") in stock_fx1_keys))]
     if fx1_mods:
         picks += [max(fx1_mods, key=lambda m: cyc[m["stem"]])["stem"]] \
             * FX1_SLOTS
+    picks += sorted(fixed)
     counts = {}
     for n in picks:
         counts[n] = counts.get(n, 0) + 1
@@ -131,7 +138,22 @@ BURN_INJECT = [
 
 MARKER = "__cyc_body"
 INNER_MARKER = "__cyc_inner"
-SAMPLE_LOOP = re.compile(r"^\s*do\s+n7\s*,\s*>?(\w+)\s*(?:;.*)?$", re.I)
+SAMPLE_LOOP = re.compile(r"^\s*do\s+(?:n7|x0(?=\s*,[^;]+;\s*CYCLES_SAMPLE_LOOP\s*$))\s*,\s*>?(\w+)\s*(?:;.*)?$", re.I)
+# A mixdown hook sees a fixed 16-frame block, not an effect's n7. Opt in
+# explicitly; a 32-word mono loop runs twice per stereo sample. As with
+# ordinary effects, setup and work outside the sample loop are not priced.
+FRAME_LOOP = re.compile(r"^\s*do\s+#<\$(10|20)\s*,\s*>?(\w+)\s*;\s*CYCLES_FRAME_LOOP\s*$", re.I)
+
+
+def sample_loop(line):
+    m = SAMPLE_LOOP.match(line)
+    if m:
+        return m.group(1), 1
+    m = FRAME_LOOP.match(line)
+    if m:
+        return m.group(2), int(m.group(1), 16) // 16
+    return None
+
 # A COUNTED inner loop: `do #4,>tankend`. The tank is rolled over its lines,
 # so words != cycles for its body -- but the count is a literal, so the cycles
 # are still exactly computable: the body simply runs N times. Anything else in
@@ -180,7 +202,10 @@ def prep(name):
         # word count, but assert the shape it relies on so a drift is loud.
         if src.count("$30000") != 1:
             sys.exit(f"{name}: expected exactly one $30000 literal")
-    return src
+    from remix import bus_source
+    key = next(m.key for m in registry.modules().values()
+               if m.dsp is not None and pathlib.Path(m.dsp.asm).stem == name)
+    return bus_source.transform(key, src, registry.remix(os.environ.get("REMIX")))
 
 
 def assemble(src, tag):
@@ -217,9 +242,17 @@ def measure(name):
     src = prep(name)
     lines = src.split("\n")
 
-    hits = [i for i, l in enumerate(lines) if SAMPLE_LOOP.match(l)]
+    hits = [i for i, l in enumerate(lines) if sample_loop(l)]
     if not hits:
         sys.exit(f"{name}: no `do n7,>...` sample loop found")
+    # Routing copies run in addition to the engine. Their explicit marker
+    # prevents treating them as mutually exclusive effect modes. Charging
+    # even conditional copies gives a conservative routing path cost.
+    auxiliary = [i for i in hits if "; CYCLES_AUX_LOOP" in lines[i]]
+    hits = [i for i in hits if i not in auxiliary]
+    if not hits:
+        sys.exit(f"{name}: only auxiliary sample loops found")
+    extra = sum(_measure_loop(name, src, lines, i)["cycles"] for i in auxiliary)
     if len(hits) > 1:
         alts = [_measure_loop(name, src, lines, i) for i in hits]
         worst = max(alts, key=lambda m: m["cycles"])
@@ -229,12 +262,21 @@ def measure(name):
             f"worst of {len(alts)} mode loops ({others})"
         # every priced path, for --modes: (loop end label, alternative, cycles)
         worst["modes"] = [m for a in alts for m in a["modes"]]
-        return worst
-    return _measure_loop(name, src, lines, hits[0])
+        result = worst
+    else:
+        result = _measure_loop(name, src, lines, hits[0])
+    if extra:
+        result["cycles"] += extra
+        result["modes"] = [(end, alt, cost + extra) for end, alt, cost in result["modes"]]
+        result["inner"] += (", " if result["inner"] else "") + f"routing copies <= {extra}"
+    result["fixed_hook"] = all(FRAME_LOOP.match(lines[i]) for i in hits)
+    if result["fixed_hook"]:
+        result["inner"] += (", " if result["inner"] else "") + "once outside FX slots"
+    return result
 
 
 def _measure_loop(name, src, lines, i):
-    end_label = SAMPLE_LOOP.match(lines[i]).group(1)
+    end_label, per_frame = sample_loop(lines[i])
 
     # The body is everything between the `do` and its end label. Refuse to
     # report a number if it contains anything that breaks words==cycles.
@@ -272,6 +314,8 @@ def _measure_loop(name, src, lines, i):
     fork = {}
     mids = []
     for si, sl in enumerate(lines):
+        if not i < si < end_line:
+            continue
         if sl.strip().startswith("; MODEFORK_BEGIN"):
             fork["begin"] = si
         elif sl.strip().startswith("; MODEFORK_MID"):
@@ -505,6 +549,10 @@ def _measure_loop(name, src, lines, i):
         modes = [(end_label, f"arm {a}", shared + c) for a, c in sorted(arm_cyc.items())]
     else:
         modes = [(end_label, "", cycles)]
+    if per_frame != 1:
+        cycles *= per_frame
+        modes = [(end, alt, cost * per_frame) for end, alt, cost in modes]
+        note = (note + ", " if note else "") + f"{per_frame} words per stereo frame"
     return dict(name=name, words=words, cycles=cycles, inner=note,
                 loop_end=end_label, total_words=len(blob) // 3, marked=marked,
                 modes=modes)

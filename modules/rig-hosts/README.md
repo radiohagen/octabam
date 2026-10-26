@@ -33,3 +33,7 @@ with `python3 tools/hw/ot_project.py host <project>`.
 ## Open
 
 - A project born on the unit under the current module.
+
+With RETURNS selected in the remix, the same initializer assigns T8's FX2
+to RETURNS, and the host conversion command makes the same choice using
+the remix's bound effect IDs. Without RETURNS, T8 keeps stock DELAY.

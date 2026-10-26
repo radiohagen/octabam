@@ -76,7 +76,7 @@ id_by_track:
         rts
 2:      cmpl    #7,%d3
         bne     3f
-        moveq   #ID_ECHO,%d0            | track 8, the master: the stock delay
+        moveq   #ID_ECHO,%d0            | track 8: RETURNS or stock DELAY, from remix.inc
 3:      rts
 
 | ---- a1 = the descriptor P of track d3's FX2 (d0 saved: live in the loop) --
