@@ -43,6 +43,16 @@ upstream send transport and normalization behavior unchanged.
 installed detour with the stock builder stubbed. It checks both record
 banks, every LEVEL, zero and fractional controls, held notes, stale marker
 bits, selected IDs, non-send records, mixer data and saved registers.
+It also assembles the hook in private scratch with IDs 33/34/35 and with
+SEND alone at 39, checking remapping and absent-engine guards. Those
+synthetic cases prove the ColdFire ID contract, not full 64-ID firmware.
+
+`tools/verify/verify_postfader_dsp.py test/send-return-poc --image IMAGE`
+reads the DSP uploads from that image's boot pointers, including packed
+window code. Tagged and untagged REV words with held notes 0, 72, 84 and 96
+must produce the same delay audio at all 24 bits and the expected note and
+pitch state. With no held note, PTCH sets the pitch; a held note overrides
+it. Repeat with a separately built two-grain image and `--grains 2`.
 
 `tools/verify/verify_postfader.py test/send-return-poc --image IMAGE
 --project TEMPLATE` copies a local project into owned scratch and builds a
@@ -53,8 +63,13 @@ bit-identical. Changing original membership to zero is a positive control
 that must change the return. Dynamic MIDI mutes of T1, T2 and T5 after a
 200 ms T2 burst must preserve the non-silent tail exactly. The gate also
 checks the mixer snapshot to prove each mute actually arrived.
+A continuous tone on a muted source must produce no return, proving that
+muting also stops new excitation through the actual DSP decoder.
 
 These checks do not establish physical DMA timing, long-tail stability,
 scene XLV behavior, cue-only use, or an instantaneous excitation cutoff.
+The integrated fixture uses MUTE MODES' stock OT setting; alternative
+trigger-only and dry-cut modes have their own semantics and need separate
+qualification.
 No card or user project is edited. Historical October 13 prototype gate
 results are not evidence for this revised transient transport.

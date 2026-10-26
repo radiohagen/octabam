@@ -67,10 +67,10 @@ slots, but their dry track level no longer controls the shared wet returns.
 Muting either host therefore leaves other tracks' returns audible. Muting
 the master itself still affects the complete mix.
 
-This combination is opt-in and requires hardware acceptance; the required
-host setup above remains the hardware-qualified setup for the default
-remix. POST FADER follows the mixer's LEVEL/mute/solo snapshot, not scene
-XLV, CUE gain or AMP VOL. See the module references for
+This combination is opt-in and requires hardware acceptance; the default
+remix keeps the host setup described above. POST FADER uses the mixer's
+LEVEL/mute/solo snapshot. AMP VOL already affects the source audio; scene
+XLV and CUE gain are outside this module. See the module references for
 [POST FADER](reference/modules/post-fader.md) and
 [RETURNS](reference/modules/returns.md).
 

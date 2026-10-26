@@ -134,6 +134,13 @@ staleness. A plain `move #imm,reg` does NOT disturb the condition codes, so
 the `sub`/`tst` that sets the flag survives to the Tcc. (This is also why the
 sample loop stays branch-free: Tcc replaces the branch AND avoids the trap.)
 
+The same trap applies **before a shift**, not just before a store. POST
+FADER's participation tag makes a control word negative. Masking its held
+MIDI note with `and #>$7f00,a` and then shifting right copied stale A2 sign
+bits into A1: note zero became `0xff0000`. Reload `a1` through a data
+register before the shift. `verify_postfader_dsp.py` checks both note state
+and GRAIN audio with tagged and untagged controls.
+
 <a name="trap-tcc-pair"></a>
 
 ### A Tcc pair that shares one compare is broken by any arithmetic between them
@@ -700,6 +707,31 @@ logic keyed on a dispatcher fact (r7, r6, X:0x213, instance blocks) is
 measured under the port (`ot_emu --dsp-pcwatch`), never modelled in
 `dsp_host`; and a hardware failure the lock-step harness cannot show goes to
 the port before it goes to a guess.
+
+<a name="trap-proc-a"></a>
+
+### A host guard must preserve the dispatcher's split-call flag in A
+
+The bus engines save A on entry to distinguish the calls within a split
+audio block. HOSTGUARD used A to compare r7 with the allowed host slot,
+overwriting that flag before the engine saved it. Reverb then advanced its
+block-rate LFO on both halves. The guard now compares in B. The
+`verify_bus_dsp_identity.py --returns-fallback` gate compares guarded and
+unguarded engines at splits 0, 1, 7 and 15 and catches the resulting audio
+difference; unsplit output alone did not reveal it.
+
+<a name="trap-frozen-dsp"></a>
+
+### A frozen firmware file does not freeze ambient DSP window metadata
+
+The legacy `dsp_modmap.dumpmem` adds the current build's window records
+from `out/dsp/window_records.json` to whichever image it is given. Comparing
+an older window image after a rebuild can therefore execute the newer
+engine while reporting the older image's hash. A negative POST FADER
+control initially passed for exactly this reason. Frozen-image gates use
+`tools/harness/image_dsp.py`: it follows the supplied image's boot pointers,
+unpacks its own loader payloads and checks their hashes. Record the actual
+executed memory dumps as well as the firmware and harness hashes.
 
 <a name="trap-init-r1"></a>
 

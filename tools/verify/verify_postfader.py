@@ -5,7 +5,9 @@ Stages owned copies with T7 silent but its original sends held at 100.
 Muting, fading or solo-excluding that track must leave the remaining
 sender's return bit-identical. Changing T7's original send to zero is a
 positive control: it changes participation, so the return must differ.
-Only T2 has sample trigs; the provided project must have audible T2 audio.
+Only T2 has sample trigs; the tone and burst audio are generated locally.
+The project is only a structural template and stays unchanged. Dynamic
+MIDI mutes after a burst check that T1/T2/T5 muting preserves its tail.
 The installed-hook gate separately covers every LEVEL and transient tag.
 
 Does not establish physical timing, instantaneous mute, or crossfader XLV.
@@ -81,7 +83,7 @@ def stage(template, remix, tag, t7, audio):
                             f"MIDI_TRIG_CH{track+1}={track}".encode(), raw)
         assert count == 1, "fixture needs eight track MIDI channel settings"
     # Own the mute state; do not rely on an arbitrary user's template.
-    mute = 64 if tag == "muted" else 2 if tag == "source_muted" else 0
+    mute = 64 if tag == "muted" else 0
     raw, nm = re.subn(rb"(?m)^TRACK_MUTE_MASK=\d+", f"TRACK_MUTE_MASK={mute}".encode(), raw)
     raw, ns = re.subn(rb"(?m)^TRACK_SOLO_MASK=\d+", (b"TRACK_SOLO_MASK=2" if tag == "solo" else b"TRACK_SOLO_MASK=0"), raw)
     assert nm == ns == 1, "fixture must contain audio mute/solo masks"
@@ -103,10 +105,13 @@ def run(image, tag):
            "--poke", "0x80000049=1",       # audio CC input enabled
            "--block-dump", str(d / "blocks.dump"),
            "--mem-dump", f"0x80000000,0x8000={d / 'sram.bin'}"]
-    if tag.startswith("tail_t"):
-        track = int(tag[6:])
+    if tag.startswith("tail_t") or tag == "source_muted":
+        track = int(tag[6:]) if tag.startswith("tail_t") else 2
+        # The continuous source starts before its mute, and both engines
+        # are still warming when it is cut: their eventual wet must be 0.
+        when = MUTE_FRAME if tag.startswith("tail_t") else 64
         midi = d / "mute.midi"
-        midi.write_text(f"{MUTE_FRAME} {0xaf+track:02X} 31 7F\n")
+        midi.write_text(f"{when} {0xaf+track:02X} 31 7F\n")
         cmd += ["--midi", str(midi)]
     with open(d / "run.txt", "w") as f:
         r = subprocess.run(cmd, cwd=ROOT, stdout=f, stderr=subprocess.STDOUT)
@@ -122,6 +127,8 @@ def main():
     remix = registry.remix(a.remix)
     if "POST FADER" not in remix.modules:
         print(f"  [ -- ] verify_postfader: {a.remix} carries no POST FADER"); return 0
+    if not {"REVERB SERVER", "DELAY SERVER"}.issubset(remix.modules):
+        print("  [ -- ] verify_postfader: full audio gate needs both bus servers; hook gate covers SEND-only builds"); return 0
     if not a.project:
         print("  [SKIP] verify_postfader: no project (OT_PROJECT=<dir> or --project)"); return 0
     if not EMU.is_file():
@@ -184,6 +191,8 @@ def main():
     mods = registry.bound(remix)
     send_id, dly_id = mods["SEND"].menu.fx2_id, mods["DELAY SERVER"].menu.fx2_id
     d = (OUT / "muted" / "sram.bin").read_bytes()
+    if "MUTE_MODES" in remix.modules:
+        check("integrated mute-mode fixture uses OT semantics", d[0xdc:0xe0] == bytes(4))
     u16 = lambda addr: int.from_bytes(d[addr - 0x80000000:addr - 0x80000000 + 2], "big")
     u32 = lambda addr: int.from_bytes(d[addr - 0x80000000:addr - 0x80000000 + 4], "big")
     rec = 0x80000110 + (u32(0x800000e0) << 9)
@@ -203,6 +212,10 @@ def main():
 
     outputs = ((0, (0x80003390, 0x80003790), 3, "T8 returns"),) if "RETURNS" in remix.modules else RETURNS_RB
     muted = bd.classes(bd.read(OUT / "source_muted" / "blocks.dump"))
+    dry = [w[64:128] for ram in (0x80003190, 0x80003590)
+           for f, w in muted.get(('<', 1, 1, ram), []) if f > WARM]
+    check("muted source keeps rendering dry audio into its SEND effect",
+          len(dry) > 100 and sum(any(w) for w in dry) > 100)
     for core, rams, ti, name in outputs:
         values = [w[64*ti:64*ti+64] for ram in rams
                   for f, w in muted.get(('<', 1, core, ram), []) if f > WARM]
@@ -241,6 +254,17 @@ def main():
         mix = int.from_bytes(tail[0x3c10:0x3c14], "big") - 0x80000000
         check(f"dynamic T{track} mute reached the real mixer snapshot",
               tail[mix + 8*(track-1)+2:mix + 8*(track-1)+4] == bytes(2))
+        # Require the mute to have arrived throughout the compared tail
+        # window, not merely at the end of the run. These are the actual
+        # parameter halfwords sent to each DSP, before its decoder runs.
+        packets = bd.classes(bd.read(OUT / f"tail_t{track}" / "blocks.dump"))
+        core, bases = (1, (0x80000110, 0x80000310)) if track <= 4 else (0, (0x80000210, 0x80000410))
+        off = 32*((track-1) % 4) + 12
+        words = [w[off:off+2] for base in bases
+                 for f, w in packets.get(('>', 0, core, base), []) if f > WARM]
+        rev_mask = 0x7f00 if track == 1 else 0x7fff
+        check(f"dynamic T{track}: zero excitation and retained participation throughout tail window",
+              len(words) > 100 and all(d == 0x8000 and r & 0x8000 and not r & rev_mask for d, r in words))
     print(f"verify_postfader: {'ok' if not fails else 'FAIL'} ({fails} failure(s))")
     return 1 if fails else 0
 

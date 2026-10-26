@@ -6,6 +6,8 @@ wrong-track/core calls can be exercised deliberately. The full firmware
 post-fader gate covers the installed hook, engine routing and live mute tails.
 No hardware timing claim is made by this arithmetic/ownership gate.
 """
+import argparse
+import hashlib
 import importlib.util
 import json
 import os
@@ -19,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools'))
 import toolpath  # noqa: E402,F401
 from remix import registry
+import image_dsp
 import send_probe
 
 OUT = ROOT / 'out/verify_returns'
@@ -281,7 +284,7 @@ def installed(remix, image, source, assemble):
     """The arithmetic gate must exercise exactly the bytes placed in the image."""
     module = registry.bound(registry.remix(remix))['RETURNS']
     for tag in 'AB':
-        path = send_probe.dump_mem(image, OUT/f'installed_{tag}.mem', tag)
+        path = image_dsp.dump_mem(image, OUT/f'installed_{tag}.mem', tag)
         blob = path.read_bytes()
         init, proc = send_probe.entry_points(path, module.menu.fx2_id)
         guard = '; payload A' if tag == 'A' else 'rts'
@@ -337,7 +340,8 @@ def run(remix, image):
     poisoned=observed[active*STRIDE:(active+1)*STRIDE]
     poisoned[440:472]=rows[active][440:472]
     assert poisoned != model(rows[active]), 'vacuous output oracle'
-    receipt=dict(cases=len(rows),samples_exact=len(rows)*32,
+    receipt=dict(image=str(image), image_sha256=hashlib.sha256(Path(image).read_bytes()).hexdigest(),
+                 memory_source='supplied image boot uploads', cases=len(rows),samples_exact=len(rows)*32,
                  coverage=['installed module bytes and hook','all 128 gains','bipolar/clipped MAIN and MASTER',
                            'all eight delay rotations','fresh/stale/consumed stamps',
                            'off-track init and proc','payload B no-op'],
@@ -347,10 +351,14 @@ def run(remix, image):
 
 
 def main():
-    remix = sys.argv[1] if len(sys.argv)>1 else 'test/send-return-poc'
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('remix', nargs='?', default='test/send-return-poc')
+    parser.add_argument('--image', type=Path, default=ROOT/'out/mainos_bus.bin')
+    args = parser.parse_args()
+    remix = args.remix
     if 'RETURNS' not in registry.remix(remix).modules:
         print('[ -- ] no RETURNS');return
-    run(remix, ROOT/'out/mainos_bus.bin')
+    run(remix, args.image)
 
 
 if __name__ == '__main__': main()
