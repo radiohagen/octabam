@@ -32,6 +32,14 @@ sources are unchanged between that revision and `f8141428`. The reviewed
 branch is based on `f8141428`; neither a moving remote branch nor an earlier
 PR build is the behavioral oracle.
 
+For publication to the `radiohagen/octabam` fork, upstream
+`92a63bacc51ebf4c5c80a930670a9c7e973e150e` was merged on 27 October 2026.
+Its two additional commits change only `FAILURE_MODES.md` and `DEMAND_LOAD.md`;
+firmware sources, build inputs and verification tools are unchanged. The merge
+preserves the measured commits and the reproducible source references below.
+Documentation checks passed again after this synchronization; audio measurements
+were retained because their executable inputs did not change.
+
 The optional combination is selected by
 [`test/send-return-poc`](../../remixes/test/send-return-poc/README.md).
 The default `octabam-bus` selection does not acquire POST FADER or RETURNS.
@@ -381,4 +389,4 @@ failure to investigate, not a difference to average away.
 
 CI's reached gates and build-identity checks also remain part of upstream
 review. Repository policy delegates whole-remix/reach/refhash passes to CI;
-this local review ran focused gates and has not published or flashed an image.
+this local review ran focused gates. No image was flashed as part of this review.
