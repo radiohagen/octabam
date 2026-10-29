@@ -28,15 +28,17 @@ implementation commit `9b9e2060`. Its historical results do not qualify this
 new image. Sam Banks's return protocol was adapted to the current memory map.
 
 The first measurements were built at upstream `d1f32c7c`. The two engine
-sources are unchanged between that revision and `f8141428`. The reviewed
-branch is based on `f8141428`; neither a moving remote branch nor an earlier
+sources are unchanged between that revision and `f8141428`. The original
+measured branch was based on `f8141428`; neither a moving remote branch nor an earlier
 PR build is the behavioral oracle.
 
-For publication to the `radiohagen/octabam` fork, upstream
+For the initial publication to the `radiohagen/octabam` fork, upstream
 `92a63bacc51ebf4c5c80a930670a9c7e973e150e` was merged on 27 October 2026.
 Its two additional commits change only `FAILURE_MODES.md` and `DEMAND_LOAD.md`;
-firmware sources, build inputs and verification tools are unchanged. The merge
-preserves the measured commits and the reproducible source references below.
+firmware sources, build inputs and verification tools were unchanged in that
+synchronization. The original published history is retained in
+`codex/backup/bus-dsp-before-rebase-20261029` at `d45d80c4`, including the
+measured commits and reproducible source references below.
 Documentation checks passed again after this synchronization; audio measurements
 were retained because their executable inputs did not change.
 
@@ -256,8 +258,10 @@ extraction are invalid evidence and are not counted here.
 
 ## 5. Reproduction and provenance
 
-Use the reviewed branch's tools, the user's own OS 1.40C, the pinned source
-revisions above, and identical build options. Keep every image under a distinct
+For the original review, use the tools at `d45d80c4` on the retained backup
+branch, the user's own OS 1.40C, the pinned source revisions above, and
+identical build options. The 29 October rebase checks are recorded separately
+below; they use the rebased tools and updated emulator pin. Keep every image under a distinct
 name before the next build. Do not restore a firmware file while leaving
 incompatible ambient build metadata and then invoke a legacy gate.
 
@@ -341,7 +345,8 @@ The original run receipts are local files under `out/optimization/`:
 host hashes, executed-memory hashes, per-case output hashes and measured counts.
 The meters and logs remain beside them. The ten-case firmware receipt is
 `out/review/measurement/postfader-startup-fixed-receipt.json`.
-The sounding-host receipt is `out/postfaderhosts/results.json`; the earlier
+The original sounding-host receipt is now
+`out/rebase-20261029/previous-postfaderhosts/results.json`; the earlier
 failed immediate-onset cases remain under
 `out/postfaderhosts-startup-immediate/`. The supplemental receipts are `out/optimization/state-{delay-4grain,delay-2grain,reverb}/results.json`;
 the independent repeat is `out/review/measurement/repeat-enhanced/results.json`.
@@ -355,11 +360,76 @@ document are retained in Git.
 | Optimized four-grain image | `afb7ceb7c212f1bc7cb814f6808b5e070ee2286dcf179facbb39b7e79a847528` |
 | Original two-grain image | `abcedc1a40ef6d46e20316540fd7e9741353f90bfcfd981e2b7e83fa3ca94ed2` |
 | Optimized two-grain image | `d7e1bd10c70d4ed0fc7c1a37ed2f691e3e8f3562777acc96da19aea063f3c71d` |
-| Final integrated four-grain image | `9317770bbf847a94f47508cb087681c0822517d3730868cc87c0f047d59633e8` |
+| 26 October integrated four-grain image | `9317770bbf847a94f47508cb087681c0822517d3730868cc87c0f047d59633e8` |
 | Superseded integration image; startup negative control | `7b7c545cd11e426bef893743095b989c59d320ace51fa1eb4b999ca1b4134d4a` |
-| Measured DSP host | `e936529aadccbc623018f191eff8d30aab08e32be73f52c2c75d834a7b216e8f` |
+| 26 October measured DSP host | `e936529aadccbc623018f191eff8d30aab08e32be73f52c2c75d834a7b216e8f` |
 
-## 6. Acceptance still required
+## 6. Rebase onto current upstream, 29 October 2026
+
+The feature branch was rebased onto upstream `main` at
+`bc1445238541e120fbb0ad72e90c89caf97f4d24` (114 commits after the previous
+synchronization). The original published state remains on the backup branch
+above. `git range-diff` confirms equivalent feature patches; the only manual
+conflict resolution kept both additions to `TRAPS.md`. The bus DSP sources,
+POST FADER/RETURNS implementation and feature-specific verification scripts
+are unchanged.
+The equivalent optimization commit is now `04db7e3a`; the rebased startup
+fix is `a61fd750`. The tested source head before this documentation update
+is `9c789f5a`.
+
+Unlike the earlier documentation-only synchronization, this upstream update
+changes the builder, selected firmware modules and emulator. In particular,
+MUTE MODES moves its shadow state into DRAM, USB changes its buffer handling,
+and DSP56300 moves from `8ccdd843` to `8b731966`. The new interpreter changes
+DO-loop termination behavior. Earlier results therefore were not accepted
+as sufficient qualification of the rebased integration image.
+
+The new toolchain was built privately in this worktree, leaving the shared
+toolchain untouched. The pinned vendor test runner, assembler checks,
+18 focused unit tests and seven init-register checks pass. The port's CTest
+run passes eight applicable tests; `repitch-patch` explicitly skips because
+this is not a REPITCH image. Documentation checks also pass.
+
+| Rebase artifact | SHA-256 |
+|---|---|
+| Integrated four-grain image | `256de5d1819a0039056b0fdb9abeccfb1523914f1b0d9ec654db8f4e8827bdea` |
+| DSP host | `47de4ff0859681905b4e475d5036be8f5ed1fed9cbe2fed7ce1b08f8657d8da3` |
+| DSP assembler | `23047635db619ebd89dd3ae2bb1f3bf74e295f70dc7c56a62acfeb8c3db9ed6e` |
+| ColdFire/DSP port | `343a3643214a84310a66a374897ee2980304c52bf0ff5cdb19a07bc4374e616f` |
+| DSP vendor patch | `05a175b0e864e6a3c34b50a6b2749b4b0e338d092f9236c272d596b672f5a4bf` |
+
+All four plain comparison images rebuilt byte-for-byte identically to the
+original image hashes above. Fresh checks on the new toolchain establish:
+
+| Check | Rebased result |
+|---|---|
+| Pure audio identity | 79/79 cases and all controls pass |
+| Comparison with historical runs | All 158 complete meter files and 632 output hashes match exactly; headline instruction totals and percentages are unchanged |
+| Adversarial state | All three runs pass; their audio, sampled X state and final Y-range hashes also match the historical runs |
+| Selected fallback paths | 12/12 exact comparisons and eight controls pass |
+| Held notes, four grains | Eight renders and seven controls pass |
+| Installed ColdFire hook | 2,048 installed-image and 4,096 bound-ID cases pass |
+| RETURNS arithmetic | 212 exact cases pass |
+| Full firmware tails and sends | Ten fixtures / 35 checks pass; other-source returns and T1/T2/T5 mute tails remain exact across 803 non-silent blocks; active muted T2 adds no wet audio |
+| Sounding-host startup | Four fixtures pass; muted T1/T5 have zero wet buffers and late MASTER output despite sounding dry audio |
+
+The unchanged performance table remains a harness instruction measurement,
+not a physical DSP-load claim. The new image is qualified only for the checks
+listed here; the hardware and routing limits below remain in force.
+
+Fresh results are retained under
+`out/rebase-20261029/`, with build logs and source exports beside them.
+The measurement receipts are `identity4/results.json`, `identity2/results.json`
+and `measurement-comparison.json`; state checks are in
+`state-{delay4,delay2,reverb}/results.json`. Integration receipts include
+`returns-fallback/results.json`, `postfader-notes/results.json`,
+`postfader-hook.json`, `postfader-hosts-results.json` and the combined
+14-fixture receipt `postfader-rerun-results.json`.
+Historical firmware cards and receipts were preserved in
+`previous-postfaderverify/` and `previous-postfaderhosts/` inside that directory;
+earlier failure artifacts remain intact.
+
+## 7. Acceptance still required
 
 The evidence supports equivalence for the measured DSP cases. It does not
 establish absence of every functional regression or qualify the changes for
