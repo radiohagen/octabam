@@ -48,3 +48,13 @@ TEMPO window: press [TEMPO], then LEFT / RIGHT to focus the DELAY box.
 | 2 | SIZE | GRAIN: grain length 46 / 93 / 23 ms, XTRM 186 ms. REVERSE: segment length, XTRM 371 ms |
 | 2 | PTCH | GRAIN: ±2 octaves, 64 = unison |
 | 2 | TIME | delay time; sticky-snaps to tempo divisions |
+
+
+## Optional DMA wait experiment
+
+The separate DMA branch can build a labelled 8K/4K test pair with the same
+optimized bus, post-fader sends and T8 returns. Regular builds retain the
+original wait. The shorter wait needs hardware acceptance; selecting the
+8K image restores the original wait while keeping the other optimizations.
+A power cycle alone may reload a remembered experimental selection. Follow
+the [experiment and rollback procedure](https://github.com/radiohagen/octabam/blob/codex/bus-dma-halfwait-20261031/docs/contributing/BUS_DSP_OPTIMIZATION.md#12-separate-half-wait-dma-experiment--31-october-2026).

@@ -14,6 +14,9 @@ scratch: delay $4c..$57; reverb $14/$38 only when glided SHMR is exactly zero.
 With --derived-delay-mask, new delay scratch $6e/$6f/$7e must satisfy its
 step-mask and TIME-cache invariants rather than simply being ignored.
 The original delay's L/R control records must also agree and be changing.
+Use --exact-state when both images already contain the same optimizations:
+it forbids every scratch exception and replaces the old L/R cache-duplication
+requirement with complete state equality (the shared cache still must evolve).
 These are emulator checks, not proof of hardware DMA timing or all inputs.
 """
 import argparse
@@ -182,6 +185,8 @@ def main():
     ap.add_argument("--engine", choices=("delay", "reverb"), required=True)
     ap.add_argument("--grains", choices=(2, 4), type=int, default=4)
     ap.add_argument("--remix", default="bus")
+    ap.add_argument("--exact-state", action="store_true",
+                    help="compare optimized images with no scratch-state exceptions")
     ap.add_argument("--host", type=Path, default=send_probe.HOST)
     ap.add_argument("--out", type=Path)
     ap.add_argument("--derived-delay-mask", action="store_true",
@@ -215,16 +220,20 @@ def main():
         for off, (x, y) in enumerate(zip(old[1:], new[1:])):
             if x == y:
                 continue
-            permit = (0x4c <= off < 0x4c + 3 * args.grains if args.engine == "delay" else
-                      off in (0x14, 0x38) and old[1+0x0e] == new[1+0x0e] == 0)
+            permit = not args.exact_state and (
+                0x4c <= off < 0x4c + 3 * args.grains if args.engine == "delay" else
+                off in (0x14, 0x38) and old[1+0x0e] == new[1+0x0e] == 0)
             if args.derived_delay_mask and off in (0x6e, 0x6f, 0x7e):
-                permit = derived[index] is not None and derived[index][off]
+                permit = not args.exact_state and derived[index] is not None and derived[index][off]
             bucket = allowed if permit else unexpected
             bucket.setdefault(f"{off:02x}", dict(blocks=0, first=[old[0], x, y]))["blocks"] += 1
     checks = dict(raw24_identical=all(x.read_bytes() == y.read_bytes() for x, y in zip(audio_a, audio_b)),
                   final_y_identical=y_a.read_bytes() == y_b.read_bytes(),
                   live=before["live_after_warmup"] and after["live_after_warmup"],
                   no_unexpected_state_differences=not unexpected)
+    report["exact_state_required"] = args.exact_state
+    if args.exact_state:
+        checks["all_state_identical"] = a == b
     if args.engine == "delay":
         if args.derived_delay_mask:
             live_derived = [(row, check) for row, check in zip(b, derived) if check is not None]
@@ -238,8 +247,10 @@ def main():
         live = [r for r in a[512:] if r[1+0x69] == 0x10000]
         n = args.grains * 3
         records = {tuple(r[1+0x40:1+0x40+n]) for r in live}
-        checks.update(original_lr_records_equal=bool(live) and all(r[1+0x40:1+0x40+n] == r[1+0x4c:1+0x4c+n] for r in live),
-                      original_records_live=len(records) > 100 and any(any(r) for r in records))
+        checks["original_records_live"] = len(records) > 100 and any(any(r) for r in records)
+        if not args.exact_state:
+            checks["original_lr_records_equal"] = bool(live) and all(
+                r[1+0x40:1+0x40+n] == r[1+0x4c:1+0x4c+n] for r in live)
         report["original_grain_record_distinct_states"] = len(records)
         ymem = array.array("I", y_a.read_bytes())
         saturation = {label: {"positive": ymem[start:end].count(0x7fffff),
