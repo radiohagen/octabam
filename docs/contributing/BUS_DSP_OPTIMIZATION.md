@@ -460,3 +460,165 @@ failure to investigate, not a difference to average away.
 CI's reached gates and build-identity checks also remain part of upstream
 review. Repository policy delegates whole-remix/reach/refhash passes to CI;
 this local review ran focused gates. No image was flashed as part of this review.
+
+## 8. Further optimization review — 31 October 2026
+
+This follow-up measures configuration costs on the already optimized image and
+ranks further candidates. It changes no DSP code. Candidate savings below are
+source-derived bounds, not measured improvements or hardware CPU percentages.
+
+### Reverb configurations: measured
+
+Twenty-one configurations use the section 3 harness and the section 6 toolchain,
+at source `aaadcc2b`. The frozen input image is `optimized4.bin`, SHA-256
+`afb7ceb7c212f1bc7cb814f6808b5e070ee2286dcf179facbb39b7e79a847528`.
+Every run renders 8,192 blocks, retaining 7,680 blocks / 122,880 stereo frames
+for instruction statistics. Core A contains BusVerb and one SEND; core B
+contains CLEAN BusDelay and one SEND. This is the pure DSP image, without the
+optional POST FADER/RETURNS paths.
+
+Default reverb settings are SIZE 100, SHMR 0, SHFT +12, WET 127, PLATE,
+TONE 64, DIFF 80, GATE 0, DLY 127 and TIME 64; its host DEL/REV are zero.
+SEND A uses REV 100, SEND B uses DEL 100, and delay repeats also feed reverb.
+Each row changes only the stated controls. The same deterministic input includes
+noise, tones and silence. No parameter automation or block splits occur here.
+
+| Reverb configuration | Core-A instructions/frame | Maximum retained block |
+|---|---:|---:|
+| ROOM, PLATE or BIG; SHMR 0 | 913.062500 | 14,609 |
+| ROOM or PLATE; SHMR 127 | 1,027.288086 | 16,737 |
+| BIG; SHMR 127 | 1,027.286865 | 16,737 |
+| PLATE; SHMR 1 or 64 | 1,027.288086 | 16,737 |
+| PLATE; DIFF, SIZE, TIME or TONE at 0 or 127; SHMR 0 | 913.062500 | 14,609 |
+| PLATE; GATE 8, 20 or 127; SHMR 0 | 913.000000 | 14,608 |
+| PLATE; SHMR 127, SHFT −12 | 1,026.661051 | 16,727 |
+| PLATE; SHMR 127, SHFT +24 | 1,027.663900 | 16,743 |
+
+ROOM, PLATE and BIG use the same eight-line tank, four input allpasses, two
+bloom allpasses and two in-loop allpasses. They change constants and tap
+lengths rather than the number of processors. BIG is therefore not a heavier
+algorithm. Lower DIFF does not remove allpasses; shorter TIME/SIZE does not
+remove tank lines; a closed gate does not suspend the tank.
+
+Shimmer is the meaningful load switch: SHMR 0 saves 114.225586 instructions/frame
+against active PLATE, or 11.1191% of that active harness-core workload. Conversely,
+active shimmer costs 12.5102% more than shimmer-off. The tested nonzero amounts
+1, 64 and 127 cost exactly the same. A turn to zero must finish its glide before
+the existing fast path engages. The small SHFT differences are under 0.1%
+between the tested endpoints; selecting a different interval is not a useful
+load reduction.
+
+All six mode × SHMR 0/127 cases were independently repeated with fresh input
+generation and image extraction: every meter byte and all four audio hashes
+match. Seven controls confirm identical inputs, unchanged core-B meters,
+nonzero reverb output, effective control changes, reproduction of the previous
+PLATE reference's audio and instruction totals, and an untouched ambient
+firmware image. These checks validate the cost comparison, not a new DSP change.
+
+### Split calls matter more than the reverb character
+
+Three additional runs split every 16-frame block at frame 1, 7 or 15, with the
+same default PLATE/SHMR 0 settings. All three split positions have the same cost:
+
+| Harness core | Whole block instructions/frame | Split block | Increase |
+|---|---:|---:|---:|
+| A: BusVerb + SEND | 913.0625 | 979.0000 | 65.9375 / 7.2216% |
+| B: CLEAN BusDelay + SEND | 799.6875 | 1,346.3125 | 546.6250 / 68.3548% |
+
+BusDelay's 8,192-NOP pad runs per live proc call, so a split block pays it twice.
+The second pad accounts for 512 instructions/frame of core B's increase; the
+remaining 34.625 comes from other extra call work. Reverb also repeats setup.
+These runs split all four harness instances on every block. They do not measure
+the frequency of splits in a real project or imply this increase across a song.
+Server audio differs between whole and split renders: this is a cost comparison,
+not an equivalence claim. Existing baseline/candidate split equivalence remains
+the relevant regression check. Moving control glides to once per block would
+itself change the existing split behavior.
+
+### Prioritized candidates
+
+The first four reverb candidates aim to preserve the current output and state:
+
+| Candidate | Source-derived opportunity | Conditions and proof needed |
+|---|---|---|
+| Specialize the eight low-cut updates at exact-zero coefficient | Gross 48 instructions/frame | Test the actual glided coefficient. Keep subtraction of the frozen, possibly nonzero filter state and the existing limiting point. TONE's target alone is insufficient. |
+| Specialize the GATE 0 envelope | Gross 14 instructions/frame | Keep the counter/retrigger state and both gate multiplies: `0x7fffff` is not exact unity. Preserve transitions back to an active gate. |
+| Specialize the six tank lines with fixed zero input weight | Gross 12 instructions/frame | Retain their feedback gains, table layout, state writes, pointer advancement and required instruction spacing. The two driven lines keep the original arithmetic. |
+| Inline the four input allpass calls | At most 8 instructions/frame | Keep identical arithmetic and AGU spacing; replacement padding may consume part of the saving. Check program-space fit. |
+| Precompute the pinned LFO rate and eight increments | Gross 34 instructions/call, or 2.125/frame unsplit | Derive exact fixed-point constants, preserve stored values and existing phase-update gating. This is a small addition. |
+
+The first four total **82 instructions/frame before guards and padding**, about
+9.0% of the measured shimmer-off core-A workload, or 8.0% with shimmer active.
+They are not an implemented or guaranteed speedup. The LO and gate opportunities
+apply to the default control state; their benefit changes with settings.
+These counts do not support a promise of another 20–30% reverb reduction.
+General MODE caching is lower priority: some copied slots are overwritten with
+derived TIME/LFO values each call, so unchanged MODE does not make the copy
+redundant without further changes.
+
+Three further candidates serve the bus as a whole. The SEND alternatives overlap;
+their savings must not be added together for the same client:
+
+- **Settled sends at any gain:** when both actual per-sample steps are zero
+  after existing setup, hold the two gains in registers and omit both ramp
+  update sequences. The sample body can fall from 25 to 15 instructions,
+  before the once-per-call predicate and two gain loads. This also benefits
+  audible, steady sends. Verify signed multiply encoding and preserve the
+  stored gain values, count handling and transient-ramp path.
+- **Settled-zero sends:** after normal ramp setup, a SEND with both running
+  gains and both steps exactly zero can avoid its 25-instruction sample body,
+  less dispatch and required pointer handling. One settled-zero destination
+  offers 10 instructions/frame before overhead. Preserve housekeeping and
+  original send participation/counts, including the POST FADER tag. A muted
+  source can stop contributing while other sources retain exactly the same
+  normalization and both engines continue their tails. Do not gate on the
+  target knob or mute alone, because an existing ramp may still be audible.
+- **Zero-gain grains:** skip a grain's audio reads, interpolation and addition
+  when its computed window gain is exactly zero, retaining all phase, PRNG,
+  latch, accumulator and cache evolution. The shipping geometry has 21 such
+  instructions/channel/grain: 42 gross for a closed stereo grain. Four closed
+  grains offer 168 gross, but guards and loop-end handling reduce this; dense
+  settings could become slower. Benchmark sparse and dense workloads separately
+  before choosing a dispatch strategy. This retains four grains rather than
+  changing the algorithm to two.
+
+### Largest opportunity: requalify the delay wait on hardware
+
+The unchanged pad alone is 512 instructions/frame in whole blocks: 64.0% of the
+measured CLEAN core-B workload and 40.3% of four-grain GRAIN. These are shares of
+the harness instruction count, not safely recoverable CPU budget. For scale,
+halving the pad would remove 256 instructions/frame, equivalent to 32.0% and
+20.1% of those respective workloads **if hardware timing allowed it**. Redundant
+waiting on a second call in the same frame is another hypothesis to test.
+
+The [failure record](FAILURE_MODES.md) explicitly leaves open whether the later
+REP-to-DO conversion removed the original reason for this pad. It also records
+failed DSR1/DCR1 polling and frame-end/idle-hook attempts. Those approaches must
+not be presented as established fixes. Qualify the current interruptible build
+with paired timing/load measurements and at least ten-minute hard-left burst
+captures, including light/heavy FX1, different modes, splits and sounding hosts.
+Keep the current pad until that evidence establishes a safe alternative.
+Material delay-loop speedups also need this timing check even with the pad
+unchanged: less computation advances the following read-back copy.
+
+Halving the reverb sample rate, reducing its eight tank lines, dropping modulation
+or interpolation, or reducing four grains to two would change the sound or
+behavior. They belong to optional alternative algorithms, not this exact-output
+optimization. Suspending a shared engine on track mute, WET 0 or a closed gate
+is also unsuitable: its state and tails may still matter later. A build without
+shimmer removes the ability to enable it and is a feature tradeoff.
+
+Local reproducibility receipts are retained under `out/profile-20261031/`:
+`profile_busverb.py` with `results.json`, and separate repeat/split scripts and
+receipts. The main receipt includes every command, setting, integer total,
+denominator, input/audio/meter hash and executable provenance. SHA-256 values:
+
+- Main 21-case receipt: `c36f1d70caf16b485870ebffd41c13b93a2ae01718d2e544981544a4cae2b388`.
+- Six-case repeat receipt: `819fc05bc5d81e53b8a5b1df7a2b1633762000c972c0fcd5a441320dadb90124`.
+- Three-case split receipt: `b3008a606a71e42d544cc383a333566104cee92fc6db693dc1a0002fc465d230`.
+
+Recommended next work is the small exact-output reverb specializations and
+settled-zero SEND paths, each compared against this frozen implementation for
+audio, persistent state, automation, splits and instruction cost. Investigate
+the DMA wait separately on hardware; it offers the largest potential reduction
+and has a different acceptance burden.
