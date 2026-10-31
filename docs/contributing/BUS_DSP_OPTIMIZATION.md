@@ -848,3 +848,200 @@ changes in the full-image host; that limit is covered by the isolated wrapper
 and the real firmware mute/fader tests instead of claiming unsupported host
 behavior. The unchanged DMA wait and section 7's physical acceptance work remain
 the boundary on release claims.
+
+## 10. Separate half-wait DMA experiment — 31 October 2026
+
+This is an opt-in hardware experiment on the optimized bus with POST FADER
+and T8 RETURNS. The regular `modules/busdelay/delay_server.asm` retains its
+8,192-NOP read-back pad. The experiment builds a separate source snapshot
+with a 4,096-NOP pad through the existing `DLSRC` override; reverting the
+experiment does not undo the audio-preserving optimizations in section 9.
+It changes when the following output copy can run, not the delay's intended
+audio arithmetic. That timing change is precisely what needs a physical test.
+
+### Test pair and expected saving
+
+| Image name / card file | Delay pad | Role |
+|---|---:|---|
+| `BUS DMA8K` / `BUS DMA8K.RMX` | 8,192 NOPs | Optimized comparison and rollback image |
+| `BUS DMA4K` / `BUS DMA4K.RMX` | 4,096 NOPs | Experimental half-wait image |
+
+Both use `test/send-return-poc`, four grains and BUILD `D1`. They contain the
+same selected modules, post-fader sends and independent T8 returns. Their
+internal BRAIN image names differ so the operator can identify the running
+variant. They are focused bus test images, not replacements for the separate
+RADBUSS7 synth/MIDI package.
+
+The expected instruction reduction is **4,096 NOPs per delay process call
+that reaches the pad**, or **256 instructions per stereo sample frame** for
+one normal 16-sample call. A split block can reach the pad twice; the experiment
+retains the original per-call placement rather than making a new once-per-frame
+rule. Measure those split cases separately. The same savings must not be
+subtracted from the reverb core, and instruction counts are not physical CPU
+percentages. The safe recoverable hardware budget is still unknown.
+
+The production source remains unchanged and the package contains both variants.
+No pad-free image is included. Software comparisons can establish equal samples
+and state in the emulator, but its DMA timing does not establish that the
+shorter wait is safe on a unit. A clean short listening session is also
+insufficient: the historical failures were intermittent.
+
+### Package evidence
+
+Build the labelled pair into a fresh output directory:
+
+```sh
+python3 tools/hw/build_dma_wait_test.py --out out/dma-wait-20261031
+```
+
+The builder fixes the remix, BUILD tag and grain count for this first experiment
+and writes both `.RMX` files under `package/BRAIN/REMIXES/`. It must not overwrite
+an earlier output directory. Qualify the resulting images themselves, rather
+than whatever a later command leaves in `out/mainos_bus.bin`. For example:
+
+```sh
+dma8_image='out/dma-wait-20261031/package/BRAIN/REMIXES/BUS DMA8K.RMX'
+dma4_image='out/dma-wait-20261031/package/BRAIN/REMIXES/BUS DMA4K.RMX'
+python3 tools/verify/verify_bus_dsp_identity.py "$dma8_image" "$dma4_image" --remix test/send-return-poc --engine all --out out/dma-wait-20261031/identity
+python3 tools/verify/verify_bus_fastpaths.py "$dma8_image" "$dma4_image" --post-fader --out out/dma-wait-20261031/fastpaths
+python3 tools/verify/verify_bus_dsp_state.py "$dma8_image" "$dma4_image" --remix test/send-return-poc --engine delay --exact-state --out out/dma-wait-20261031/state
+```
+
+The matched-name binary gate proves exactly one DSP word changes, at shared
+P:`0x35e7d`: the immediate in `move #>8192,x0 / do x0,... / nop` becomes
+4096. The source snapshot differs only in that literal. The matched-name images
+differ in 157 bytes: 149 compressed-upload bytes and eight checksum bytes.
+The decoded payload changes only one byte; all
+other image bytes outside the verified container and its two checksums match.
+This also compensates for the existing `DLSRC` hatch relaxing the build's
+signed-multiply census and Y-base source check. The ordinary baseline still
+passes those checks. A separate label proof permits exactly two ColdFire
+name-string replacements and their container checksums, with both DSP uploads
+unchanged. An independent repeat of all three builds reproduces identical images.
+
+The final labelled `.RMX` pair passes all **43 audio comparisons**, **38
+additional complete audio/state comparisons**, and the **16,384-block
+adversarial delay run** with `--exact-state`. That flag permits no scratch-state
+exceptions: all 132 instance words per block, all four raw24 streams and all
+262,144 final Y words match. The exact-state mode does not require the original
+engine's duplicated L/R control cache, which the preceding optimization removed;
+it still checks evolving grain records and saturation of both delay lines.
+Thirty focused unit tests pass, including fault injections into the pad,
+unrelated firmware bytes, compressed checksums, package names and source anchor.
+Documentation validation reports 88 modules, 113 remixes and no problems.
+The final 4K image also passes ten full-firmware routing/tail fixtures, four
+sounding-host startup fixtures, 6,144 installed/synthetic POST FADER hook cases
+and 212 exact RETURNS cases. The tail comparisons cover 803 non-silent frames
+per mute fixture, approximately 0.29 seconds; they do not replace long hardware
+captures. All four gate processes exit successfully. Generated fixture cards
+were removed by the artifact-retention wrapper after success.
+
+An independent meter audit checks every one of **572,928 paired measured
+blocks** across the 81 cases, rather than only rounded averages. Core A matches
+on every row. Core B saves exactly 4,096 instructions for a whole block or
+8,192 for a split block (62 whole-block and 19 split cases). Blocks 0–511 are
+excluded only from performance statistics; the audio/state checks include
+startup. In this integrated delay-plus-SEND layout:
+
+| Mode | 8K instructions/stereo frame | 4K | Reduction |
+|---|---:|---:|---:|
+| CLEAN | 759.1875 | 503.1875 | 33.72% |
+| Dense four-grain GRAIN | 1215.1875 | 959.1875 | 21.07% |
+| REVERSE | 839.1875 | 583.1875 | 30.51% |
+
+The highest observed block falls from 28,753 to 20,561 instructions in the
+split-grain cases. These are emulator work counts for these fixtures, not
+physical cycle measurements or proof of a hardware deadline. The separate
+adversarial state run does not record an instruction meter.
+
+Each `.RMX` is 1,275,323 bytes. SHA-256:
+
+- `BUS DMA8K.RMX`: `de04bf6d4199e41493cd493ac5dc0f6b71b712753b39249372ad519cae07db8c`
+- `BUS DMA4K.RMX`: `bcf5044413f3fa068bea1807ff94ce576c3b7b8eba1f673e2e9b8d2357d2df0b`
+
+Receipts are under `out/dma-wait-20261031/` and the independently repeated build
+under `out/dma-wait-20261031-rebuild/`. The local package includes the source
+commit, build/source/tool hashes, selected modules, exact-image validation,
+instruction measurements and checksums. The independently audited
+`measurement.json` SHA-256 is
+`e9ab081a2342e6c8f011f571c218d8f4c4b71e8bdf3edfc1b1156e7844f38c9c`.
+Keep `.RMX` files and captured audio out of Git: they contain proprietary
+firmware or local test material. No card copy or flash is performed.
+
+### Paired hardware test
+
+Use a disposable copy of the same project for both images. Confirm the running
+name in BRAIN before every take; the boot-screen OS version belongs to the
+flashed image and does not identify a switched image. Keep source samples,
+tempo, effect settings, routing, capture format and recording/polling workload
+the same for each pair.
+
+1. Capture **at least ten minutes per image per workload**, starting with
+   `BUS DMA8K`. Reproduce the historical repeated-transient case with T1 BAL
+   hard left and an audible sample on the delay host. Retain a quiet right
+   channel in the isolated case so full-scale wrong-channel bursts are obvious;
+   test the normal wet bus routing separately. Include transport starts/stops,
+   parameter edits and a sounding T5 host.
+2. Repeat CLEAN, REVERSE and GRAIN with light FX1 work and with the heavier
+   FX1 configurations used in the actual project. Include trig/microtiming cases
+   that exercise split calls, dense and sparse grains, and changes in controls.
+   Record the exact project state; an emulator's synthetic split schedule does
+   not prove which split positions a physical take exercised.
+3. Exercise T1/T5 host mutes and another source track's mute/LEVEL while tails
+   sound. Check that existing tails continue and other tracks' send levels stay
+   unchanged. These routing properties remain required in both images.
+4. Record the same-duration load trace and audio for each image. Compare core B
+   busy/period and T1 FX2 cost, as well as peaks, stalled counters, bad meter
+   records, discontinuities and audible corruption. Preserve the complete
+   traces instead of only the displayed percentage. Re-test the 8K image after
+   a suspected failure to separate the wait change from a shared problem.
+
+[LOAD METER](../../modules/load-meter/README.md) is available in
+BRAIN > PERFORMANCE, with LOAD and PROCS tabs. Its USB helper records a series:
+
+```sh
+python3 tools/hw/load_meter.py --for 600 --json dma8k-load.json
+# After switching to the paired image and restoring the same project state:
+python3 tools/hw/load_meter.py --for 600 --json dma4k-load.json
+```
+
+The helper labels T1 FX2 as `B1.FX2`; core B carries tracks 1–4. These are
+readings of the unit's timers, not emulator instruction counts. Take a fresh
+meter baseline for each run because peak and slot counters can retain earlier
+work. The [hardware testing guide](HARDWARE_TESTING.md) describes the capture
+and meter setup.
+
+For the repeating-transient recording, the existing
+[`burst_census.py`](../../tools/harness/burst_census.py) also compares the other
+channel against an aligned earlier copy, exposing a quieter block offset beside
+a full-scale burst. It assumes **signed 32-bit PCM WAV** and zero-based channel
+indices; it must not be fed packed 24-bit or floating-point WAV data. For a
+stereo main L/R take use explicit channels 0 and 1:
+
+```sh
+.venv/bin/python3 tools/harness/burst_census.py dma8k-main.wav 0 1
+.venv/bin/python3 tools/harness/burst_census.py dma4k-main.wav 0 1
+```
+
+Its default channels 2 and 3 belong to the historical multichannel recorder.
+The detector expects repeating audio and flags large one-off discontinuities;
+zero detections do not establish general audio correctness or a timing margin.
+The [failure register](FAILURE_MODES.md) records both the original read-back
+race and later burst investigations. Any new wrong-channel burst, click,
+unexpected silence or stalled DSP counter blocks acceptance of the 4K variant.
+
+### Switch back without reverting the optimizations
+
+Load the pair through MAIN MENU > BRAIN > REMIXES using the same existing
+REMIX SWITCH workflow. Select **BUS DMA8K** to restore the original wait while
+keeping the optimized DSP and post-fader/return behavior. Select the image under
+**FLASHED** to return permanently to the flashed OS and clear the saved remix
+selection.
+
+REMIX SWITCH can remember its selection in `BRAIN/card.work`; a power cycle
+alone may reload the experimental image. To bypass a saved selection for one
+boot, hold FUNC at power-on and choose EXIT in the stock STARTUP MENU. Booting
+with the card removed also leaves the flashed image running. These steps follow
+the current [REMIX SWITCH instructions](../../modules/remix-switch/README.md);
+the saved-selection behavior depends on the switcher in the flashed image too.
+Do not claim the fallback was exercised on hardware until it has been.

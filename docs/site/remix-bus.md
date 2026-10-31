@@ -81,6 +81,15 @@ XLV and CUE gain are outside this module. See the module references for
 [POST FADER](reference/modules/post-fader.md) and
 [RETURNS](reference/modules/returns.md).
 
+An optional hardware experiment pairs `BUS DMA8K` (the original delay wait)
+with `BUS DMA4K` (half that wait), both using this optimized post-fader/T8-return
+rig. The shorter wait is **not hardware accepted**; regular builds keep the
+original wait. The pair is a focused bus test package, separate from the
+RADBUSS7 synth/MIDI remix. See the
+[DMA experiment and rollback procedure](../contributing/BUS_DSP_OPTIMIZATION.md#10-separate-half-wait-dma-experiment--31-october-2026)
+before testing. Returning to `BUS DMA8K` retains the other optimizations;
+a power cycle alone may reload a remembered experimental selection.
+
 ## FX1
 
 | effect | in place of | modes |
