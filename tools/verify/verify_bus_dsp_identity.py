@@ -9,7 +9,8 @@ Build both images separately with the same remix and grain count. This gate
 never builds an image or changes a source; generated dumps stay under out/.
 --grains records the caller's declared build configuration; it does not infer
 the grain count from a binary. Repeat with an independently built two-grain
-pair to cover that substitution. --returns-fallback compares a plain optimized
+pair to cover that substitution. --engine density covers all eight DENS buckets
+for evaluating sparse-reader dispatch. --returns-fallback compares a plain optimized
 bus image with POST FADER + RETURNS selected but no running RETURNS instance.
 It gives the candidate equivalent tagged send controls, feeds all four sources,
 and checks every mode with whole and split blocks. This also catches a host
@@ -61,6 +62,12 @@ class Case:
 
 def cases(engine):
     result = []
+    if engine == "density":
+        # All eight quantized DENS buckets: near-dense dispatch can otherwise
+        # cost more in guards than it saves by omitting zero-weight reads.
+        return [Case(f"grain_density{density}", {DELAY: dict(
+            MODE=1, DENS=density, SIZE=1, PTCH=64, SCTR=127, TIME=100)})
+                for density in (0, 16, 32, 48, 64, 80, 96, 127)]
     if engine in ("delay", "all"):
         result += [Case("delay_clean"), Case("delay_tone", {DELAY: {"TONE": 10}}),
                    Case("delay_grain", {DELAY: {"MODE": 1}}),
@@ -138,7 +145,8 @@ class Host:
         self.entries = [send_probe.entry_points(self.mems[core], mods[key].menu.fx2_id)
                         for key, core in SPECS]
 
-    def render(self, case):
+    def render(self, case, *, extra_args=()):
+        """Render a case; optional host capture/raw-word arguments enter the receipt."""
         defaults = ({"MODE": 1, "SHMR": 0}, {"REV": 100, "DEL": 0},
                     DELAY_DEFAULTS, {"REV": 0, "DEL": 100})
         parameters = []
@@ -180,6 +188,7 @@ class Host:
             cmd += ["-sched", ",".join(events)]
         if case.split:
             cmd += ["-split", str(case.split)]
+        cmd += list(extra_args)
         run = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
         log = run.stdout + run.stderr
         (self.work / f"{name}.log").write_text(log)
@@ -216,7 +225,7 @@ def main():
     ap.add_argument("candidate", type=Path)
     ap.add_argument("--returns-fallback", action="store_true",
                     help="12 mode/split cases with equivalent tagged candidate sends and all sources fed")
-    ap.add_argument("--engine", choices=("delay", "reverb", "all"), default="all")
+    ap.add_argument("--engine", choices=("delay", "reverb", "density", "all"), default="all")
     ap.add_argument("--remix", default="bus")
     ap.add_argument("--grains", type=int, choices=(2, 4), default=4)
     ap.add_argument("--host", type=Path, default=send_probe.HOST)
@@ -286,6 +295,9 @@ def main():
                 and saved["delay_reverse"]["peak"][2] > 0)
         control("unknown MODE falls back to CLEAN", not differs("delay_clean", "delay_unknown", 2))
         control("delay automation changes audio", differs("delay_held", "delay_automation", 2))
+    if not args.returns_fallback and args.engine == "density":
+        control("all density buckets produce signal", all(c["peak"][2] > 0 for c in saved.values()))
+        control("density changes audio", differs("grain_density0", "grain_density127", 2))
     if not args.returns_fallback and args.engine in ("reverb", "all"):
         control("reverb has signal", saved["reverb_mode1"]["peak"][0] > 0)
         for mode in (0, 2):

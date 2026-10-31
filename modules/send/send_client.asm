@@ -361,6 +361,16 @@ cnt_done:
         teq     y1,b
         move    b,x:(r7+$17)
         move    a,x:(r7+$18)
+
+; Use the computed steps, after both snaps above, rather than the target
+; knobs: a zero target can still have an audible ramp. Registration and
+; housekeeping have already run, including original POST FADER membership.
+        tst     a                       ; REV step, with a0 already cleared
+        bne     send_ramp
+        move    x:(r7+$16),a             ; DEL step
+        tst     a
+        beq     settled
+send_ramp:
         do      n7,>send_end
         move    x:(r7+$15),a
         move    x:(r7+$16),x0
@@ -373,9 +383,8 @@ cnt_done:
         asr     #$1,a,a                  ; a = mono
         move    a,x0
 
-        mpy     x0,y1,a                  ; a = mono * DEL level
+        mpy     x0,y1,a     y:(r2),b     ; mono * DEL; parallel accumulator read
         asr     #$3,a,a                  ; 3 bits of bus headroom: eight clients
-        move    y:(r2),b
         add     b,a
         move    a,y:(r2)+                ; AUX ACC[write][i] += contribution
         move    x:(r7+$17),a             ; REV level, ramped per sample
@@ -383,9 +392,8 @@ cnt_done:
         add     y1,a
         move    a,x:(r7+$17)
         move    a,y1
-        mpy     x0,y1,a                  ; a = mono * REV level
+        mpy     x0,y1,a     y:(r4),b     ; mono * REV; parallel accumulator read
         asr     #$3,a,a
-        move    y:(r4),b
         add     b,a
         move    a,y:(r4)+                ; REV ACC[write][i] += contribution
 
@@ -394,4 +402,95 @@ send_end:
 send_refused:
         rts
 fx1out:                                 ; an FX1 slot: nothing above ran
+        rts
+
+; Both steps are exactly zero. The existing setup has already stored each
+; snapped gain, so the loop need not rewrite it. Keep mono limiting, the
+; three-bit headroom shift and each bus addition in their original order.
+; x1 holds REV so this path does not acquire a new y0 clobber. The signed
+; x1,x0 multiply is the same product as x0,y1 in the ramped path.
+settled:
+        move    x:(r7+$15),y1            ; fixed DEL gain
+        move    x:(r7+$17),x1            ; fixed REV gain
+        move    y1,a
+        tst     a
+        beq     rev_pick
+        move    x1,a
+        tst     a
+        beq     del_only
+        do      n7,>pair_end
+        move    x:(r0)+,a
+        move    x:(r0)+,x0
+        add     x0,a
+        asr     #$1,a,a
+        move    a,x0
+        mpy     x0,y1,a     y:(r2),b
+        asr     #$3,a,a
+        add     b,a
+        move    a,y:(r2)+
+        mpy     x1,x0,a     y:(r4),b
+        asr     #$3,a,a
+        add     b,a
+        move    a,y:(r4)+
+pair_end:
+        nop
+        rts
+
+; Skipping an exact-zero contribution leaves even a saturated bus word
+; unchanged. Advance its pointer after the loop: m2/m4 were set linear
+; above. Keep r0's two original AGU updates, including on the all-zero path.
+rev_pick:
+        move    x1,a
+        tst     a
+        beq     zero_run
+        do      n7,>rev_stop
+        move    x:(r0)+,a
+        move    x:(r0)+,x0
+        add     x0,a
+        asr     #$1,a,a
+        move    a,x0
+        mpy     x1,x0,a     y:(r4),b
+        asr     #$3,a,a
+        add     b,a
+        move    a,y:(r4)+
+rev_stop:
+        nop
+        move    n7,x0
+        move    r2,a
+        add     x0,a
+        move    a,r2
+        rts
+
+del_only:
+        do      n7,>del_stop
+        move    x:(r0)+,a
+        move    x:(r0)+,x0
+        add     x0,a
+        asr     #$1,a,a
+        move    a,x0
+        mpy     x0,y1,a     y:(r2),b
+        asr     #$3,a,a
+        add     b,a
+        move    a,y:(r2)+
+del_stop:
+        nop
+        move    n7,x0
+        move    r4,a
+        add     x0,a
+        move    a,r4
+        rts
+
+zero_run:
+        do      n7,>zero_end
+        move    (r0)+
+        move    (r0)+
+zero_end:
+        nop
+        move    n7,x0
+        move    r2,a
+        add     x0,a
+        move    a,r2
+        move    r4,a
+        add     x0,a
+        move    a,r4
         rts

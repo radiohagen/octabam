@@ -66,8 +66,11 @@ def _table():
     words = list(_RECIP)
     for name in ("ROOM", "PLATE", "BIG"):        # MODE index 0, 1, 2
         row = []
-        for slot, value in zip(_MODE_SLOTS, _MODE_ROWS[name] + _MODE_COMMON,
-                               strict=True):
+        pairs = tuple(zip(_MODE_SLOTS, _MODE_ROWS[name] + _MODE_COMMON, strict=True))
+        if dict(pairs).get(0x2f) != 0x7fffff:
+            raise ValueError(f"{name}: MODE RATE scale must remain 0x7fffff; "
+                             "reverb_server.asm folds it into exact DSP increment constants")
+        for slot, value in pairs:
             row += [slot, value]
         assert len(row) == 2 * 17 <= _MODE_STRIDE
         words += row
@@ -81,7 +84,7 @@ MODULE = Module(
     key="REVERB SERVER",
     kind=Kind.DSP_EFFECT,
     category=Category.BUS, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.RENDER, proof_note="optimized path: 7 audio comparisons plus one adversarial state run; original ran on Sam's MKII; hardware acceptance of optimization pending",
+    proof=Proof.RENDER, proof_note="exact shimmer/LO/gate/FDN/allpass/RATE paths: raw24 audio and state regression coverage, including control transitions and splits; original ran on Sam's MKII; new hardware acceptance pending",
     doc="Eight-line FDN reverb: ROOM/PLATE/BIG, shimmer, gate, mid/side width.",
     menu=MenuEntry(
         fx2_id=0x07,

@@ -24,6 +24,24 @@ split block. With shimmer off the fixture saves about 111 executed
 instructions per sample; active shimmer adds three for the guard. These
 are emulator instruction counts, not hardware utilization measurements.
 
+The 31 Oct 2026 pass also specializes an **exact-zero glided LO
+coefficient**, retaining and subtracting any nonzero frozen low-cut state
+left by earlier TONE automation. GATE 0 skips redundant envelope work while
+preserving its counter/retrigger history and both output multiplications.
+The six fixed-zero FDN input weights avoid their zero products; the four
+input allpasses are inlined, and all eight allpasses combine an existing
+multiply with the write of their already-limited state. Pinned RATE
+arithmetic is replaced by its exact stored constants. The tank topology,
+limiting points, control glides and sample history stay the same.
+
+These paths are checked against the preceding engine with raw 24-bit audio
+and state comparisons, including mode/control changes and split calls.
+Hardware acceptance of the new paths is pending; Sam's original hardware
+results below remain historical evidence. See the
+[DSP optimization review](../../docs/contributing/BUS_DSP_OPTIMIZATION.md)
+for measured results, fixtures and limits. Whole-core measurements include
+SEND and must not be attributed entirely to this reverb.
+
 ## Knobs
 
 Since 26 Sep 2026 the host page draws DEL and REV only (the remix's

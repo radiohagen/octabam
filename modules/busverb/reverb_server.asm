@@ -140,6 +140,7 @@
 ; words a block over 256 blocks and outputs dry until warm.
 ; ---------------------------------------------------------------------------
 
+; CYCLES_FORWARD_BRANCHES
 ; LINES = 8, the tank loop bound, is hardcoded: dsp_asm has no equ.
 
 init:
@@ -1122,31 +1123,13 @@ shfst:
                                         ; already runs away. A quarter puts that
                                         ; sweet spot near the top of the travel
                                         ; instead of a fifth of the way up.
-; ---- the LFO increment: pinned at what RATE 40 gave (the knob went 15 Sep
-; 2026); 8x what it would be per sample, because the LFO is stepped once per
-; block.
-        move    #$28,a                  ; 40 << 16
-        move    a1,x0
-        move    x0,a
-        move    a,x0
-        move    #$50,y1
-        mpy     x0,y1,a
-        asr     #$8,a,a                 ; Round 13: BASE RATE x8, ~2.2 Hz at a
-                                        ; mode scale of 1.0. The pinned ~0.4 Hz
-                                        ; rate could not spread a mode across
-                                        ; FFT bins, and the surviving modes
-                                        ; towered 50-65 dB over the diffuse
-                                        ; tail -- THE metallic end-ring,
-                                        ; measured (latetail probe). An earlier
-                                        ; seasick 2.84 Hz was fast-DEEP; this
-                                        ; is fast-SHALLOW: every mode's depth
-                                        ; scale is set so vibrato stays under
-                                        ; ~12 cents.
-        add     #>$180,a                
-        move    a,x1                    ; fold in MODE's LFO rate scale, which the
-        move    x:(r7+$2f),y1           ; md_ block parked here. SPEED still spans
-        mpy     x1,y1,a                 ; its full range inside each character, the
-        move    a,x:(r7+$2f)            ; same shape as MOD depth and damping.
+; ---- pinned LFO base increment ------------------------------------------
+; RATE 40 and the three MODE rows' common $7fffff rate scale produce $1a7f.
+; This is the exact stored result, including the Q23 truncation at the mode
+; multiply (the value before that multiply is $1a80). Keep the same state
+; word for the six rolled LFOs and the same once-per-block phase gating.
+        move    #>$1a7f,a
+        move    a,x:(r7+$2f)
 
 ; (the RATE speed select on slot 11 went with the MOD knob, 15 Sep 2026:
 ; the LFO runs at 1x, the default it always had)
@@ -1171,10 +1154,7 @@ g_st:                                   ; (g_off falls through with a still
 ; ---- EIGHT INDEPENDENT LFOs, one per tank line --------------------------
 
         move    x:(r7+$81),a            ; line 0  (1.000x) phase
-        move    x:(r7+$2f),x0           ; base increment, from RATE
-        move    #$7f,y1                    ; rate x0.992
-        mpy     x0,y1,b                 ; this line's own rate
-        move    b1,x0
+        move    #>$1a4a,x0              ; exact $1a7f * $7f0000, high word
         add     x0,a
         and     #>$7fffff,a                  ; wrap
         move    a1,x0                   ; extract without saturating on A2
@@ -1218,10 +1198,7 @@ lf3e:
         move    x0,x:(r7+$22)           ; interpolation fraction
 
         move    x:(r7+$4f),a            ; line 1  (1.168x) phase
-        move    x:(r7+$2f),x0           ; base increment, from RATE
-        move    #>$6cc000,y1               ; rate x0.850
-        mpy     x0,y1,b                 ; this line's own rate
-        move    b1,x0
+        move    #>$1682,x0              ; exact $1a7f * $6cc000, high word
         add     x0,a
         and     #>$7fffff,a                  ; wrap
         move    a1,x0                   ; extract without saturating on A2
@@ -1597,6 +1574,14 @@ lfrol:
         move    x:(r7+$29),a            ; GHOLD
         tmi     x1,a                    ; NOT triggered -> counted-down
         move    a,x:(r7+$30)            ; GCNT
+; GATE=0 resets GLVL to full at this call's setup. Its counter still runs
+; above: enabling a gate later must inherit the same countdown/retrigger
+; history. Only the envelope arithmetic is redundant. The output keeps its
+; two full-scale multiplies: $7fffff is not mathematical unity.
+        move    x:(r7+$29),a            ; GHOLD: the ungated sentinel
+        cmp     #>$400000,a
+        beq     genvpass
+        move    x:(r7+$30),a            ; GCNT, restored for the active path
 ; C. target = FULL if GCNT > 0 else 0:
         tst     a                       ; Z = (GCNT == 0)
         move    #>$7fffff,a             ; FULL
@@ -1613,6 +1598,7 @@ lfrol:
         mpy     y0,x0,a                 ; sees the sub's flag. coeff * delta
         add     b,a
         move    a,x:(r7+$27)            ; GLVL += coeff*(target - GLVL)
+genvpass:
 
         move    r1,a                    ; the allpass phase IS the tank phase:
         and     #>$7ff,a                ; both advance by 1 a sample, and the
@@ -1636,25 +1622,64 @@ lfrol:
         move    a,r5                    ; = write address
         move    x:(r7+$25),y0           ; g, from DIFFUSION; held across all
                                         ; four input allpasses
-        bsr     apbody                  ; the rolled allpass body
+        nop                             ; spaces the caller's r5 write
+        move    y:(r5+n5),b             ; d, at (phase - tap) mod 2048
+        move    b,x0
+        mpy     x0,y0,a
+        add     y1,a                    ; v = x + g*d
+        move    a,x1                    ; x1 = v (a register move limits
+                                        ; exactly as a store does)
+        mpy     x1,y0,a     x1,y:(r5)   ; g*v; write the already-limited v
+        sub     a,b                     ; out = d - g*v
+        move    b,y1                    ; chain out
 
         move    x:(r7+$06),n5        ; this MODE's allpass 1
         move    r5,a
         add     #>$800,a
         move    a,r5                    ; = write address
-        bsr     apbody
+        nop                             ; preserves the call-site AGU spacing
+        nop                             ; spaces the caller's r5 write
+        move    y:(r5+n5),b             ; d, at (phase - tap) mod 2048
+        move    b,x0
+        mpy     x0,y0,a
+        add     y1,a                    ; v = x + g*d
+        move    a,x1                    ; x1 = v (a register move limits
+                                        ; exactly as a store does)
+        mpy     x1,y0,a     x1,y:(r5)   ; g*v; write the already-limited v
+        sub     a,b                     ; out = d - g*v
+        move    b,y1                    ; chain out
 
         move    x:(r7+$07),n5        ; this MODE's allpass 2
         move    r5,a
         add     #>$800,a
         move    a,r5                    ; = write address
-        bsr     apbody
+        nop                             ; preserves the call-site AGU spacing
+        nop                             ; spaces the caller's r5 write
+        move    y:(r5+n5),b             ; d, at (phase - tap) mod 2048
+        move    b,x0
+        mpy     x0,y0,a
+        add     y1,a                    ; v = x + g*d
+        move    a,x1                    ; x1 = v (a register move limits
+                                        ; exactly as a store does)
+        mpy     x1,y0,a     x1,y:(r5)   ; g*v; write the already-limited v
+        sub     a,b                     ; out = d - g*v
+        move    b,y1                    ; chain out
 
         move    x:(r7+$3e),n5        ; this MODE's allpass 3
         move    r5,a
         add     #>$800,a
         move    a,r5                    ; = write address
-        bsr     apbody
+        nop                             ; preserves the call-site AGU spacing
+        nop                             ; spaces the caller's r5 write
+        move    y:(r5+n5),b             ; d, at (phase - tap) mod 2048
+        move    b,x0
+        mpy     x0,y0,a
+        add     y1,a                    ; v = x + g*d
+        move    a,x1                    ; x1 = v (a register move limits
+                                        ; exactly as a store does)
+        mpy     x1,y0,a     x1,y:(r5)   ; g*v; write the already-limited v
+        sub     a,b                     ; out = d - g*v
+        move    b,y1                    ; chain out
 
 ; ---- BLOOM ALLPASSES ------------------------------------------
         move    x:(r7+$39),a            ; in-loop AP A base = shared+0x4000
@@ -1671,9 +1696,8 @@ lfrol:
         mpy     x0,y0,a
         add     y1,a                    ; v = x + g*d (y1 = the chain out)
         move    a,x0                    ; x0 = v, limited as the store was
-        mpy     x0,y0,a
+        mpy     y0,x0,a     x0,y:(r5)   ; g*v; write v (AP a)
         sub     a,b                     ; out = d - g*v
-        move    x0,y:(r5)               ; write v (AP a)
         move    b,x1                    ; AP a out -> AP b in
         move    r5,a                    ; base_a + phase, still intact ...
         add     #>$800,a                  ; ... + 0x800 = base_b + phase
@@ -1685,10 +1709,9 @@ lfrol:
         move    x1,x0
         add     x0,a                    ; v = x + g*d
         move    a,x0                    ; x0 = v, limited as the store was
-        mpy     x0,y0,a
+        mpy     y0,x0,a     x0,y:(r5)   ; g*v; write v (AP b)
         sub     a,b                     ; out = d - g*v
         move    b,x:(r7+$08)            ; -> the bloom component, for the sums
-        move    x0,y:(r5)               ; write v (AP b)
 
         move    y1,a                    ; the diffused chain
 ; ---- TANK INPUT ATTENUATION: -12 dB of headroom -------------------------
@@ -1710,6 +1733,11 @@ lfrol:
         move    x0,r5                   ; pointer r1 has always been
         lua     (r7+$16),r4             ; the Hadamard slots u0..u7 (m4 = $fff:
                                         ; eight words inside one block)
+; MODEFORK_BEGIN
+        move    x1,a                    ; actual glided LO, not the TONE target
+        tst     a
+        beq     lofrozen
+; MODEFORK_MID
         do      #8,>tankend
         move    y:(r6)+,n5              ; w0: this line's read offset
         move    y:(r6)+,y1              ; w1: its interpolation fraction
@@ -1747,6 +1775,43 @@ lfrol:
         move    a,x:(r4)+               ; this line's output, straight into its
                                         ; Hadamard slot
 tankend:
+        bra     tankjoin
+; MODEFORK_MID
+lofrozen:
+        do      #8,>loend
+        move    y:(r6)+,n5              ; w0: this line's read offset
+        move    y:(r6)+,y1              ; w1: its interpolation fraction
+        move    n1,x0                   ; the line stride, 0x1000
+        move    y:(r5+n5),b             ; d0 -- the AGU wraps inside the line
+        move    r5,a
+        add     x0,a
+        move    a,r5                    ; on to the next line
+; The interpolation partner needs no second address: the read pointer advances
+; one per sample, so d1 THIS sample is d0 LAST sample. The write head stays
+; >=55 samples away even at the longest tap and deepest modulation, so the
+; carried value is never overwritten. Seeded one sample further back before
+; the loop, so sample 0 is exact too.
+        move    y:(r6),a                ; w2: d1 = last sample's d0
+        sub     b,a         b,y:(r6)+   ; carry forward ; d1 - d0
+        move    a,x0
+        mpy     x0,y1,a                 ; f*(d1-d0)
+        add     b,a         y:(r6),b    ; + d0 -> the interpolated tap ; w3: damping state
+        sub     b,a
+        move    a,x0
+        mpy     x0,y0,a                 ; y0 = DAMP, held across every line
+        add     b,a
+        move    a,y:(r6)+               ; damping state back
+    ; At exact-zero coefficient the stored LO value stays frozen. Preserve
+    ; the damped tap's limiting point AND subtract that possibly nonzero
+    ; frozen state (automation from a high TONE can leave it behind).
+        move    a,y1
+        move    y:(r6)+,x0
+        move    y1,a
+        sub     x0,a
+        move    a,x:(r4)+
+loend:
+; MODEFORK_END
+tankjoin:
 
         move    #>$7ff,m5               ; back to the input diffusers' 2048
 
@@ -2183,7 +2248,15 @@ shquiet:
         lua     (r7+$3a),r5             ; r5 -> scratch0
         move    x:(r7+$15),y1           ; input, also spaces the r5 write
         nop
-        do      #4,>fbA
+        do      #3,>fbA
+        move    (r6)+                   ; consume the known-zero weight slot
+        move    x:(r4)+,x0              ; u[k], already stored/limited
+        move    y:(r6)+,y0              ; original positive gain[k]
+        mpy     x0,y0,a
+        move    a,x:(r5)+              ; same feedback scratch and limit
+        nop                            ; retain the original AGU spacing
+fbA:
+; The driven fourth line keeps its original signed injection arithmetic.
         move    y:(r6)+,x0             ; weight[k]
         mpy     x0,y1,b     x:(r4)+,a   ; input * weight[k] ; u[k]
         move    a,x0
@@ -2197,7 +2270,6 @@ shquiet:
         add     b,a                    ; fb = u*G_k + input*weight
         move    a,x:(r5)+              ; store fb[k] to scratch
         nop                            ; one instruction between r5 write and use
-fbA:
 
 ; -- Step 1b: rolled feedback, group B (u[4..7] at $1a..$1d) --------------
 ; r4 walks u[4..7], r5 walks scratch[4..7] ($41..$44).
@@ -2207,7 +2279,15 @@ fbA:
                                         ; lua's 7-bit displacement
         nop                             ; r5 is first read ten
                                         ; instructions into the loop
-        do      #4,>fbB
+        do      #3,>fbB
+        move    (r6)+                   ; consume the known-zero weight slot
+        move    x:(r4)+,x0              ; u[k], already stored/limited
+        move    y:(r6)+,y0              ; original positive gain[k]
+        mpy     x0,y0,a
+        move    a,x:(r5)+              ; same feedback scratch and limit
+        nop                            ; retain the original AGU spacing
+fbB:
+; The driven fourth line keeps its original signed injection arithmetic.
         move    y:(r6)+,x0             ; weight[k]
         mpy     x0,y1,b     x:(r4)+,a   ; input * weight[k] (y1 from group A) ; u[k]
         move    a,x0
@@ -2216,7 +2296,6 @@ fbA:
         add     b,a                    ; fb = u*G_k + input*weight
         move    a,x:(r5)+              ; store fb[k] to scratch
         nop
-fbB:
 
 ; -- Step 2: in-loop allpass, line 0: diffuses the feedback before storage --
         move    #>$1ff,m5               ; these two are 512. The input
@@ -2250,9 +2329,8 @@ fbB:
         mpy     y0,x0,a     x1,x0       ; g*d, signed (y0,x0)
         add     x0,a                    ; v = x + g*d
         move    a,x0                    ; x0 = v, limited as the store was
-        mpy     y0,x0,a                 ; g*v
+        mpy     y0,x0,a     x0,y:(r5)   ; g*v; write the already-limited v
         sub     a,b                     ; out = d - g*v
-        move    x0,y:(r5)               ; store v
         move    b,a                     ; out -> the line
         move    a,y:(r1)             ; write at the line's own modulo pointer
 
@@ -2281,9 +2359,8 @@ fbB:
         mpy     y0,x0,a     x1,x0       ; g*d (y0 = g from line 0)
         add     x0,a                    ; v = x + g*d
         move    a,x0                    ; x0 = v, limited as the store was
-        mpy     y0,x0,a                 ; g*v
+        mpy     y0,x0,a     x0,y:(r5)   ; g*v; write the already-limited v
         sub     a,b                     ; out = d - g*v
-        move    x0,y:(r5)               ; store v
         move    #>$7ff,m5               ; back to the input diffusers' 2048
         move    b,a                     ; out -> the line
         move    a,y:(r2)             ; write at the line's own modulo pointer
@@ -2456,26 +2533,6 @@ dry:
         move    #>$ffffff,m3
         move    #>$ffffff,m4
         move    #>$ffffff,m5
-        rts
-
-; ---- apbody: one input-diffuser allpass ------------------------------------
-; In: r5 = write address, n5 = this allpass's tap (m5 = $7ff modulo held by
-; the caller), y0 = g (held across all four calls), y1 = chain in.
-; Out: y1 = chain out, v written at y:(r5). Clobbers a/b/x0/x1.
-; The mpy x0,y0 encodes as mpysu: safe because the SECOND operand y0 = g is
-; always positive.
-apbody:
-        nop                             ; spaces the caller's r5 write
-        move    y:(r5+n5),b             ; d, at (phase - tap) mod 2048
-        move    b,x0
-        mpy     x0,y0,a
-        add     y1,a                    ; v = x + g*d
-        move    a,x1                    ; x1 = v (a register move limits
-                                        ; exactly as a store does)
-        mpy     x1,y0,a
-        sub     a,b                     ; out = d - g*v
-        move    x1,y:(r5)               ; write v at base + phase
-        move    b,y1                    ; chain out
         rts
 
 ; ---- stampgr: a clear-on-read liveness stamp with 3 blocks of grace -------

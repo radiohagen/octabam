@@ -11,9 +11,9 @@
 ; that build_bus.py rewrites per payload with a blanket text replace over the
 ; whole source, comments included, and censuses; shared-window addresses
 ; elsewhere in this file are offsets from a register-held base. The lines are
-; plain circular buffers wrapped by hand (m1/m2 stay linear): the read
-; address is base + ((wr - TIME) & mask) and the post-write pointer folds
-; back the same way. THE GEOMETRY FOLLOWS THE PLACEMENT (tools/remix/geom.py:
+; circular buffers: the aligned L write wraps through m1; R stays linear
+; and wraps by hand. The read address is base + ((wr - TIME) & mask).
+; THE GEOMETRY FOLLOWS THE PLACEMENT (tools/remix/geom.py:
 ; lines tagged `; @B` ship, `; @DEV` are the hatch's):
 ;   shipping (payload B, core 1), 741 ms of TIME:
 ;     LineL   base .. base+0x7fff          32768 words, the whole shared half
@@ -108,7 +108,7 @@
 ;                       load and save); one phase for both heads
 ;   r7+$5f              SIZE select index, raw 0..3 (per block)
 ;   r7+$60/$61          REVERSE segment length S / phase step 2^23/S
-;   r7+$62              free
+;   r7+$62              reserved for optional RETURNS liveness grace
 ;   r7+$0c              last-seen rotation (the gated housekeeping block's)
 ;   r7+$20              this block's resolved write offset (0..112);
 ;                       every bus address derives from it (the ROTLATCH slot)
@@ -118,9 +118,9 @@
 ;                       frame offset); the loop writes at (r3+n3)
 ;   r7+$63/$64          this call's ACC read address (the loop walks it in
 ;                       r3) / the TIME ramp's per-sample increment (Q8)
-;   r7+$65/$66          free
+;   r7+$65/$66          reserved for the optional RETURNS routing
 ;   r7+$67              this call's frame offset, from r0 (shared mechanism)
-;   r7+$68              free
+;   r7+$68              reserved for optional RETURNS sample-count park
 ;   r7+$69              MODE, MSB-aligned select (per block; 0 = CLEAN,
 ;                       1 = GRAIN, 2 = REVERSE; anything else = CLEAN)
 ;   r7+$6a              this block's MIDI note for GRAIN (0 = none)
@@ -128,7 +128,8 @@
 ;                       $7fff in REVERSE)
 ;   r7+$6c              skipR: 1 in REVERSE (the R line's read and write are
 ;                       skipped per sample; the output is mono to both)
-;   r7+$6e/$6f          free
+;   r7+$6e              OR of FDBK/TONE/PING/TIME steps, every live call
+;   r7+$6f              cached TIME integer lag, valid when raw $6e is zero
 ;   r7+$70/$71          LineL/LineR write-pointer phase (persistent, masked
 ;                       on load and save: garbage with bit 23 set saturates
 ;                       the AGU and hangs the bus)
@@ -143,7 +144,8 @@
 ;   r7+$7b/$7c          fL/fR, the damped taps == this sample's wet (GRAIN
 ;                       and REVERSE overwrite them with their own)
 ;   r7+$7d              GRAIN: x_in parked while n6 holds the wet sum
-;   r7+$7e, $81         free
+;   r7+$7e              cached TIME fraction, valid when raw $6e is zero
+;   r7+$81              free
 ;   r7+$7f              bus auto-gain 1/sqrt(N) (per block; read per sample)
 ;   r7+$80              1 - PING, from PING's run value per sample
 ;   r7+$82              warm-up tagged counter
@@ -556,7 +558,7 @@ dwarmc:
 ; declares `grains=2` (schema.Remix) has build_bus.py substitute three
 ; things at the markers below, and nothing else changes:
 ;
-;   ; GRAINCNT  the two rolled loops count 2 instead of 4
+;   ; GRAINCNT  both readers in each density path count 2 instead of 4
 ;   ; GRAINOFF  the grain-to-grain phase offset doubles, G/4 -> G/2, so two
 ;              grains still tile the cycle
 ;   ; GRAINMK   the makeup doubles, because FOUR triangle windows at quarter
@@ -1331,9 +1333,51 @@ gvrdone:
                                         ; base is 32K-aligned and r1 can);
                                         ; n2 supplies the base at the write
 
-; No AGU modulo on the lines: m1/m2 stay at the linear invariant ($ffffff),
-; the read address is computed per sample and the write pointers are
-; wrapped by hand below. n1/n2 hold the line bases for the block. In the
+; L's base is aligned to its ring size in both layouts, so its postincrement
+; can wrap through m1. Set this AFTER rebuilding r1 with the linear base add
+; above. R's base is only 16K-aligned in the shipping layout: keep m2 linear
+; for its indexed phase+base write and wrap that phase by hand below.
+        move    #>$7fff,m1                                                 ; @B
+        move    #>$3fff,m1                                                 ; @DEV
+        move    x:(r7+$23),a            ; REVERSE uses both 16K halves       ; @DEV
+        tst     a                                                         ; @DEV
+        beq     dmodready                                                 ; @DEV
+        move    #>$7fff,m1                                                 ; @DEV
+dmodready:
+; Zero steps make the three coefficients, 1-PING and TIME decomposition
+; identical on every sample. Test their exact OR once per call, including
+; split calls and REVERSE's forced-zero PING step. These three scratch words
+; cache derived values only: no glide, ramp base or update cadence changes.
+        move    x:(r7-$13),a            ; FDBK step
+        move    x:(r7-$12),x0           ; TONE step
+        or      x0,a
+        move    x:(r7-$1a),x0           ; PING step
+        or      x0,a
+        move    x:(r7+$1b),x0           ; TIME step
+        or      x0,a
+        move    a1,x:(r7+$25)           ; raw $6e, exact 24-bit mask
+        tst     a
+        bne     dcachemade
+; A zero TIME step leaves raw $26 untouched throughout this call. Apply the
+; same clamp and split once; the sample loop keeps x1/y0 through its input
+; stage. Cache writes happen only when both values are used on this call.
+        move    x:(r7-$23),a
+        move    #>$800,x0
+        cmp     x0,a
+        tlt     x0,a
+        move    #>$7ff800,x0                                                ; @B
+        move    #>$3ff800,x0                                                ; @DEV
+        cmp     x0,a
+        tgt     x0,a
+        move    a,b
+        asr     #$8,a,a
+        move    a,x:(r7+$26)            ; raw $6f: integer lag
+        move    b,a
+        and     #>$ff,a
+        asl     #$f,a,a
+        move    a,x:(r7+$35)            ; raw $7e: fraction in Q23
+dcachemade:
+; The read address is computed per sample. n1/n2 hold the line bases. In the
 ; loop: r3 walks the ACC read (n3 = the CHAIN write's offset from it), n4
 ; is the TIME ramp, n6 is x_in (GRAIN: the wet sum, x_in parked in raw
 ; $7d), r6 is GRAIN's phase cursor / REVERSE's lag0, r4 GRAIN's record
@@ -1359,6 +1403,13 @@ dkeyrun:
         move    a,n4                    ; the TIME ramp, Q8, walked per sample
         do      n7,>dlyend
 ; ---- the coefficient ramps: FDBK TONE PING (1 - PING) one step each -------
+        move    x:(r7+$25),a
+        tst     a
+        bne     drampwalk
+        move    x:(r7+$26),x1           ; settled integer lag
+        move    x:(r7+$35),y0           ; settled fraction, possibly nonzero
+        beq     drampidle               ; Z still set: only moves since tst
+drampwalk:
         move    x:(r7+$2a),a
         move    x:(r7-$13),x0
         add     x0,a
@@ -1376,6 +1427,28 @@ dkeyrun:
         sub     x0,a
         move    a,x:(r7+$37)            ; 1 - PING, from the run (a running
                                         ; difference drifted a few LSB)
+; ---- this sample's lag: the glided TIME, Q8, kept inside the line: never
+; nearer the write head than 8, never past the ring's oldest valid sample
+; (32760; the hatch's 16376); a wrap would be a full-lap discontinuity.
+        move    n4,a                    ; the ramped TIME, Q8
+        move    x:(r7+$1b),x0           ; this block's per-sample increment
+        add     x0,a
+        move    a,n4                    ; ... advanced for the next sample
+        move    #>$800,x0               ; 8 samples
+        cmp     x0,a
+        tlt     x0,a
+        move    #>$7ff800,x0            ; 32760 samples                     ; @B
+        move    #>$3ff800,x0            ; 16376 samples                     ; @DEV
+        cmp     x0,a
+        tgt     x0,a
+        move    a,b
+        asr     #$8,a,a
+        move    a,x1                    ; the lag, integer samples (modtap's)
+        move    b,a
+        and     #>$ff,a                 ; the low 8 bits (a is positive: a2 stays clean)
+        asl     #$f,a,a                 ; -> Q23, 0 .. 255/256
+        move    a,y0                    ; the fraction (modtap's)
+drampidle:
 
 ; ---- input: own dry mono sum + shared DELAY bus accumulator --------------
         move    x:(r0),a
@@ -1430,27 +1503,6 @@ dkeyrun:
 ; re-enters the loop. (The tape wow and flutter that rode this lag went 26
 ; Sep 2026, WOW's slot to TIME; at WOW 0 they added exactly 0, so the lag
 ; is the one they left.)
-; ---- this sample's lag: the glided TIME, Q8, kept inside the line: never
-; nearer the write head than 8, never past the ring's oldest valid sample
-; (32760; the hatch's 16376); a wrap would be a full-lap discontinuity.
-        move    n4,a                    ; the ramped TIME, Q8
-        move    x:(r7+$1b),x0           ; this block's per-sample increment
-        add     x0,a
-        move    a,n4                    ; ... advanced for the next sample
-        move    #>$800,x0               ; 8 samples
-        cmp     x0,a
-        tlt     x0,a
-        move    #>$7ff800,x0            ; 32760 samples                     ; @B
-        move    #>$3ff800,x0            ; 16376 samples                     ; @DEV
-        cmp     x0,a
-        tgt     x0,a
-        move    a,b
-        asr     #$8,a,a
-        move    a,x1                    ; the lag, integer samples (modtap's)
-        move    b,a
-        and     #>$ff,a                 ; the low 8 bits (a is positive: a2 stays clean)
-        asl     #$f,a,a                 ; -> Q23, 0 .. 255/256
-        move    a,y0                    ; the fraction (modtap's)
 ; ---- Line L: the read at the lag, then the loop's one-pole damping -------
 ; s += c*(d-s); fL is this sample's wet L in every mode until an arm
 ; replaces it.
@@ -1518,11 +1570,6 @@ rskipr:
         move    (r2)+                   ; advance the phase
 rskipw:
 
-        move    r1,a
-        move    x:(r7+$22),x0
-        and     x0,a
-        move    a1,r1                   ; the masked phase (a1 needs no A2-clean)
-        move    (r1)+n1                 ; + LineL base
         move    r2,a
         and     #>$7fff,a                                                  ; @B
         and     #>$3fff,a                                                  ; @DEV
@@ -1538,12 +1585,23 @@ rskipw:
         move    x:(r7+$20),a
         move    #$1,x0               ; 1 << 16 = GRAIN
         cmp     x0,a
-        beq     gmode
+        beq     gselect
         move    #$2,x0               ; 2 << 16 = REVERSE
         cmp     x0,a
         beq     rmode
         bra     pdone                   ; CLEAN, and every unknown value
-; MODEFORK_MID -- alternative 1: GRAIN
+gselect:
+; GRAIN_DENSITY_PATHS
+; Density is decoded once per call. At the top two buckets keep the unguarded
+; reader, including any still-closed latched grains from a previous density.
+; The near-dense bucket costs more in guards than it saves in measured 2/4
+; grain renders. Lower densities use the exact-zero shortcut; control math
+; and state writes are identical in both readers.
+        move    x:(r7-$d),a
+        cmp     #>6,a
+        bge     gmode
+        bra     zgrain
+; MODEFORK_MID -- alternative 1: GRAIN, dense reader
 
 gmode:
         move    n6,a
@@ -1633,8 +1691,7 @@ gmode:
 ; GRAINCNT
         do      #4,>gvlz
         move    r6,a                    ; this grain's phase
-        tst     a                       ; Z SET == its wrap
-        move    a,x1                    ; phase, kept for the distance
+        tst     a          a,x1        ; Z SET == wrap; keep the same phase
         move    x:(r7+$f),x0           ; candidate scatter
         move    x:(r4),b
         teq     x0,b
@@ -1649,9 +1706,8 @@ gmode:
         move    x:(r4),b
         teq     x0,b                    ; acc restarts at the wrap
         move    x:(r7-$1b),x0           ; rstep, this sample's
-        add     x0,b                    ; acc += rstep
+        add     x0,b       a,x0        ; acc += old x0 (rstep); x0 = phase
         move    b,x:(r4)+               ; -> the next record
-        move    a,x0                    ; phase
         mpy     x0,y1,a                 ; a0 = wrap(2*phase/G), signed Q23
         move    a0,x0
         move    x0,a                    ; reloaded clean: A2 consistent
@@ -1705,11 +1761,10 @@ gmode:
         mpy     y0,x0,a                 ; frac * (t1 - t0)
         add     b,a                     ; tap = t0 + frac*(t1-t0)
         move    a,x0                    ; LIMITING move
-        mpy     x0,y1,a                 ; * the window gain
+        mpy     x0,y1,a     n6,b        ; * window gain; prior limited wet sum
         move    a,x0
-        move    n6,a
-        add     x0,a
-        move    a,n6                    ; wet +=
+        add     x0,b
+        move    b,n6                    ; wet +=, same limiting add/store
         move    x1,a                    ; next grain: a quarter further round
         move    x:(r7-$10),x0
         add     x0,a
@@ -1721,8 +1776,7 @@ gvlz:
 ; four windows at quarter offsets sum to exactly 2, so the makeup coeff's
 ; 1/2 at full density is unity and its 1.0 top is +6 dB for the sparsest
 ; gate.
-        move    n6,a
-        move    a,x0
+        move    n6,x0                   ; wet L is already a limited 24-bit sum
         move    x:(r7+$11),a            ; makeup coeff, stepped per sample
         move    x:(r7+$12),y1
         add     y1,a
@@ -1759,15 +1813,251 @@ gvlz:
         mpy     y0,x0,a                 ; frac * (t1 - t0)
         add     b,a                     ; tap = t0 + frac*(t1-t0)
         move    a,x0                    ; LIMITING move
-        mpy     x0,y1,a                 ; * the window gain
+        mpy     x0,y1,a     n6,b        ; * window gain; prior limited wet sum
         move    a,x0
-        move    n6,a
-        add     x0,a
-        move    a,n6                    ; wet +=
+        add     x0,b
+        move    b,n6                    ; wet +=, same limiting add/store
 gvrz:
 ; ---- wet R -------------------------------------------------------------
+        move    n6,x0                   ; wet R is already a limited 24-bit sum
+        move    x:(r7+$11),y1           ; makeup coeff, this sample's
+        mpy     x0,y1,b
+; GRAINMK
+        move    b,x:(r7+$33)            ; wet R
+        move    x:(r7+$34),a
+        move    a,n6                    ; x_in back
+        bra     pdone
+; MODEFORK_MID -- alternative 1: GRAIN, sparse exact-zero reader
+
+zgrain:
         move    n6,a
+        move    a,x:(r7+$34)            ; x_in parked: n6 is the wet sum here
+; the read distance base per sample from the TIME ramp: min(TIME, 28670 -
+; mask) + G + 2 on this sample's ramped TIME (the block's own write of $-e
+; is overwritten).
+        move    n4,a                    ; the ramped TIME, Q8 (this sample's)
+        asr     #$8,a,a
+        move    #>28670,b               ; 32767 - 4096 - 1                 ; @B
+        move    #>12286,b               ; 16383 - 4096 - 1                 ; @DEV
+        move    x:(r7-$11),y1           ; mask = G - 1
+        sub     y1,b                    ; the lag cap for this G
+        move    b,x0
+        cmp     x0,a
+        tgt     x0,a                    ; min(TIME, cap) = lag
+        add     y1,a                    ; + G - 1
+        add     #>$3,a                  ; + 3 = lag + G + 2
+        move    a,x:(r7-$e)            ; the read distance base
+; ---- PRNG advance: BusDelay's 23-bit xorshift 15/15/8 -------------------
+        move    x:(r7-$31),a            ; state
+        move    a1,x0
+        asl     #$f,a,a
+        and     #>$7fffff,a
+        eor     x0,a                    ; x ^= (x << 15)
+        move    a1,x0
+        move    x0,a
+        asr     #$f,a,a                 ; state is always positive, so the
+        eor     x0,a                    ; arithmetic shift IS a logical one
+        move    a1,x0
+        move    x0,a
+        asl     #$8,a,a
+        and     #>$7fffff,a
+        eor     x0,a                    ; x ^= (x << 8)
+        move    a1,x0
+        move    x0,a                    ; A2 clean before the store
+        move    a,x:(r7-$31)
+        move    a,b                     ; the state, for the density bits
+; ---- this sample's scatter candidate: prng * SPRAY -> 0..4095 samples ----
+        move    a,x0                    ; state, 0 .. ~1.0 (always positive)
+        move    x:(r7+$13),y1           ; SPRAY, Q23
+        mpy     x0,y1,a                 ; both operands non-negative
+        asr     #$b,a,a                 ; fraction -> integer samples
+        and     #>$fff,a                ; belt and braces: it IS 0..4095
+        move    a1,x0
+        move    x0,a
+        move    a,x:(r7+$f)
+; ---- this sample's window-multiplier candidate: 2^(23-k), or 0 if muted --
+        asr     #$5,b,b
+        and     #>$7,b
+        move    b1,x1                   ; bits, 0..7
+        clr     b                       ; the muted form, BEFORE the compare
+        move    x:(r7-$d),a            ; dens3
+        sub     x1,a                    ; N SET == muted
+        move    x:(r7-$f),x0           ; the live multiplier
+        tpl     x0,b                    ; not muted -> take it
+        move    b,x:(r7+$10)
+; ---- age advance, masked by G-1 (also swallows size changes) -------------
+        move    x:(r7-$17),a
+        add     #>$1,a
+        move    x:(r7-$11),x0
+        and     x0,a
+        move    a1,x0
+        move    x0,a
+        move    a,x:(r7-$17)
+        move    a,r6                    ; the phase cursor = age (grain 0's)
+        move    x:(r7-$1b),a            ; rstep, one step
+        move    x:(r7-$19),x0
+        add     x0,a
+        move    a,x:(r7-$1b)
+; ---- READER, line L: four grains, rolled -----------------------------------
+; Shared stereo records of THREE words at raw $40: s (latched scatter), w
+; (window multiplier, 0 = muted), acc (read advance, Q14.9). The old L/R
+; records were identical: both cleared at warm-up, then given the same phase,
+; scatter, window candidate and read step. Compute their control values once
+; and cache distance/gain/fraction at raw $4c for R's separate audio reads.
+; Each channel keeps its original interpolation and limiting sum order.
+; Every latch is a Tcc
+; reading the ONE `tst` of this grain's phase, with nothing but moves between
+; them; the `add` that advances acc comes AFTER the last of them. The phase
+; cursor walks r6 by G/4 per trip; the wet sum accumulates in n6; b is the
+; latch register, then acc, then frac, then t0.
+        lua     (r7-$9),r4              ; records at raw $40 (r7 rebased by $49)
+        move    n1,n5                   ; this line's base for the reads
+        clr     a
+        move    a,n6                    ; wet L = 0
+; GRAINCNT
+        do      #4,>zleftdone
+        move    r6,a                    ; this grain's phase
+        tst     a          a,x1        ; Z SET == wrap; keep the same phase
+        move    x:(r7+$f),x0           ; candidate scatter
+        move    x:(r4),b
+        teq     x0,b
+        move    b,x:(r4)+               ; s
+        move    b,y0                    ; s
+        move    x:(r7+$10),x0           ; candidate multiplier (0 = muted)
+        move    x:(r4),b
+        teq     x0,b
+        move    b,x:(r4)+               ; w
+        move    b,y1                    ; w, the window multiplier
+        move    #$0,x0
+        move    x:(r4),b
+        teq     x0,b                    ; acc restarts at the wrap
+        move    x:(r7-$1b),x0           ; rstep, this sample's
+        add     x0,b       a,x0        ; acc += old x0 (rstep); x0 = phase
+        move    b,x:(r4)+               ; -> the next record
+        mpy     x0,y1,a                 ; a0 = wrap(2*phase/G), signed Q23
+        move    a0,x0
+        move    x0,a                    ; reloaded clean: A2 consistent
+        abs     a
+        move    a,y1                    ; the window gain
+        move    b,a                     ; acc
+        asr     #$9,a,a                 ; integer samples advanced
+        move    a1,x0
+        move    b,a
+        and     #>$1ff,a                ; the fraction
+        asl     #$e,a,a                 ; -> Q23
+        move    a,b                     ; frac
+        move    x:(r7-$e),a            ; lag + G + 2
+        sub     x0,a                    ; - advance
+        add     y0,a                    ; + s
+        add     x1,a                    ; + phase = dist: W moves one sample
+                                        ; per sample, so a distance that does
+                                        ; not grow with the phase reads an
+                                        ; octave up at unity
+        move    #>$2,x0
+        cmp     x0,a                    ; never the head's own slot ...
+        tlt     x0,a
+        move    #>$7fff,x0                                                 ; @B
+        move    #>$3fff,x0                                                 ; @DEV
+        cmp     x0,a                    ; ... and never past the line's end
+        tgt     x0,a                    ; (a low pitch on a long grain pins
+                                        ; at the oldest sample: a flat spot,
+                                        ; not a wrap)
         move    a,x0
+; r4 already points to the next persistent record: +9 reaches this grain's
+; cache at raw $4c + 3*grain. All three values fit in 24 bits; no rounding
+; changes here. The two-grain build writes and reads only its first two rows.
+        move    x0,x:(r4+$9)            ; distance, shared by both lines
+        move    y1,x:(r4+$a)            ; window gain
+        move    b,x:(r4+$b)             ; interpolation fraction
+; All control and cache writes above run even when this grain is closed.
+; The remaining tap has no persistent state, and multiplying by zero makes
+; its limiting wet-sum addition an identity for every possible input word.
+        move    y1,a
+        tst     a
+        beq     zleftomit
+        move    r1,a                    ; the line's write pointer
+        sub     #>1,a                   ; the line write above advanced it
+        sub     x0,a                    ; W - dist
+        and     #>$7fff,a                                                  ; @B
+        and     #>$3fff,a                                                  ; @DEV
+        move    a1,r5                   ; a1 straight in: no limiter, no A2 to clean
+        move    b,y0                    ; frac (s is consumed); spaces the r5 write
+        move    y:(r5+n5),b             ; t0 (the line base in n5)
+        add     #>$1,a                  ; one sample NEWER
+        and     #>$7fff,a                                                  ; @B
+        and     #>$3fff,a                                                  ; @DEV
+        move    a1,r5
+        move    y:(r5+n5),a             ; t1
+        sub     b,a                     ; t1 - t0, signed
+        move    a1,x0                   ; -> the signed operand
+        mpy     y0,x0,a                 ; frac * (t1 - t0)
+        add     b,a                     ; tap = t0 + frac*(t1-t0)
+        move    a,x0                    ; LIMITING move
+        mpy     x0,y1,a     n6,b        ; * window gain; prior limited wet sum
+        move    a,x0
+        add     x0,b
+        move    b,n6                    ; wet +=, same limiting add/store
+zleftomit:
+        move    x1,a                    ; next grain: a quarter further round
+        move    x:(r7-$10),x0
+        add     x0,a
+        move    x:(r7-$11),x0
+        and     x0,a
+        move    a1,r6                   ; a1 straight in (the loop top reads r6 back)
+zleftdone:
+; ---- wet L = sum of four * makeup --------------------------------------
+; four windows at quarter offsets sum to exactly 2, so the makeup coeff's
+; 1/2 at full density is unity and its 1.0 top is +6 dB for the sparsest
+; gate.
+        move    n6,x0                   ; wet L is already a limited 24-bit sum
+        move    x:(r7+$11),a            ; makeup coeff, stepped per sample
+        move    x:(r7+$12),y1
+        add     y1,a
+        move    a,x:(r7+$11)
+        move    a,y1
+        mpy     x0,y1,b
+; GRAINMK
+        move    b,x:(r7+$32)            ; wet L
+; ---- READER, line R: cached control, independent line audio --------------
+        lua     (r7+$3),r4              ; cache at raw $4c (r7 rebased by $49)
+        move    n2,n5                   ; this line's base for the reads
+        clr     a
+        move    a,n6                    ; wet R = 0
+; GRAINCNT
+        do      #4,>zrightdone
+        move    x:(r4)+,x0              ; distance from the shared control pass
+        move    x:(r4)+,y1              ; window gain
+        move    x:(r4)+,b               ; interpolation fraction
+        move    y1,a
+        tst     a
+        beq     zrightomit
+        move    r2,a                    ; the line's write pointer
+        sub     #>1,a                   ; the line write above advanced it
+        sub     x0,a                    ; W - dist
+        and     #>$7fff,a                                                  ; @B
+        and     #>$3fff,a                                                  ; @DEV
+        move    a1,r5                   ; a1 straight in: no limiter, no A2 to clean
+        move    b,y0                    ; frac (s is consumed); spaces the r5 write
+        move    y:(r5+n5),b             ; t0 (the line base in n5)
+        add     #>$1,a                  ; one sample NEWER
+        and     #>$7fff,a                                                  ; @B
+        and     #>$3fff,a                                                  ; @DEV
+        move    a1,r5
+        move    y:(r5+n5),a             ; t1
+        sub     b,a                     ; t1 - t0, signed
+        move    a1,x0                   ; -> the signed operand
+        mpy     y0,x0,a                 ; frac * (t1 - t0)
+        add     b,a                     ; tap = t0 + frac*(t1-t0)
+        move    a,x0                    ; LIMITING move
+        mpy     x0,y1,a     n6,b        ; * window gain; prior limited wet sum
+        move    a,x0
+        add     x0,b
+        move    b,n6                    ; wet +=, same limiting add/store
+zrightomit:
+        nop                            ; both arms execute the DO's last word
+zrightdone:
+; ---- wet R -------------------------------------------------------------
+        move    n6,x0                   ; wet R is already a limited 24-bit sum
         move    x:(r7+$11),y1           ; makeup coeff, this sample's
         mpy     x0,y1,b
 ; GRAINMK
@@ -1978,8 +2268,8 @@ dry:
         move    r7,a                    ; the r7 REBASE undone: the raw
         sub     #>$49,a                 ; state block goes back to the
         move    a,r7                    ; dispatcher exactly as it came
-        move    #>$ffffff,m1            ; the global linear invariant for the
-        move    #>$ffffff,m2            ; two pointers this file never sets
+        move    #>$ffffff,m1            ; restore L's modulo to the global
+        move    #>$ffffff,m2            ; linear invariant
                                         ; (m0/m4/m5 are set linear every block
                                         ; above and never changed: their
                                         ; restores here were no-ops)

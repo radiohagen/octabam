@@ -21,6 +21,28 @@ this page was cut from is `git show 666b6154:docs/effects/XBUS.md`. ✅
 measured on the unit, 🟡 measured under the port or the harness, ❓
 inferred.
 
+The 31 Oct 2026 optimization keeps registration and housekeeping before
+its audio-path selection. It tests the **computed per-sample steps after
+snapping**, so a send moving toward zero continues its original ramp. Once
+both steps are zero, it selects a loop for two nonzero gains, one nonzero
+gain, or two zero gains. Mono limiting, bus headroom, addition order and
+pointer advancement are preserved. The ramping loop also combines each
+multiply with its existing accumulator read.
+
+The former 25-instruction sample body is now 23 while ramping, 13 with both
+gains settled and nonzero, 9 with one nonzero gain, or 2 with both zero.
+These are inner-loop instruction counts; setup, selection, housekeeping
+and bus contention are additional costs. The optimized paths have raw
+24-bit audio/state regression coverage, including transitions and split
+calls. Hardware acceptance is pending; the original SEND ran on Sam's
+MKII. See the [DSP optimization review](../../docs/contributing/BUS_DSP_OPTIMIZATION.md)
+for receipts and the limits of emulator measurements.
+
+With optional [POST FADER](../post-fader/README.md), registration still
+uses the original send's participation tag independently of the scaled
+coefficient. Skipping a settled zero contribution therefore leaves other
+senders' normalization unchanged.
+
 ## Knobs
 
 | page | slot | name | reads | range | what it does |

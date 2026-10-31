@@ -11,6 +11,8 @@ exercise state beyond the normal listening fixture. All four dry inputs are
 fed. Every block's complete raw server state ($00..$83), every raw24 output,
 and final Y:$00000..$3ffff (262,144 words) must match except repurposed
 scratch: delay $4c..$57; reverb $14/$38 only when glided SHMR is exactly zero.
+With --derived-delay-mask, new delay scratch $6e/$6f/$7e must satisfy its
+step-mask and TIME-cache invariants rather than simply being ignored.
 The original delay's L/R control records must also agree and be changing.
 These are emulator checks, not proof of hardware DMA timing or all inputs.
 """
@@ -32,6 +34,43 @@ from remix import registry  # noqa: E402
 from verify_bus_dsp_identity import DELAY, REVERB, SPECS, DELAY_DEFAULTS, FRAMES, sha  # noqa: E402
 
 BLOCKS, STATE_WORDS = 16384, 0x84
+SPLITS = (7, 1, 15, 0)
+
+
+def delay_cache_invariants(rows, calls_per_block):
+    """Check derived scratch only after the delay has actually processed.
+
+    delay_server.asm's dwarmtag/dwarmrun accepts tag $2e0000, clears one
+    chunk per proc call, and processes only when the entry count is >=256.
+    A final row at count 256 may therefore still be the last warm-up call.
+    Account for both calls of a split block: entry count 255 with two calls
+    warms once and then processes. Controls do not change between those
+    calls in this fixture, so the final steps also describe the first call.
+    None marks a wholly warming block; it grants no scratch exception.
+    """
+    if calls_per_block not in (1, 2):
+        raise ValueError("the dispatcher makes one or two calls per block")
+    result = []
+    for index, row in enumerate(rows):
+        previous = rows[index - 1] if index else None
+        # render() explicitly dirties raw $82 to zero before init. An
+        # unrecognised tag starts at count zero on that call.
+        warm = previous[1+0x82] if previous is not None else 0
+        count = warm & 0x1ff if warm & 0xfffe00 == 0x2e0000 else 0
+        if count + calls_per_block <= 0x100:
+            result.append(None)
+            continue
+        mask = row[1+0x36] | row[1+0x37] | row[1+0x2f] | row[1+0x64]
+        q8 = row[1+0x26]
+        if q8 & 0x800000:
+            q8 -= 1 << 24
+        q8 = min(max(q8, 0x800), 0x7ff800)
+        result.append({
+            0x6e: row[1+0x6e] == mask,
+            0x6f: row[1+0x6f] == (q8 >> 8 if mask == 0 else previous[1+0x6f]),
+            0x7e: row[1+0x7e] == ((q8 & 255) << 15 if mask == 0 else previous[1+0x7e]),
+        })
+    return result
 
 
 def signal(path):
@@ -114,7 +153,7 @@ def render(image, label, args, mods, work, source):
            "-blocks", str(BLOCKS), "-in", str(source), "-stereo", "-out", str(raw),
            "-track", ",".join(f"{i:x}" for i in range(STATE_WORDS)), "-trackinst", str(target),
            "-trackout", str(track), "-dumpcore", str(SPECS[target][1]), "-dumpy", f"0,40000,{ydump}",
-           "-split", "7,1,15,0"]
+           "-split", ",".join(map(str, SPLITS))]
     for values in params:
         cmd += ["-params", ",".join(map(str, values))]
     cmd += ["-sched", ",".join(f"{b}:{i}:{mods[SPECS[i][0]].knob_map()[k]}={v}"
@@ -145,7 +184,11 @@ def main():
     ap.add_argument("--remix", default="bus")
     ap.add_argument("--host", type=Path, default=send_probe.HOST)
     ap.add_argument("--out", type=Path)
+    ap.add_argument("--derived-delay-mask", action="store_true",
+                    help="check the candidate step mask and settled TIME caches at $6e/$6f/$7e")
     args = ap.parse_args()
+    if args.derived_delay_mask and args.engine != "delay":
+        ap.error("--derived-delay-mask requires --engine delay")
     for key in ("baseline", "candidate", "host"):
         path = getattr(args, key).resolve()
         if not path.is_file():
@@ -164,12 +207,18 @@ def main():
     before, a, audio_a, y_a = render(args.baseline, "baseline", args, mods, work, source)
     after, b, audio_b, y_b = render(args.candidate, "candidate", args, mods, work, source)
     allowed, unexpected = {}, {}
-    for old, new in zip(a, b):
+    # Exceptions and unconditional checks share one oracle. In particular,
+    # a corrupt value equal to the baseline's old scratch is still checked.
+    derived = (delay_cache_invariants(b, 2 if 0 < SPLITS[2] < FRAMES else 1)
+               if args.derived_delay_mask else [None] * len(b))
+    for index, (old, new) in enumerate(zip(a, b)):
         for off, (x, y) in enumerate(zip(old[1:], new[1:])):
             if x == y:
                 continue
             permit = (0x4c <= off < 0x4c + 3 * args.grains if args.engine == "delay" else
                       off in (0x14, 0x38) and old[1+0x0e] == new[1+0x0e] == 0)
+            if args.derived_delay_mask and off in (0x6e, 0x6f, 0x7e):
+                permit = derived[index] is not None and derived[index][off]
             bucket = allowed if permit else unexpected
             bucket.setdefault(f"{off:02x}", dict(blocks=0, first=[old[0], x, y]))["blocks"] += 1
     checks = dict(raw24_identical=all(x.read_bytes() == y.read_bytes() for x, y in zip(audio_a, audio_b)),
@@ -177,6 +226,15 @@ def main():
                   live=before["live_after_warmup"] and after["live_after_warmup"],
                   no_unexpected_state_differences=not unexpected)
     if args.engine == "delay":
+        if args.derived_delay_mask:
+            live_derived = [(row, check) for row, check in zip(b, derived) if check is not None]
+            masks = [row[1+0x6e] for row, _ in live_derived]
+            checks["derived_mask_matches_steps"] = bool(live_derived) and all(check[0x6e] for _, check in live_derived)
+            checks["derived_time_caches_match_or_hold"] = bool(live_derived) and all(check[0x6f] and check[0x7e] for _, check in live_derived)
+            report["derived_first_live_block"] = live_derived[0][0][0] if live_derived else None
+            report["derived_live_blocks_checked"] = len(live_derived)
+            report["settled_fraction_values"] = sorted({row[1+0x7e] for row, _ in live_derived if row[1+0x6e] == 0})
+            checks["derived_mask_zero_and_active"] = {v == 0 for v in masks} == {False, True}
         live = [r for r in a[512:] if r[1+0x69] == 0x10000]
         n = args.grains * 3
         records = {tuple(r[1+0x40:1+0x40+n]) for r in live}
