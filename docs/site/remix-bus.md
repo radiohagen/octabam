@@ -51,9 +51,11 @@ engines' knobs (TEMPO BUS). Turning a MODE on the panel re-defaults the
 knobs around it (MODE DEFAULTS). The FX2 chooser cannot change a track's
 effect (FX2 LOCK).
 
-The current BusDelay/BusVerb optimization candidate has passed exact local
-audio comparisons, with separate checks of DSP state. Its hardware acceptance
-is pending; earlier reports from Sam's unit describe the original engines.
+The current BusDelay, BusVerb and SEND optimization candidate removes redundant
+work while preserving the existing audio calculations and tails. It has passed
+exact local audio comparisons, with separate checks of DSP state and parameter
+transitions. Hardware acceptance is pending; earlier reports from Sam's unit
+describe the original engines. The delay's hardware timing wait remains in place.
 
 ### Optional post-fader sends and T8 returns
 

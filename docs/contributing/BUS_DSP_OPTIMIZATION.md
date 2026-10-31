@@ -617,8 +617,234 @@ denominator, input/audio/meter hash and executable provenance. SHA-256 values:
 - Six-case repeat receipt: `819fc05bc5d81e53b8a5b1df7a2b1633762000c972c0fcd5a441320dadb90124`.
 - Three-case split receipt: `b3008a606a71e42d544cc383a333566104cee92fc6db693dc1a0002fc465d230`.
 
-Recommended next work is the small exact-output reverb specializations and
-settled-zero SEND paths, each compared against this frozen implementation for
+At the time of this profile, the recommended next work was the small exact-output
+reverb specializations and settled-zero SEND paths, each compared against this frozen implementation for
 audio, persistent state, automation, splits and instruction cost. Investigate
 the DMA wait separately on hardware; it offers the largest potential reduction
 and has a different acceptance burden.
+
+
+## 9. Second optimization pass — 31 October 2026
+
+This pass uses `db3b62c9` and the 29 October optimized images as its immediate
+reference. The earlier measurements in this document remain historical; the
+new savings are additional to that first pass. Sam Banks remains the author
+of these engines. This is an optimization of their implementation, with the
+original algorithms, fixed-point audio and persistent musical state as the
+contract.
+
+### Exact work removed
+
+- **BusVerb:** precompute the pinned RATE and first two LFO increments; inline
+  the four input allpasses while retaining address-generator spacing; combine
+  eight independent allpass state stores with multiplies; specialize the six
+  zero input weights. At an exactly zero **glided** LO coefficient, retain and
+  subtract its possibly nonzero frozen history. At GATE 0, omit redundant
+  envelope arithmetic but keep its counter, retrigger history and output
+  multiplies. Q23 full-scale is not mathematical unity, so those multiplies
+  cannot simply be removed.
+- **SEND:** dispatch only after the original coefficient snaps and ramp-step
+  calculations. Preserve registration and housekeeping on every call. Moving
+  gains use the original ramp with two parallel loads; settled gains use
+  separate both/one/neither-active paths. The inner loops execute 23, 13, 9 or
+  2 instructions per sample respectively, versus 25 before dispatch/setup.
+  Zero targets alone never select the silent path; the actual steps and gains
+  must be zero. POST FADER membership remains independent of scaled amplitude.
+- **BusDelay:** wrap the aligned left line using hardware modulo addressing,
+  restoring the linear modifier on exit. Keep the differently aligned right
+  line's original wrapping. Cache TIME's integer/fraction decomposition only
+  when the actual TIME/FDBK/TONE/PING steps are all zero; recompute the cache
+  for every eligible call, including split calls. Combine independent GRAIN
+  loads/multiplies and remove redundant register moves. The new raw scratch
+  words are `$6e` (step mask), `$6f` (integer lag), and `$7e` (fraction); the
+  RETURNS reservation at `$65` is not reused. Below DENS 96, a separate GRAIN
+  path omits channel tap/interpolation/product work only when that grain's
+  computed window gain is exactly zero. Phase, random/latch evolution and all
+  control-cache writes still run. DENS 96–127 uses the unguarded path: measuring
+  all eight density buckets found that guarding bucket 6 was a regression.
+
+No sample-rate, tank-line, interpolation, filter, feedback, modulation or
+shipping grain-count reduction is part of this pass. Zero SEND input does not
+suspend either server or clear a tail. The 8,192-instruction delay wait remains
+unchanged; faster computation still changes real timing and requires hardware
+qualification.
+
+### Verification method
+
+`verify_bus_dsp_identity.py` compares all 24 bits of each rendered output and
+records the executed instruction counts from image-extracted DSP code. The
+new `verify_bus_fastpaths.py` also captures all 132 instance-state words after
+every block, plus all 262,144 final Y words of the selected core, with no address
+exclusions. The standalone host keeps P separate from X/Y at the hardware's
+shared-window addresses (`dsp_host.cpp` constructs memory with bridge `0x200000`
+and shares X/Y between cores). This capture therefore does not inspect P-word
+immutability or prove the physical aliasing/timing behavior. Image extraction,
+assembler checks and full-firmware routing fixtures provide separate evidence.
+An initial attempted P-via-Y immutability check failed even for correct images;
+that incorrect model was removed, rather than excluding mutable memory from
+the comparison. Its diagnostic receipts are retained.
+
+The adversarial state gate retains the original unoptimized image as a separate
+oracle. New delay scratch is checked against explicit invariants, not ignored:
+the step mask equals the OR of the four real steps; settled lag/fraction equal
+the clamped Q8 TIME decomposition, otherwise the cache must retain its previous
+value. The earlier GRAIN cache and dormant-shimmer exceptions remain bounded
+as described above. Dirty startup, saturation of both signs, automation and
+unequal split calls exercise these checks.
+
+Instruction counts are work performed by the emulator, not elapsed benchmark
+time, physical DSP cycles, or a measured percentage of the Octatrack's total
+CPU. The harness includes one server and one SEND per core. Setup, dispatch and
+an unchanged wait therefore matter alongside the sample loops.
+
+### Measured instruction savings
+
+The immediate reference is the already optimized 29 October image. Whole-block
+cases below retain 7,680 blocks / 122,880 stereo frames after warm-up. Counts
+include the server and one SEND on that core, and setup/dispatch/wait work.
+The grain-density sweep fixes TIME 100, SIZE 1, PTCH 64 and SCTR 127; it is
+separate from the default TIME 40 comparison.
+
+| Configuration | Core | Before instructions/frame | After | Additional reduction |
+|---|---|---:|---:|---:|
+| Reverb, SHMR 0, TONE 64, GATE 0 | A | 913.0625 | 816.1250 | 10.62% |
+| Reverb, SHMR 127, TONE 64, GATE 0 | A | 1027.2881 | 930.3506 | 9.44% |
+| CLEAN delay | B | 799.6875 | 754.3125 | 5.67% |
+| REVERSE delay | B | 879.6875 | 834.3125 | 5.16% |
+| GRAIN, four grains, DENS 127 | B | 1270.7500 | 1210.3750 | 4.75% |
+| GRAIN, four grains, DENS 0 | B | 1270.7500 | 1099.7035 | 13.46% |
+| GRAIN, two grains, DENS 127 | B | 1078.8125 | 1026.4375 | 4.85% |
+| GRAIN, two grains, DENS 0 | B | 1078.8125 | 972.1016 | 9.89% |
+
+Matching the new cases to the original-reference measurements in section 6
+also gives cumulative reductions: reverb with SHMR off **20.32%**, CLEAN
+**6.38%**, REVERSE **5.37%**, default dense four-grain GRAIN **16.80%**, and the
+DENS 0 / SIZE 0 / PTCH 64 grain case **24.41%**. The intermediate image's input,
+audio hashes and meter values match across the two receipts before composing
+these comparisons. These are reductions of the measured per-core harness
+workload, not percentage points of the instrument's total DSP utilization.
+
+ROOM, PLATE and BIG still have effectively the same processing cost when the
+other controls match. Active shimmer adds about 114.226 instructions/frame;
+its nonzero amount does not select a cheaper algorithm. The new specializations
+make LO/gate activity matter too. With SHMR 0 in PLATE:
+
+| TONE | GATE | Candidate core-A instructions/frame |
+|---:|---:|---:|
+| 64 | 0 | 816.1250 |
+| 64 | 8 | 831.0625 |
+| 127 | 0 | 865.1250 |
+| 127 | 8 | 880.0625 |
+
+The LO-active case costs another 49 instructions/frame, and the active gate
+case another 14.9375 including setup. Choosing a reverb character is therefore
+not a significant load lever; shimmer and these active processing paths are.
+The tests drive the LO state before freezing it and close an enabled gate
+before disabling it, so equality does not rely on never-excited state.
+
+### Sparse GRAIN: mean and peak tradeoff
+
+Both two- and four-grain images were compared at all eight DENS buckets. The
+initial guarded bucket 6 lost 9.298 instructions/frame with four grains and
+7.315 with two against the intermediate candidate. The final code routes
+buckets 6 and 7 to the dense reader. Bucket 5 retains a small average win
+against that intermediate image: 8.031 / 2.016 instructions/frame for four/two
+grains in this fixture.
+
+A grain's latched window can remain open during a density transition. When all
+windows are open, guards cost 24 / 14 instructions/frame more than the
+intermediate candidate without sparse skipping. This is an explicit peak-cost
+tradeoff for lower average work at sparse settings. Against the immediate
+pre-pass reference, **every measured density-sweep block still improves**:
+the smallest paired saving is 502 / 598 instructions per 16-frame block.
+Maximum observed blocks fall from 20,332 to 19,830 with four grains, and from
+17,261 to 16,663 with two. This finite sweep is not a proof of all possible
+runtime histories or chip deadlines.
+
+The conservative source-word pricer reports BusVerb 1039 for its dearer LO
+arm / 989 for LO zero, SEND 23/13/9/9/2 by path, and four-grain delay 805 at
+its worst modeled path. It includes the sparse all-open alternative and
+conservatively counts forward-skipped work; it is not interchangeable with
+executed instructions or measured hardware cycles. Pricing markers assemble
+byte-for-byte identically and the two-grain lever covers both reader pairs.
+
+### Final qualification and reproducibility
+
+| Check | Result | Boundary |
+|---|---|---|
+| Existing audio matrix | 43 four-grain + 36 two-grain pairs pass | All four raw24 outputs, startup, automation and tails |
+| Adversarial state | Three 16,384-block pairs pass | Complete server X block and final Y; bounded scratch exceptions checked explicitly |
+| Full-image fast paths | 30 plain + 38 routed pairs pass | Raw24 audio, complete selected X block and all Y words; gate closure/reset, frozen LO history and fractional/tagged sends |
+| Density sweep | Eight buckets × two grain counts pass | All raw24 outputs plus mean, maximum and paired block costs |
+| Isolated SEND | 24 pairs pass | Tagged transitions, fractions, saturation, per-block bus words and register contracts; housekeeping tested separately |
+| Routing fallback | 12 mode/split pairs + eight controls pass | Equivalent plain/tagged inputs, no active return client |
+| Held-note decoding | Eight renders + seven controls pass | Membership tags do not become a GRAIN note |
+| Full firmware | Ten audio fixtures + four sounding-host startup fixtures pass | Actual LEVEL/mute/solo hooks and active independent returns |
+| Installed POST FADER hook | 2,048 installed-image + 4,096 synthetic-ID cases pass | Stock builder stubbed in this focused hook test |
+| RETURNS | 212 exact cases pass | Installed bytes/hook and arithmetic/ownership model |
+| Focused unit checks | 47 tests pass | Includes cache-oracle fault injection, all-Y capture faults and both GRAIN substitutions |
+| Init registers | Three plain-bus and seven integrated module inits pass | Static dispatcher contract |
+
+The firmware fixtures retain original participation while a source is muted or
+faded, verify an unchanged other-source return, and compare tails after T1/T2/T5
+mutes. The measured tail comparison is 803 frames, about 0.291 seconds; it is
+not a long physical decay capture. Four additional fixtures begin with a
+sounding T1 or T5, already muted or unmuted, and check dry audio and both wet
+buffers. The complete sequence passed through the workspace's artifact-retention
+wrapper; successful generated cards were removed, while logs and receipts stay.
+
+Builds use BUILD 79 and the same private toolchain recorded in section 6. The
+strict normal four-grain and integrated builds pass the signed/unsigned multiply
+audit, assembler/disassembler checks and memory placement. The plain image leaves
+161 program words free on core A and 727 on core B; the sparse reader trades
+213 program words for less work than the intermediate candidate. An integrated rebuild
+is byte-identical. A final whitespace cleanup in the delay source is separately
+assembled for two/four grains and plain/routed selection: all four code blobs
+are identical to the tested snapshots. The source changes do not alter screens.
+Broader whole-remix/reach/refhash checks remain CI work under repository guidance.
+No hardware was flashed or measured in this pass.
+
+Final local artifacts live under `out/optimization-20261031/`. Key receipts are
+`final-identity4`, `final-identity2`, `final-state-delay4`, `final-state-delay2`,
+`final-state-reverb`, `final-density4`, `final-density2`, `send-micro`,
+`final-fastpaths-full-y`, `final-fastpaths-integrated-full-y`,
+`final-fallback`, `final-notes`, and the `firmware-results.json`,
+`postfader-hook.json`, `postfader-hosts-results.json`, `returns-results.json`,
+`final-density-peaks.json`, `cumulative-measurement.json` and
+`final-provenance.json` files. The instruction-measurement receipts record the actual input,
+image-extracted payloads, executable hashes, commands and meter totals. Earlier
+`pass1`, `pass2`, and failed instrumentation receipts are diagnostics, not the
+final acceptance result. Proprietary images and audio remain untracked.
+
+| Final image | SHA-256 |
+|---|---|
+| Plain four-grain | `214d86d8ab2fba32b3d5012067af13299571bc1deb4ae87712fffc7af9b830d7` |
+| Plain two-grain | `cde0c439519d61a1f75f7e9e1a73eed601516fc304e606ef319023da9e3bb60e` |
+| POST FADER + RETURNS, four-grain | `709b66bfa9b9606fa9bc2099bc82f63b8e0344c3763203c72c2f5077fba68730` |
+
+To reproduce, build the immediate reference at `db3b62c9` and the candidate
+separately using the pinned toolchain and the same selection/grain count as
+section 5. Keep the original engine image for the state gate's L/R recurrence
+control. The following commands illustrate the new gates; filenames stand for
+those separately built images:
+
+```sh
+python3 tools/verify/verify_bus_dsp_identity.py before4.bin after4.bin --engine all
+python3 tools/verify/verify_bus_dsp_identity.py before2.bin after2.bin --engine delay --grains 2
+python3 tools/verify/verify_bus_dsp_identity.py before4.bin after4.bin --engine density
+python3 tools/verify/verify_bus_dsp_identity.py before2.bin after2.bin --engine density --grains 2
+python3 tools/verify/verify_bus_fastpaths.py before4.bin after4.bin
+python3 tools/verify/verify_bus_fastpaths.py before-routed.bin after-routed.bin --post-fader
+python3 tools/verify/verify_bus_dsp_state.py original4.bin after4.bin --engine delay --derived-delay-mask
+python3 tools/verify/verify_bus_dsp_state.py original2.bin after2.bin --engine delay --grains 2 --derived-delay-mask
+python3 tools/verify/verify_bus_dsp_state.py original4.bin after4.bin --engine reverb
+python3 tools/verify/verify_send_fastpaths.py before-send.asm modules/send/send_client.asm --image after4.bin
+```
+
+`before-send.asm` is the SEND source from `db3b62c9`. The isolated test is now a
+tracked tool so tagged-transition evidence can be reproduced without the local
+scratch script. Constant `-pword` overrides cannot schedule tagged raw-word
+changes in the full-image host; that limit is covered by the isolated wrapper
+and the real firmware mute/fader tests instead of claiming unsupported host
+behavior. The unchanged DMA wait and section 7's physical acceptance work remain
+the boundary on release claims.

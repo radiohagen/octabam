@@ -4,7 +4,7 @@ One copy of the substitution, imported by both the builder and the pricer,
 so the image and `make cycles` agree. Three edits, at markers in the engine
 source:
 
-  ; GRAINCNT   the two rolled loops count 2 instead of 4
+  ; GRAINCNT   both rolled readers in each density path count 2 instead of 4
   ; GRAINOFF   the grain-to-grain phase offset doubles, G/4 -> G/2, so two
               grains still tile the cycle
   ; GRAINMK    the makeup doubles: four triangle windows at quarter offsets
@@ -15,11 +15,20 @@ A1 (a logical shift would leave A2 stale and the next store would saturate).
 """
 
 MARKERS = (("; GRAINCNT\n", 2), ("; GRAINOFF\n", 1), ("; GRAINMK\n", 2))
+DENSITY_PATHS = "; GRAIN_DENSITY_PATHS\n"
 
 
 def census(src):
     """[(marker, found, expected)] for every marker whose count is wrong."""
-    return [(m, src.count(m), n) for m, n in MARKERS if src.count(m) != n]
+    # Historical reference sources have one reader pair. The explicit marker
+    # declares two mutually exclusive pairs; do not accept a missing pair in
+    # that source merely because two markers would fit the old layout.
+    paths = src.count(DENSITY_PATHS)
+    counts = [(m, n * 2 if paths and m != "; GRAINOFF\n" else n)
+              for m, n in MARKERS]
+    if paths:
+        counts.append((DENSITY_PATHS, 1))
+    return [(m, src.count(m), n) for m, n in counts if src.count(m) != n]
 
 
 def roll(src, grains):

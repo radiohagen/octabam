@@ -24,7 +24,7 @@ MODULE = Module(
     key="SEND",
     kind=Kind.DSP_CLIENT,
     category=Category.BUS, author="sambanks", author_url="https://github.com/sambanks",
-    proof=Proof.HARDWARE, proof_note="Sam's MKII",
+    proof=Proof.RENDER, proof_note="settled/ramping paths: raw24 audio and state regression coverage, including zero/nonzero transitions and splits; original ran on Sam's MKII; new hardware acceptance pending",
     doc="Bus client: DEL into the delay, REV into the reverb, from any track. The default effect.",
     menu=MenuEntry(
         fx2_id=0x09,

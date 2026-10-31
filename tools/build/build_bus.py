@@ -621,7 +621,9 @@ TAIL_CEILING = 0x2000
 # site needs its operand audited and this table updated; a vanished site
 # needs the table updated so the count stays exact.
 MPYSU_AUDITED = {
-    "REVERB SERVER": {"x0,y0,a": 12, "x0,x1,a": 9, "x1,y1,a": 4},
+    # Inlined input allpasses and the specialized feedback bodies retain
+    # the same nonnegative second operands; fixed RATE no longer multiplies.
+    "REVERB SERVER": {"x0,y0,a": 16, "x0,x1,a": 9, "x1,y1,a": 3},
     "CHARACTER":     {"x1,y1,b": 1},
     "CHARACTER TXTR": {"x1,y1,b": 1},   # the same chtube site, in its copy of the source
     "SPECTRUM":      {"x1,y1,b": 1},

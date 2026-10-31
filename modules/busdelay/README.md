@@ -35,6 +35,24 @@ off and the output is mono to both channels.
 
 ## Measured
 
+- The 31 Oct 2026 follow-up uses hardware modulo wrapping for the aligned
+  left delay line and caches TIME's lag/fraction only while the actual
+  TIME/FDBK/TONE/PING steps are all zero. Moving coefficients keep their
+  original per-sample updates; split calls retain the same ramp history.
+  GRAIN combines independent loads and multiplies while keeping the separate
+  channel audio reads and their fixed-point limiting order. Below DENS 96,
+  an exact-zero reader skips a grain's audio reads and sum only when its
+  actual window gain is zero; phase, random state, latches and the shared
+  control cache still advance. DENS 96–127 uses the unguarded reader. This
+  selection improves the tested density averages; when all latched grains
+  are open, the zero tests add a small peak cost relative to the preceding
+  optimization stage. Derived cache
+  words `$6e/$6f/$7e` are checked by the adversarial state gate and do not
+  overlap the optional RETURNS scratch. These changes have local exact
+  audio/state evidence; physical timing acceptance is still pending. See the
+  [optimization record](../../docs/contributing/BUS_DSP_OPTIMIZATION.md#9-second-optimization-pass--31-october-2026)
+  for current measurements and reproduction commands.
+
 - The 26 Oct 2026 optimization shares GRAIN's distance, window gain and
   fractional-position calculation between L and R. Each channel still
   interpolates its own audio and accumulates it in the original order.
