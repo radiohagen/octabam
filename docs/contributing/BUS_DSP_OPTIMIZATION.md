@@ -97,9 +97,11 @@ limiter, tone, modes, diffusion, gate and feedback design are unchanged.
 POST FADER scales the transient DSP send controls by `(LEVEL/128)^2` using
 the MAIN mixer snapshot after mute/solo. It does not rewrite the Part, saved
 project, displayed knobs or MIDI feedback. It is a LEVEL-aware control path,
-not an exact post-mixer audio tap: scene XLV, cue gain and stock's per-sample
-mixer ramp are outside this implementation. AMP VOL already affects the audio
-reaching the effects.
+not an exact post-mixer audio tap: cue gain and stock's per-sample mixer
+ramp are outside this implementation. The November scene-volume fix below
+adds the stock XLV curve relative to its unlocked value. AMP VOL, its
+envelope and scene XVOL already affect the audio reaching the effects;
+they must not be multiplied into the send coefficients again.
 
 A tag carries the original nonzero send's participation independently of its
 scaled gain. DSP consumers use the tag for the existing `1/sqrt(N)` client
@@ -848,3 +850,117 @@ changes in the full-image host; that limit is covered by the isolated wrapper
 and the real firmware mute/fader tests instead of claiming unsupported host
 behavior. The unchanged DMA wait and section 7's physical acceptance work remain
 the boundary on release claims.
+
+
+## 10. Scene-volume sends — 1 November 2026
+
+This belongs to the main bus optimization fix. The optional half-wait DMA
+experiment is rebased on top and remains a separate commit; normal builds
+retain all 8,192 wait instructions.
+
+### Behavior and gain boundary
+
+The previous POST FADER hook omitted snapshot halfword 2, scene XLV (XLEV
+on the panel). A source faded out with XLEV could therefore keep sending
+fresh audio even while its dry MAIN output was silent. The hook now scales
+each transient DEL/REV coefficient by the stock XLV curve, after its existing
+LEVEL/mute/solo scaling. It changes excitation, not the shared engine's
+feedback, state or output. Existing tails continue; the other sources retain
+the same normalization shares. The original send knob still determines
+participation, including at XLEV zero.
+
+AMP VOL, envelopes and scene XVOL affect the audio upstream of the effects.
+They already reach SEND as audio changes and must not be multiplied into the
+send controls again. Source FX1 audio changes also propagate naturally.
+T8 RETURNS/master volume and MAIN/CUE output volumes are destination gains;
+feeding those back into every source's excitation would change the routing.
+This remains a frame-rate control path with existing send smoothing, MAIN
+high-byte quantization and bus latency. It is not an exact copy of the stock
+mixer's split-aware sample ramp, nor an instantaneous cutoff.
+
+The new coefficient is a 256-entry unsigned Q15 table generated at build time
+from the user's stock DSP A table at X:0x6c00. The existing USB TRACKS POST
+extractor validates its shape. For snapshot word `w`, the index is
+`(w >> 7) & 255`. Coefficients are rounded to nearest and normalized to
+stock index 254 (`w = 0x7f00`, unlocked), capped at unity. Index 0 is zero;
+index 254 is exactly 32768. This preserves **every previous unlocked-scene
+send coefficient exactly**. Normalization differs from absolute stock unity
+by about +0.000655 dB; it preserves the existing bus calibration.
+
+Each send first retains its existing LEVEL-scaled integer, then multiplies by
+this scene coefficient and shifts 15 bits. This avoids prematurely rounding
+a combined LEVEL/scene gain. The held-note byte of BusDelay REV remains
+untouched; that control keeps its existing seven-bit amplitude resolution.
+Other transient controls retain their fractional bits. RETURNS and unselected
+effect IDs are untouched. No Part data, saved project format, panel knob,
+MIDI feedback or DSP source changes.
+
+### Measured cost and precision
+
+- Both image-extracted DSP uploads, including their window code and initial
+  data, are byte-identical to the optimized `8e930625` image. This change adds
+  **zero DSP instructions** and retains the full DMA wait.
+- The linked ColdFire hook grows from 226 to 812 bytes: 74 bytes of code and
+  512 bytes of table. Its saved-register stack frame grows by eight bytes.
+- Executing the hook against the old source with identical inputs adds one
+  instruction per frame plus eight per selected source at unlocked XLEV,
+  or fourteen per source when attenuated. Seven selected sources add 57 or
+  99 instructions per frame; eight add 65 or 113. These are executed ColdFire
+  instructions with the builder stubbed, not hardware cycles or CPU percent.
+- The largest normalized-curve error is 0.000015231725915 in absolute gain.
+  An exhaustive 8,225,790-pair sweep (255 curve indices and all 32,258 reachable
+  pre-scene control values) differs from the exact rational curve by at most
+  one transient control LSB. Unlocked and zero endpoints are exact.
+
+The installed-image gate checks 4,336 vectors and another 8,672 vectors
+against separately assembled remapped-ID/SEND-only hooks. It reads back all
+256 installed table entries, both record banks, every LEVEL and XLV index,
+fractional words, original participation, held notes, untouched records and
+saved registers. The old hook executes the same 4,336 vectors for the cost
+comparison. Image-bound receipts live under `out/volume-20261101/`.
+
+The new firmware gate, `tools/verify/verify_postfader_volume.py`, exercises
+scene XLEV, AMP VOL and scene XVOL through the real firmware and both DSPs.
+It uses generated audio and owned project copies; scene endpoint rows are
+controlled explicitly and the actual mixer snapshot must confirm delivery.
+The old image is a negative control for XLEV zero. Existing mute, solo,
+LEVEL, sounding-host startup and return-mixer gates remain required.
+Physical-unit scene sweeps, long tails and timing still require acceptance.
+
+The source-volume gate passed eight cases and 92 assertions on the new image.
+XLEV zero retained live pre-SEND audio but yielded zero delay and reverb wet
+buffers. Fading silent T7 left T2's output identical, and changing T2 XLEV
+after a burst preserved all 803 non-silent compared tail frames (about
+0.29 seconds). AMP VOL 64 versus 127 gave approximately 0.254 amplitude in
+the incoming audio and both isolated wet buffers. AMP VOL zero and scene
+XVOL zero silenced the incoming audio while leaving send controls unchanged.
+The template initially had both scenes muted: the first diagnostic run
+correctly failed snapshot-delivery assertions. The final fixture explicitly
+owns those saved mute settings; a bypassed scene can no longer pass this gate.
+
+Reproduce the focused scene checks with a frozen image and a local project
+used only as a structural template:
+
+```sh
+.venv/bin/python3 tools/verify/verify_postfader_hook.py test/send-return-poc --image IMAGE --baseline-ref 8e930625 --receipt hook.json
+.venv/bin/python3 tools/verify/verify_postfader_volume.py test/send-return-poc --image IMAGE --project TEMPLATE
+```
+
+Wrap the complete firmware sequence with the workspace's `ot-artifacts` tool
+when running locally so successful generated card images are removed. Keep
+image, script and fixture hashes with the measurements. The new image's
+SHA-256 is `e0c0dca80b3e731a702d060d9ff0ad46801c2eeb83f0c33880c41fa2896ceb29`
+(`BUS VOL8K`, BUILD V1, four grains). No device copy or flash was performed.
+
+The same image also passes all ten existing mute/LEVEL/solo audio fixtures,
+four sounding-host startup fixtures and 212 exact RETURNS cases. The focused
+firmware sequence therefore covers 22 fixtures, with image/script hashes in
+`firmware-results.json`, `volume/results.json`, `hosts-results.json` and
+`returns-results.json`. Successful generated cards were removed by the
+workspace wrapper; source templates, audio and receipts were retained.
+
+The old optimized image was run through the same scene fixture as a negative
+control. Its mixer reached XLEV zero and its dry source kept sounding, but
+its send coefficients and both wet buffers remained live. It failed exactly
+the four intended new-excitation/silence assertions; the audible positive
+control passed. `negative-control.json` records this expected failure.

@@ -6,7 +6,8 @@
 |
 |   4000d0de  jsr    0x40004db8     | mixer gains -> *(0x80003c10): 4 halfwords
 |                                   |   a track; halfword 1 = MAIN gain, the
-|                                   |   level << 8 with mute and solo applied
+|                                   |   level << 8 with mute and solo applied;
+|                                   |   halfword 2 = scene XLV, 0..0x7f00
 |   4000d0e4  jsr    0x40004bd4     | records -> 0x80000110 + (*0x800000e0 << 9),
 |                                   |   64 bytes a track; FX2 page-1 slots 0/1
 |                                   |   at +24/+26 (value << 8 | fraction), the
@@ -16,13 +17,21 @@
 | whose FX2 is a selected bus consumer (id 0 only if it aliases SEND)
 | has its slot-0/1 low 15 bits scaled by (L/128)^2, L
 | the MAIN gain's high byte -- the mixer's own law (docs/firmware/LEVEL_LAW.md)
-| -- in the DSP-bound record only. The Part, the panel and CC FEEDBACK's
+| -- then by scene XLV's stock sine curve, relative to unlocked XLV (127).
+| The extra coefficient is Q15, rounded to nearest at build time; each
+| send's LEVEL result is retained before the scene multiply (no premature
+| quantization of a combined LEVEL/XLV gain). Unlocked XLV is exactly unity,
+| preserving existing no-scene sends. Only the DSP-bound record changes.
+| The Part, the panel and CC FEEDBACK's
 | lanes keep the knob. Bit 15 marks ORIGINAL nonzero send participation,
-| independently of LEVEL/mute/solo. The module-selected DSP path must mask
+| independently of LEVEL/mute/solo/XLV. The module-selected DSP path must mask
 | bit 23 before arithmetic and use it for client counts. Muting a source
 | retains its normalization share, so other sources' gains do not rise.
-| Changing a SEND knob itself can still change membership. This is not the
-| separate scene XLV curve or stock's split-aware per-sample mixer ramp.
+| Changing a SEND knob itself can still change membership. AMP VOL, XVOL
+| and envelopes already affect the audio entering SEND: do not apply them
+| twice. The existing frame-rate SEND smoothing is retained; this does not
+| reproduce stock's split-aware per-sample mixer ramp or MAIN's low byte.
+| Source volume scales only excitation, leaving engine feedback/tails alone.
 | BusDelay's slot-1 low byte is TEMPO SYNC's held note (its cave
 | writes +0x1b inside the builder): it is kept. RETURNS (T8) is not a send
 | and is left alone.
@@ -41,14 +50,15 @@
         .globl  pf_frame
 pf_frame:
         jsr     BUILDER                 | the displaced call
-        lea     -32(%sp),%sp
-        movem.l %d0-%d5/%a0-%a1,(%sp)
+        lea     -40(%sp),%sp
+        movem.l %d0-%d6/%a0-%a2,(%sp)
         move.l  PING,%d0
         moveq   #9,%d1
         lsl.l   %d1,%d0
         movea.l %d0,%a0
         adda.l  #RECORDS,%a0            | this frame's records
         movea.l MIXREC,%a1              | this frame's mixer gains
+        lea     pf_xlv,%a2
         moveq   #14,%d3
         moveq   #8,%d5
 pf_track:
@@ -71,11 +81,21 @@ pf_track:
 pf_scale:
         mvz.b   2(%a1),%d1              | L: the MAIN gain's high byte, 0..127
         mulu.w  %d1,%d1                 | L^2 < 16384
+        mvz.w   4(%a1),%d4              | scene XLV; stock's curve index
+        lsr.l   #7,%d4
+        andi.l  #0xff,%d4
+        mvz.w   %a2@(0,%d4:l:2),%d6     | relative scene gain, Q15
         mvz.w   24(%a0),%d2             | slot 0 (DEL)
         andi.l  #0x7fff,%d2             | original control, no stale tag
         move.l  %d2,%d4                 | participation before scaling
         mulu.l  %d1,%d2
         lsr.l   %d3,%d2                 | x (L/128)^2
+        cmpi.l  #0x8000,%d6
+        beq     pf_del_tag              | exact old result at unlocked XLV
+        mulu.l  %d6,%d2
+        lsr.l   #8,%d2
+        lsr.l   #7,%d2                  | x scene gain; zero stops excitation
+pf_del_tag:
         tst.l   %d4
         beq     pf_del_store
         ori.l   #0x8000,%d2
@@ -92,6 +112,12 @@ pf_del_store:
         move.l  %d2,%d0                 | note alone is not participation
         mulu.l  %d1,%d2
         lsr.l   %d3,%d2
+        cmpi.l  #0x8000,%d6
+        beq     pf_delay_note
+        mulu.l  %d6,%d2
+        lsr.l   #8,%d2
+        lsr.l   #7,%d2
+pf_delay_note:
         andi.l  #0x7f00,%d2
         or.l    %d4,%d2
         bra     pf_rev_tag
@@ -100,6 +126,11 @@ pf_rev:
         move.l  %d2,%d0
         mulu.l  %d1,%d2
         lsr.l   %d3,%d2
+        cmpi.l  #0x8000,%d6
+        beq     pf_rev_tag
+        mulu.l  %d6,%d2
+        lsr.l   #8,%d2
+        lsr.l   #7,%d2
 pf_rev_tag:
         tst.l   %d0
         beq     pf_store
@@ -111,6 +142,10 @@ pf_next:
         addq.l  #8,%a1
         subq.l  #1,%d5
         bne     pf_track
-        movem.l (%sp),%d0-%d5/%a0-%a1
-        lea     32(%sp),%sp
+        movem.l (%sp),%d0-%d6/%a0-%a2
+        lea     40(%sp),%sp
         rts
+
+        .balign 2
+        .globl  pf_xlv
+pf_xlv: PF_XLV_TABLE                    | generated from the user's stock image

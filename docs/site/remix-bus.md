@@ -60,7 +60,7 @@ describe the original engines. The delay's hardware timing wait remains in place
 ### Optional post-fader sends and T8 returns
 
 The `send-return-poc` test remix adds POST FADER and RETURNS to the current
-bus rig. DEL and REV follow the source track's LEVEL, mute and solo. A
+bus rig. DEL and REV follow the source track's LEVEL, scene XLEV, mute and solo. A
 muted track retains its original send's normalization share, so the other
 tracks do not become louder. Changing a DEL or REV knob from zero still
 changes participation. Existing repeats and reverb continue to decay;
@@ -76,8 +76,12 @@ the master itself still affects the complete mix.
 
 This combination is opt-in and requires hardware acceptance; the default
 remix keeps the host setup described above. POST FADER uses the mixer's
-LEVEL/mute/solo snapshot. AMP VOL already affects the source audio; scene
-XLV and CUE gain are outside this module. See the module references for
+LEVEL/mute/solo and scene XLEV snapshots. AMP VOL, its envelope and scene
+XVOL already affect the source audio. Moving a source to XLEV zero stops
+new delay/reverb input through the normal smoothing; existing tails remain.
+Unlocked scenes preserve the previous send gain. CUE and output volumes
+remain destination controls and do not change the source sends. See the module
+references for
 [POST FADER](reference/modules/post-fader.md) and
 [RETURNS](reference/modules/returns.md).
 
