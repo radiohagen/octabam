@@ -4,6 +4,16 @@ the delay lines) and REVERSE, with a tape wow on the loop tap in every
 mode. The repeats come out on track 1; the reverb also hears them through
 its DLY knob. The delay follows the project tempo.
 
+The optional [POST FADER](post-fader.md) and [RETURNS](returns.md) modules
+make sends follow source volume and move the wet return to T8. Their
+`test/send-return-poc` combination still needs hardware acceptance.
+
+The BusDelay, BusVerb and SEND optimization candidate removes redundant
+work while preserving the existing audio calculations and tails. Local
+audio, DSP-state and parameter-transition comparisons cover the candidate;
+earlier hardware reports describe the original engines. The delay's
+hardware timing wait remains in place.
+
 ## Access
 
 Track 1's FX2 page draws only DEL and REV. Every other knob is in the

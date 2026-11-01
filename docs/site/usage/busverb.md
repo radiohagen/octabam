@@ -4,6 +4,10 @@ modulated taps, a shimmer, a gate and mid/side width. Every track's REV
 send, plus the delay's repeats through its DLY knob, feeds it; its tail
 comes out on track 5 under that track's dry.
 
+The optional [POST FADER](post-fader.md) and [RETURNS](returns.md) modules
+make sends follow source volume and move the wet return to T8. Their
+`test/send-return-poc` combination still needs hardware acceptance.
+
 ## Access
 
 Track 5's FX2 page draws only DEL and REV. Every other knob is in the

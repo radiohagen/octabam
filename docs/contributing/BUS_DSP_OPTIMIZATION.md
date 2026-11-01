@@ -964,3 +964,41 @@ control. Its mixer reached XLEV zero and its dry source kept sounding, but
 its send coefficients and both wet buffers remained live. It failed exactly
 the four intended new-excitation/silence assertions; the audible positive
 control passed. `negative-control.json` records this expected failure.
+
+
+## 11. Upstream refresh — 1 November 2026
+
+The main optimization branch now includes upstream `main` at
+`620e9263f56d777903a37b5d580468b592c9d029`. All nine feature commits were
+replayed. BusDelay, BusVerb, SEND, POST FADER, RETURNS and their targeted
+verification code are unchanged by the rebase. Conflicts were documentation
+only: preserve the upstream trap entries and move optional bus guidance into
+`docs/site/usage/post-fader.md` and `docs/site/usage/returns.md`, following the
+new feature directory. The retired bus overview and its obsolete web-builder
+claims are not restored. The DMA experiment remains a separate child commit.
+
+Upstream does change the selected package's ColdFire modules and build logic,
+so the entire firmware is not byte-identical. It also changes the emulator's
+DMA arming rule and host RX delivery. Validation uses a freshly built native
+arm64 emulator against a private copy of DSP pin `8b731966` with this revision's
+patch; the shared vendor checkout was not modified. All five non-firmware
+emulator tests pass. This instrument change is not evidence of physical DMA
+performance or safety.
+
+The rebuilt four-grain `BUS VOL8K` image, build `V2`, is 1,276,375 bytes, SHA-256
+`a6c42236e2d050b4edf15191a692d8cc69fcb6afaa2aa1dd39259a38559409d8`.
+Both decoded DSP uploads (all record addresses and every P/X/Y word) exactly
+match the pre-rebase `V1` image: 105 records / 34,573 words in A and 91 records /
+25,408 words in B. Thus the earlier DSP optimization comparisons apply to the
+same DSP program; no new hardware load percentage is inferred. The installed
+hook and synthetic ID variants again pass all 13,008 cases, with the same
+8,225,790-pair, at-most-one-control-LSB quantization bound. Image-bound receipts,
+the emulator provenance and focused firmware logs are retained under
+`out/rebase-20261101/`; generated firmware is not committed.
+
+Two upstream control changes also reach this test remix: page-2 FX2 MIDI CCs
+are now 102–107 and page-2 FX1 CCs are 108–111, 14 and 15; recorder trig mute
+uses TRACK+REC. The crossfader and AMP checks continue to use CC48 and CC25.
+The existing V1 download remains a pre-rebase package; it is not relabeled as
+including this upstream refresh. Physical listening/load acceptance remains
+pending for both branches.
