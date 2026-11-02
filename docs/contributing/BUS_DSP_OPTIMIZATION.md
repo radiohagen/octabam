@@ -966,9 +966,45 @@ the four intended new-excitation/silence assertions; the audible positive
 control passed. `negative-control.json` records this expected failure.
 
 
-## 11. Upstream refresh — 1 November 2026
+## 11. Upstream refreshes — November 2026
 
-The main optimization branch now includes upstream `main` at
+### 2 November 2026
+
+Both branches were rebased onto upstream `main` at
+`828314dc5a3af1d5ca5d7308e22159e45e2b5ac3` without conflicts; all 11 existing
+commits replayed with identical patches. The selected test remix gains
+upstream's KITS fix: FUNC+YES in LOAD KIT neither arms recordings nor saves a
+kit, while SAVE KIT quick-save remains available. The bus code is unchanged.
+The DMA experiment remains one separate commit above the main fix, and regular
+builds retain the 8,192-NOP wait.
+
+The rebuilt normal verification image is 1,276,443 bytes, SHA-256
+`8549b1620b7944df68183f6c9054d1be6a1c00fefd6e7c7d1838202f2e997cbb`.
+Both decoded DSP uploads exactly match the 1 November normal image, including
+all record addresses and P/X/Y words. The existing emulator was reused after
+verifying unchanged sources and its executable hash; its earlier self-tests
+were not rerun. Fresh checks pass:
+
+- 13,008 post-fader hook cases: 4,336 installed and 8,672 synthetic-ID cases.
+- 22 firmware scenarios covering live XLEV/AMP/XVOL, LEVEL/mute/solo,
+  unaffected other-track gains, preserved tails and saved-muted host startup.
+- 212 exact RETURNS cases, comprising 6,784 samples.
+- Six focused KITS scenarios: base, load, save, quick, lfyes and lfyes0. The
+  disposable fixture selects bank 3 and gives pattern 1 one trigger, satisfying
+  the gate's playable-pattern requirement without changing the source project.
+
+The fresh same-name DMA comparison proves exactly one DSP word changes from
+8,192 to 4,096, with only its packed container and checksums changing elsewhere
+in the image. Both DMA DSP uploads also match the previous DMA image exactly.
+This is a byte-identity check, not a fresh DMA playback or physical timing
+qualification. Earlier DSP performance comparisons apply to unchanged programs;
+no new hardware load percentage is inferred. Image-bound receipts and logs are
+under `out/rebase-20261102/`. This source refresh does not replace the existing
+1 November V2 download. Hardware acceptance remains pending.
+
+### 1 November 2026
+
+The main optimization branch was rebased onto upstream `main` at
 `620e9263f56d777903a37b5d580468b592c9d029`. All nine feature commits were
 replayed. BusDelay, BusVerb, SEND, POST FADER, RETURNS and their targeted
 verification code are unchanged by the rebase. Conflicts were documentation
