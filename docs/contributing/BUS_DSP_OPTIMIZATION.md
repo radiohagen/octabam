@@ -968,6 +968,61 @@ control passed. `negative-control.json` records this expected failure.
 
 ## 11. Upstream refreshes — November 2026
 
+### 4 November 2026
+
+Both branches were rebased onto upstream `main` at
+`c9cadc8206cfdf3b36c44cd70ebf4610aa8a4dda`. All twelve existing commits were
+retained; the conflict resolutions preserve both upstream's new trap entries
+and the bus warm-up entry. Functional feature patches are unchanged. The DMA
+experiment remains a separate child commit, with the regular 8,192-NOP wait
+unchanged. Upstream's redesigned `octabam-bus` configuration is included as authored;
+our independent `test/send-return-poc` retains its existing modules, ten stock
+FX1 choices, shared-window placement and T1/T5/T8 routing.
+
+The selected remix incorporates upstream's MUTE_MODES pin, USB MIDI receive
+and transmit changes, recorder-loop memo and PLOCKS P2/STORE fixes. All
+submodules were updated to their declared pins, including MIDI FOLLOW, whose
+manifest is loaded by the registry even when the remix does not select it.
+The emulator was rebuilt against the existing private DSP dependency copy;
+all five non-firmware self-tests pass. Upstream's emulator changes add
+diagnostics; no shared vendor checkout was modified.
+
+The normal verification image is 1,276,731 bytes, SHA-256
+`5df7b64768d5dba421dd791df52c6d0cecfe6eb4119ba9a2b8dedd8e085b46b4`.
+Every decoded DSP upload record and word matches the 2 November normal image.
+The fresh matched-name DMA build again changes exactly the 8,192-to-4,096
+wait literal and its packed container/checksums; its DSP uploads match the
+previous qualified DMA image. These checks preserve earlier DSP evidence;
+they do not establish new physical timing or CPU-load results.
+
+Fresh checks on the combined image pass:
+
+- 13,008 hook cases, 22 firmware audio scenarios, and 212 exact RETURNS cases
+  (6,784 samples), covering XLEV/AMP/XVOL, LEVEL/mute/solo, stable other-track
+  gains, tails and saved-muted host startup.
+- All five USB MIDI gates: ISR, TX ring, receive, clock and reconnect.
+- The upstream recorder-loop memo comparison: 78,141 calls match its prior
+  reference, including register preservation.
+- The new `verify_postfader_mute_modes.py`: 42 transition sequences across
+  T1-T7, all three destination modes and both record banks; 252 installed
+  mixer/post-fader frames and 3,108 positive assertions. A separate fresh-machine
+  negative control bypasses the mute hold and detects reopened sends.
+
+The mute-mode verifier executes the installed mixer, MUTE_MODES hook and POST
+FADER hook. Seeded records and intercepted record-builder/note-off callbacks
+limit its claim to control integration. An OT-muted track stays cut when
+leaving OT mode; unmute restores gain, and later alternate-mode mutes retain
+their intended voice/trig/pre-insert behavior. Other-track gains, participation
+and T8 controls remain intact. Alternate-mode rendered tails are not qualified
+by this logic test. Run it after a normal build with
+`.venv/bin/python tools/verify/verify_postfader_mute_modes.py test/send-return-poc`, or
+provide `--image`, `--elf`, `--layout` and `--receipt` for archived artifacts.
+
+Receipts, emulator provenance and logs are under `out/rebase-20261104/`.
+These are focused integration checks, not a whole-remix suite or a new run of
+every changed upstream module's gates. The existing 1 November V2 download is
+unchanged. Physical listening and DMA timing acceptance remain pending.
+
 ### 2 November 2026
 
 Both branches were rebased onto upstream `main` at
